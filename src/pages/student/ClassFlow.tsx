@@ -295,13 +295,9 @@ export default function ClassFlow() {
             </p>
 
             {/* Video / YouTube / placeholder */}
-            <div className="relative w-full rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl" style={{ height: '70vh', minHeight: 360 }}>
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-black border border-white/10 shadow-2xl">
               {isLive ? (
                 <>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 gap-3">
-                    <p className="font-bold text-slate-400">Live Class in Progress</p>
-                    <p className="text-xs text-slate-600">The meeting overlay should be open.</p>
-                  </div>
                   {/* Fullscreen Overlay */}
                   <JitsiMeet
                     roomName={`CynexAIClass${classData.id.replace(/[^a-zA-Z0-9]/g, '')}`}
