@@ -204,6 +204,12 @@ body {
   }
 }
 
+/* Marquee animation */
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
 /* ─── Utility Classes ─────────────────────────────────────────────────────── */
 .animate-float {
   animation: float 4s ease-in-out infinite;

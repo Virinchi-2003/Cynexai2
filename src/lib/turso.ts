@@ -559,8 +559,209 @@ export const initTursoDB = async () => {
         )
       `);
 
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS erp_users (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT UNIQUE NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS leads (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          phone TEXT,
+          course_interest TEXT,
+          source TEXT,
+          bucket_stage TEXT,
+          assigned_to TEXT,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS demos (
+          id TEXT PRIMARY KEY,
+          lead_id TEXT,
+          scheduled_at TEXT,
+          status TEXT,
+          notes TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS admissions (
+          id TEXT PRIMARY KEY,
+          lead_id TEXT,
+          amount REAL,
+          discount_locked REAL,
+          offer_expiry TEXT,
+          expected_sale_date TEXT,
+          status TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS sales (
+          id TEXT PRIMARY KEY,
+          lead_id TEXT,
+          admission_id TEXT,
+          course_id TEXT,
+          total_fee REAL,
+          amount_paid REAL,
+          status TEXT,
+          sales_exec_id TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS manager_approvals (
+          id TEXT PRIMARY KEY,
+          sale_id TEXT,
+          checklist_json TEXT,
+          status TEXT,
+          notes TEXT,
+          approver_id TEXT,
+          decided_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS onboardings (
+          id TEXT PRIMARY KEY,
+          sale_id TEXT,
+          batch_id TEXT,
+          teacher_id TEXT,
+          mode TEXT,
+          joining_date TEXT,
+          remarks TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS students (
+          id TEXT PRIMARY KEY,
+          onboarding_id TEXT,
+          student_code TEXT,
+          portal_login_email TEXT,
+          status TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS modules (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          sequence_order INTEGER
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS batches (
+          id TEXT PRIMARY KEY,
+          module_id TEXT,
+          min_students INTEGER,
+          max_students INTEGER,
+          target_capacity INTEGER,
+          current_enrolled INTEGER,
+          start_date TEXT,
+          status TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS lesson_progress (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          lesson_id TEXT,
+          status TEXT,
+          score REAL,
+          watched_pct REAL
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS tasks (
+          id TEXT PRIMARY KEY,
+          type TEXT,
+          title TEXT,
+          target_value REAL,
+          current_value REAL,
+          assignee_id TEXT,
+          due_date TEXT,
+          recurrence_rule TEXT,
+          status TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS whatsapp_templates (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          body TEXT,
+          category TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS referral_assets (
+          id TEXT PRIMARY KEY,
+          type TEXT,
+          file_url TEXT,
+          uploaded_by TEXT,
+          updated_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS teachers (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          weekly_hours_taught REAL,
+          availability_json TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS timetables (
+          id TEXT PRIMARY KEY,
+          batch_id TEXT,
+          teacher_id TEXT,
+          room_or_link TEXT,
+          day_of_week TEXT,
+          start_time TEXT,
+          end_time TEXT
+        )
+      `);
+
       // Sync user created content from LocalStorage
       await syncLocalStorageToTurso();
+
+      // Migrations - Add new columns safely
+      const addColumn = async (table: string, columnDef: string) => {
+        try {
+          await client.execute(`ALTER TABLE ${table} ADD COLUMN ${columnDef}`);
+        } catch (e: any) {
+          if (!e.message.includes('duplicate column name')) {
+            console.error(`Migration error on ${table}:`, e);
+          }
+        }
+      };
+
+      await addColumn('leads', 'referred_by_student_id TEXT');
+      await addColumn('admissions', 'referred_by_student_id TEXT');
+      await addColumn('sales', 'referred_by_student_id TEXT');
+      await addColumn('sales', 'payment_mode TEXT');
+      await addColumn('tasks', 'description TEXT');
+      await addColumn('tasks', 'created_by TEXT');
+      
+      // Update task table for check-in style tasks
+      await addColumn('tasks', 'check_in_count INTEGER DEFAULT 0');
+      await addColumn('tasks', 'target_check_in_count INTEGER DEFAULT 1');
 
       // Sync sample posts securely and robustly
       await syncSamplePosts();
@@ -575,6 +776,43 @@ export const initTursoDB = async () => {
   } else {
     console.log("Using LocalStorage fallback for blog posts and mock tests");
     return true;
+  }
+};
+
+export const seedCRMData = async () => {
+  if (isTursoConfigured && client && !dbConnectionFailed) {
+    try {
+      const { rows } = await client.execute('SELECT count(*) as count FROM leads');
+      if (Number(rows[0].count) === 0) {
+        console.log('Seeding CRM demo data...');
+        // 1. Create a Lead
+        const leadId = 'lead_demo_1';
+        await client.execute({ sql: `INSERT INTO leads (id, name, phone, course_interest, source, bucket_stage, assigned_to, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, args: [leadId, 'Rahul Demo', '9876543210', 'Data Science', 'Facebook', 'E', 'sandeep', new Date().toISOString()] });
+        
+        // 2. Create an Admission
+        const admId = 'adm_demo_1';
+        await client.execute({ sql: `INSERT INTO admissions (id, lead_id, amount, discount_locked, offer_expiry, expected_sale_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [admId, leadId, 1000, '10%', '2026-07-10', '2026-07-05', 'Active'] });
+        
+        // 3. Create a Sale
+        const saleId = 'sal_demo_1';
+        await client.execute({ sql: `INSERT INTO sales (id, lead_id, admission_id, course_id, total_fee, amount_paid, status, sales_exec_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, args: [saleId, leadId, admId, 'data_science', 50000, 25000, 'Sale Partial Closed', 'sandeep'] });
+        
+        // 4. Create Manager Approval
+        const apprId = 'appr_demo_1';
+        await client.execute({ sql: `INSERT INTO manager_approvals (id, sale_id, checklist_json, status, notes, approver_id, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [apprId, saleId, JSON.stringify({ payment_verified: false, course_confirmed: false, batch_available: false, docs_received: false, teacher_assignable: false, joining_date_feasible: false }), 'Pending', '', null, null] });
+
+        // 5. Create a student for the student portal demo
+        const onbId = 'onb_demo_1';
+        await client.execute({ sql: `INSERT INTO onboardings (id, sale_id, batch_id, teacher_id, mode, joining_date, remarks) VALUES (?, ?, ?, ?, ?, ?, ?)`, args: [onbId, saleId, 'batch_july_ds', 'tchr_rahul', 'Online', '2026-07-15', 'demo onboarding'] });
+        await client.execute({ sql: `INSERT INTO students (id, onboarding_id, student_code, portal_login_email, status) VALUES (?, ?, ?, ?, ?)`, args: ['stu_demo_1', onbId, 'CNX-2026-0001', 'demo@student.cynexai.com', 'Active'] });
+        
+        // 6. Create Demo Tasks for Sales/HR
+        await client.execute({ sql: `INSERT INTO tasks (id, type, title, description, target_value, current_value, assignee_id, created_by, due_date, recurrence_rule, status, check_in_count, target_check_in_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: ['tsk_demo_1', 'daily', 'Check HR Policies', 'Review the new HR policies for Q3.', 0, 0, 'sandeep', 'manager', '2026-07-10', 'none', 'Pending', 0, 1]});
+        await client.execute({ sql: `INSERT INTO tasks (id, type, title, description, target_value, current_value, assignee_id, created_by, due_date, recurrence_rule, status, check_in_count, target_check_in_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, args: ['tsk_demo_2', 'checkin', 'Post Instagram Updates', 'Post 2 images about the new Data Science batch', 0, 0, 'sandeep', 'manager', '2026-07-04', 'daily', 'Pending', 0, 2]});
+
+        console.log('CRM Demo Data seeded.');
+      }
+    } catch(e) { console.error('Seed failed', e); }
   }
 };
 

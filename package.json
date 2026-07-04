@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -13,13 +13,17 @@
     "@libsql/client": "^0.17.0",
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.2",
+    "date-fns": "^4.4.0",
     "framer-motion": "^12.19.1",
     "lucide-react": "^0.523.0",
+    "qrcode.react": "^4.2.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-intersection-observer": "^9.5.3",
+    "react-markdown": "^10.1.0",
     "react-pageflip": "^2.0.3",
     "react-router-dom": "^6.20.1",
+    "recharts": "^3.9.1",
     "three": "^0.177.0"
   },
   "devDependencies": {

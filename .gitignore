@@ -27,3 +27,4 @@ dist-ssr
 # Node.js backend specific ignores
 backend/node_modules/
 backend/.env
+backend/.wwebjs_auth/

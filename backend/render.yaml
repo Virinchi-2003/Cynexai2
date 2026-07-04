@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cynexai-whatsapp-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: NODE_ENV
+        value: production
+      - key: VITE_TURSO_DATABASE_URL
+        sync: false
+      - key: VITE_TURSO_AUTH_TOKEN
+        sync: false

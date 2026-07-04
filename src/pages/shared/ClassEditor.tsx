@@ -1,0 +1,322 @@
+import React, { useState, useEffect } from 'react';
+import { Card } from '../../components/ui/erp/Card';
+import { Button } from '../../components/ui/erp/Button';
+import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { client } from '../../lib/turso';
+import { generateAIMaterials } from '../../lib/aiGenerator';
+
+export default function ClassEditor() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith('/ceo') ? '/ceo' : '/manager';
+  const { courseId, moduleId, classId } = useParams();
+
+  const [classData, setClassData] = useState<any>(null);
+  const [classTitle, setClassTitle] = useState('');
+  const [youtubeLink, setYoutubeLink] = useState('');
+  const [meetLink, setMeetLink] = useState('');
+  
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [aiStatus, setAiStatus] = useState({ ppt: false, script: false });
+
+  // Class Questions state
+  const [questions, setQuestions] = useState<any[]>([]);
+  const [newQText, setNewQText] = useState('');
+  const [newQType, setNewQType] = useState<'mcq' | 'coding'>('mcq');
+  const [newQOptions, setNewQOptions] = useState<string[]>(['', '', '', '']);
+  const [newQCorrectIdx, setNewQCorrectIdx] = useState<number>(0);
+  const [newQBoilerplate, setNewQBoilerplate] = useState('def solution():\n    # Write your code here\n    pass');
+  const [newQTestCases, setNewQTestCases] = useState('[\n  {"input": "()", "expected": "True"}\n]');
+
+  useEffect(() => {
+    fetchClassData();
+    fetchQuestions();
+  }, [classId]);
+
+  const fetchClassData = async () => {
+    if (!client || !classId) return;
+    try {
+      const res = await client.execute({
+        sql: 'SELECT * FROM classes WHERE id = ?',
+        args: [classId]
+      });
+      if (res.rows.length > 0) {
+        const data = res.rows[0];
+        setClassData(data);
+        setClassTitle(data.title as string);
+        setYoutubeLink(data.youtube_video_id as string || '');
+        setMeetLink(data.meet_link as string || '');
+        
+        setAiStatus({
+          ppt: !!data.ai_ppt_markdown,
+          script: !!data.ai_script
+        });
+      }
+    } catch (e) {
+      console.error("Failed to fetch class data", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchQuestions = async () => {
+    if (!client || !classId) return;
+    try {
+      const res = await client.execute({
+        sql: 'SELECT * FROM class_questions WHERE class_id = ? ORDER BY created_at ASC',
+        args: [classId]
+      });
+      setQuestions(res.rows);
+    } catch (e) {
+      console.error("Failed to fetch questions", e);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!client || !classId) return;
+    try {
+      await client.execute({
+        sql: 'UPDATE classes SET title = ?, youtube_video_id = ?, meet_link = ? WHERE id = ?',
+        args: [classTitle, youtubeLink, meetLink, classId]
+      });
+      alert("Class saved successfully!");
+      navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`);
+    } catch (e) {
+      console.error("Error saving class", e);
+      alert("Failed to save class.");
+    }
+  };
+
+  const handleGenerateAI = async () => {
+    setGenerating(true);
+    try {
+      const { ppt, keypoints, script } = await generateAIMaterials(classTitle);
+      
+      // Save directly to Turso
+      await client.execute({
+        sql: 'UPDATE classes SET ai_ppt_markdown = ?, ai_keypoints = ?, ai_script = ? WHERE id = ?',
+        args: [ppt, keypoints, script, classId]
+      });
+      
+      setAiStatus({ ppt: true, script: true });
+      alert("AI Materials generated and saved successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Failed to generate AI materials.");
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleAddQuestion = async () => {
+    if (!client || !classId || !newQText) return;
+    const questionId = 'q_' + Date.now();
+    try {
+      await client.execute({
+        sql: `INSERT INTO class_questions (id, class_id, type, question_text, options_json, correct_answer_idx, boilerplate_json, test_cases_json) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          questionId,
+          classId,
+          newQType,
+          newQText,
+          newQType === 'mcq' ? JSON.stringify(newQOptions) : null,
+          newQType === 'mcq' ? newQCorrectIdx : null,
+          newQType === 'coding' ? JSON.stringify({ code: newQBoilerplate }) : null,
+          newQType === 'coding' ? newQTestCases : null
+        ]
+      });
+      setNewQText('');
+      setNewQOptions(['', '', '', '']);
+      setNewQCorrectIdx(0);
+      await fetchQuestions();
+      alert("Add-on question created!");
+    } catch (e) {
+      console.error(e);
+      alert("Failed to add question.");
+    }
+  };
+
+  const handleDeleteQuestion = async (qId: string) => {
+    if (!client) return;
+    if (confirm("Delete this question?")) {
+      try {
+        await client.execute({
+          sql: 'DELETE FROM class_questions WHERE id = ?',
+          args: [qId]
+        });
+        await fetchQuestions();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  if (loading) return <div className="p-8 text-erp-text">Loading class data...</div>;
+
+  return (
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <div className="flex items-center gap-2 text-sm text-erp-text/50 font-bold mb-2 cursor-pointer hover:text-indigo-400" onClick={() => navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`)}>
+            <ArrowLeft className="w-4 h-4" /> Back to Module
+          </div>
+          <h1 className="text-3xl font-display font-bold text-erp-text flex items-center gap-3">
+            <FileVideo className="w-8 h-8 text-indigo-500" /> Edit Class 
+          </h1>
+        </div>
+        <Button onClick={handleSave} variant="primary" className="flex items-center gap-2"><Save className="w-4 h-4"/> Save Class</Button>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Main Content Editor */}
+        <div className="lg:col-span-2 space-y-6">
+          
+          <Card className="bg-erp-surface border-erp-border p-6">
+            <h2 className="text-xl font-bold font-display text-erp-text mb-4">Class Details</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-1">Class Title</label>
+                <input type="text" value={classTitle} onChange={e => setClassTitle(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-1 flex items-center gap-2">
+                  <LinkIcon className="w-4 h-4 text-green-500" /> Jitsi / Google Meet Link (Live Broadcast)
+                </label>
+                <input type="url" placeholder="https://meet.google.com/abc-defg-hij" value={meetLink} onChange={(e) => setMeetLink(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-1 flex items-center gap-2">
+                  <Youtube className="w-4 h-4 text-red-500" /> YouTube Link of Completed Class (Recording URL)
+                </label>
+                <input type="url" value={youtubeLink} onChange={(e) => setYoutubeLink(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Add-ons: Quizzes & Coding Challenges */}
+          <Card className="bg-erp-surface border-erp-border p-6">
+            <h2 className="text-xl font-bold font-display text-erp-text mb-6">Class Add-ons: Quizzes & Code Exercises</h2>
+            
+            {/* List existing questions */}
+            <div className="space-y-3 mb-6">
+              {questions.length === 0 ? (
+                <p className="text-sm text-erp-text/50">No quizzes or coding challenges configured for this class yet.</p>
+              ) : (
+                questions.map((q, idx) => (
+                  <div key={q.id} className="flex justify-between items-start bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <div>
+                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded mr-2 ${q.type === 'mcq' ? 'bg-blue-900/40 text-blue-400 border border-blue-800/40' : 'bg-green-900/40 text-green-400 border border-green-800/40'}`}>
+                        {q.type}
+                      </span>
+                      <p className="text-sm font-bold text-white mt-2">Q{idx + 1}: {q.question_text}</p>
+                    </div>
+                    <Button variant="danger" className="h-7 px-2 text-xs" onClick={() => handleDeleteQuestion(q.id)}>Delete</Button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Create form */}
+            <div className="border-t border-slate-800 pt-6 space-y-4">
+              <h3 className="font-bold text-erp-text text-sm uppercase tracking-wide">Configure New Add-on</h3>
+              
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input type="radio" checked={newQType === 'mcq'} onChange={() => setNewQType('mcq')} className="accent-indigo-500" />
+                  Multiple Choice (MCQ Quiz)
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <input type="radio" checked={newQType === 'coding'} onChange={() => setNewQType('coding')} className="accent-indigo-500" />
+                  Coding Editor Question
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-erp-text/60 mb-1">Question / Prompt Text</label>
+                <textarea rows={2} value={newQText} onChange={e => setNewQText(e.target.value)} placeholder="e.g. Write a python function to reverse a string" className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none" />
+              </div>
+
+              {newQType === 'mcq' ? (
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-erp-text/60">Options & Answer Key</label>
+                  {newQOptions.map((opt, oIdx) => (
+                    <div key={oIdx} className="flex gap-2 items-center">
+                      <input type="radio" name="correct_answer" checked={newQCorrectIdx === oIdx} onChange={() => setNewQCorrectIdx(oIdx)} className="accent-indigo-500" />
+                      <input type="text" value={opt} onChange={e => {
+                        const newOpts = [...newQOptions];
+                        newOpts[oIdx] = e.target.value;
+                        setNewQOptions(newOpts);
+                      }} placeholder={`Option ${oIdx + 1}`} className="flex-1 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Boilerplate Template Code</label>
+                    <textarea rows={6} value={newQBoilerplate} onChange={e => setNewQBoilerplate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-green-400 font-mono text-xs focus:outline-none resize-none" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Validation Test Cases (JSON format)</label>
+                    <textarea rows={6} value={newQTestCases} onChange={e => setNewQTestCases(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-yellow-400 font-mono text-xs focus:outline-none resize-none" />
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={handleAddQuestion} disabled={!newQText} className="bg-indigo-600 hover:bg-indigo-500 flex items-center gap-2 text-xs h-9">
+                <Plus className="w-4 h-4" /> Add Add-on to Class
+              </Button>
+            </div>
+          </Card>
+        </div>
+
+        {/* AI Materials Generator */}
+        <div className="space-y-6">
+          <Card className="bg-gradient-to-br from-indigo-900 to-purple-900 border-none text-white sticky top-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-6 h-6 text-indigo-300" />
+              <h2 className="text-xl font-bold font-display">AI Material Prep</h2>
+            </div>
+            <p className="text-indigo-200 text-sm mb-6">Generate teaching materials based on the Class Title before assigning to a Teacher.</p>
+            
+            <div className="space-y-4">
+              <Button 
+                onClick={handleGenerateAI} 
+                disabled={generating}
+                className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-bold flex justify-center gap-2 border-none"
+              >
+                {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><Sparkles className="w-4 h-4" /> Generate All Materials</>}
+              </Button>
+
+              <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-bold flex items-center gap-2"><Video className="w-4 h-4 text-blue-300" /> Presentation (PPT)</h3>
+                  {aiStatus.ppt ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}
+                </div>
+                <p className="text-xs text-indigo-200 mb-3">{aiStatus.ppt ? 'Slides generated for teacher Live Dashboard.' : 'Pending generation.'}</p>
+              </div>
+
+              <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-bold flex items-center gap-2"><PenTool className="w-4 h-4 text-purple-300" /> Teacher Script & Keypoints</h3>
+                  {aiStatus.script ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}
+                </div>
+                <p className="text-xs text-indigo-200 mb-3">{aiStatus.script ? 'Full teleprompter script + regional examples (Hyderabad).' : 'Pending generation.'}</p>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <Button onClick={handleSave} className="w-full bg-green-500 hover:bg-green-400 text-white font-bold flex justify-center gap-2 border-none">
+                <Save className="w-4 h-4" /> Save & Approve Class
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

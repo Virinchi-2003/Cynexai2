@@ -5,6 +5,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        erp: {
+          primary: '#58CC02',
+          primary_shadow: '#58A700',
+          secondary: '#CE82FF',
+          secondary_shadow: '#A568CC',
+          danger: '#FF4B4B',
+          danger_shadow: '#EA2B2B',
+          info: '#1CB0F6',
+          info_shadow: '#1899D6',
+          background: '#FFFFFF',
+          surface: '#F7F7F7',
+          text: '#4B4B4B',
+          border: '#E5E5E5',
+        },
         primary: {
           DEFAULT: '#41c8df',  // gold accent
           50: '#FEF9E7',
@@ -23,6 +37,14 @@ export default {
           100: 'rgb(var(--color-bg-100) / <alpha-value>)'
         },
         secondary: 'rgb(var(--color-text) / <alpha-value>)',
+      },
+      boxShadow: {
+        'erp-btn': '0 4px 0 0 rgba(0, 0, 0, 0.1)',
+        'erp-btn-primary': '0 4px 0 0 #58A700',
+        'erp-btn-secondary': '0 4px 0 0 #A568CC',
+        'erp-btn-danger': '0 4px 0 0 #EA2B2B',
+        'erp-btn-info': '0 4px 0 0 #1899D6',
+        'erp-card': '0 2px 0 0 #E5E5E5',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
