@@ -102,7 +102,7 @@ export default function LiveStreamDashboard() {
     if (!classData || !client) return;
     // Mark as live in DB
     await client.execute({
-      sql: "UPDATE classes SET type = 'live', status = 'draft' WHERE id = ?",
+      sql: "UPDATE classes SET type = 'live', status = 'in_progress' WHERE id = ?",
       args: [classData.id]
     });
     // Broadcast to students via localStorage (polling)

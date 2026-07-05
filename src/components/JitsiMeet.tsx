@@ -168,8 +168,8 @@ export default function JitsiMeet({ roomName, displayName = 'Student', classId, 
   const directUrl = `https://meet.jit.si/${roomName}#config.prejoinPageEnabled=false&config.startWithAudioMuted=true`;
 
   return (
-    // FULLSCREEN overlay — takes over the entire viewport
-    <div className="fixed inset-0 z-50 bg-[#0a0a14] flex flex-col">
+    // Component overlay — fills its parent container
+    <div className="absolute inset-0 bg-[#0a0a14] flex flex-col rounded-2xl overflow-hidden">
 
       {/* Thin top bar — room name + "class ended" indicator */}
       <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-black/60 backdrop-blur z-10">

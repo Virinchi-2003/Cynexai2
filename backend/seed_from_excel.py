@@ -42,7 +42,9 @@ def main():
                 id TEXT PRIMARY KEY,
                 title TEXT NOT NULL,
                 description TEXT,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                instructor_id TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (instructor_id) REFERENCES erp_users(id)
             )
         """)
         
@@ -72,7 +74,7 @@ def main():
                 ai_script TEXT,
                 ai_keypoints TEXT,
                 ai_summary TEXT,
-                status TEXT CHECK(status IN ('draft', 'published', 'completed')) DEFAULT 'draft',
+                status TEXT CHECK(status IN ('draft', 'scheduled', 'in_progress', 'published', 'completed')) DEFAULT 'draft',
                 order_index INTEGER NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (module_id) REFERENCES modules(id) ON DELETE CASCADE

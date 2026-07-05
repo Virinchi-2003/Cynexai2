@@ -34,7 +34,7 @@ export default function StudentPortal() {
       if (!client) return;
       try {
         const res = await client.execute(
-          "SELECT id, title FROM classes WHERE type = 'live' AND status = 'draft' LIMIT 1"
+          "SELECT id, title FROM classes WHERE type = 'live' AND status = 'in_progress' LIMIT 1"
         );
         if (res.rows.length > 0) {
           const cls = res.rows[0] as any;
@@ -217,7 +217,7 @@ export default function StudentPortal() {
               <div className="flex flex-col gap-10">
                 {mod.classes.map((cls: any, clsIdx: number) => {
                   const isDone = progress[cls.id] || cls.status === 'completed';
-                  const isLiveClass = cls.type === 'live' && cls.status === 'draft';
+                  const isLiveClass = cls.type === 'live' && cls.status === 'in_progress';
                   const isNext = !nextClassFound && !isDone;
                   if (isNext) nextClassFound = true;
 

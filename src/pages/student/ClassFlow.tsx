@@ -210,7 +210,7 @@ export default function ClassFlow() {
     </div>
   );
 
-  const isLive      = classData.type === 'live' && classData.status !== 'completed';
+  const isLive      = classData.type === 'live' && classData.status === 'in_progress';
   const isCompleted = classData.status === 'completed';
 
   // ── Render ─────────────────────────────────────────────────────────────────

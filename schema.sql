@@ -53,9 +53,11 @@ CREATE TABLE IF NOT EXISTS course_modules (
     id TEXT PRIMARY KEY,
     course_id TEXT NOT NULL,
     title TEXT NOT NULL,
+    instructor_id TEXT,
     order_index INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (course_id) REFERENCES courses(id)
+    FOREIGN KEY (course_id) REFERENCES courses(id),
+    FOREIGN KEY (instructor_id) REFERENCES erp_users(id)
 );
 
 -- Course Modules/Classes Table
@@ -72,7 +74,7 @@ CREATE TABLE IF NOT EXISTS course_classes (
     ai_script TEXT,
     ai_keypoints TEXT,
     ai_summary TEXT,
-    status TEXT CHECK(status IN ('draft', 'published', 'completed')) DEFAULT 'draft',
+    status TEXT CHECK(status IN ('draft', 'scheduled', 'in_progress', 'published', 'completed')) DEFAULT 'draft',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (module_id) REFERENCES course_modules(id)
 );
