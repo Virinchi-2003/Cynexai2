@@ -4,7 +4,8 @@ import { Button } from '../../components/ui/erp/Button';
 import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
-import { client } from '../../lib/turso';
+import { client, isTursoConfigured } from '../../lib/turso';
+import { getCoursesFull, createCourse, createModule, updateCoursePitch } from '../../lib/api/cms';
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -37,20 +38,17 @@ export default function CourseManagement() {
       return;
     }
     try {
-      // Fetch Courses
-      const coursesRes = await client.execute('SELECT * FROM courses ORDER BY created_at DESC');
-      // Fetch Modules via junction mapping
-      const modulesRes = await client.execute('SELECT m.*, cmm.course_id, cmm.order_index FROM modules m JOIN course_module_mapping cmm ON m.id = cmm.module_id ORDER BY cmm.order_index ASC');
-      // Fetch Classes
-      const classesRes = await client.execute('SELECT * FROM classes ORDER BY order_index ASC');
+      const { courses: cRows, modules: mRows, classes: clsRows } = await getCoursesFull();
 
       const courseMap = new Map();
       
-      coursesRes.rows.forEach(c => {
+      cRows.forEach((c: any) => {
         courseMap.set(c.id, {
           id: c.id,
           name: c.title,
           description: c.description,
+          sales_pitch_summary: c.sales_pitch_summary || '',
+          sales_pitch_script: c.sales_pitch_script || '',
           studentsEnrolled: 0,
           modules: [],
           batches: [] // Keep empty for now as requested
@@ -58,7 +56,7 @@ export default function CourseManagement() {
       });
 
       const moduleMap = new Map();
-      modulesRes.rows.forEach(m => {
+      mRows.forEach((m: any) => {
         const mod = {
           id: m.id,
           course_id: m.course_id,
@@ -72,7 +70,7 @@ export default function CourseManagement() {
         }
       });
 
-      classesRes.rows.forEach(cls => {
+      clsRows.forEach((cls: any) => {
         if (moduleMap.has(cls.module_id)) {
           moduleMap.get(cls.module_id).classes.push({
             id: cls.id,
@@ -98,10 +96,7 @@ export default function CourseManagement() {
     if (!client || !newCourseName) return;
     const courseId = 'course_' + Date.now();
     try {
-      await client.execute({
-        sql: 'INSERT INTO courses (id, title, description, instructor_id, status) VALUES (?, ?, ?, ?, ?)',
-        args: [courseId, newCourseName, newCourseDesc, user?.id || 'sys', 'published']
-      });
+      await createCourse(courseId, newCourseName, newCourseDesc, user?.id || 'sys', 'published');
       setIsModalOpen(false);
       setNewCourseName('');
       setNewCourseDesc('');
@@ -119,22 +114,31 @@ export default function CourseManagement() {
     try {
       const course = courses.find(c => c.id === selectedCourseForModule);
       const nextOrder = course ? course.modules.length : 0;
-      // 1. Insert into global modules table
-      await client.execute({
-        sql: 'INSERT INTO modules (id, title, description) VALUES (?, ?, ?)',
-        args: [moduleId, newModuleName, '']
-      });
-      // 2. Map global module to specific course
-      await client.execute({
-        sql: 'INSERT INTO course_module_mapping (course_id, module_id, order_index) VALUES (?, ?, ?)',
-        args: [selectedCourseForModule, moduleId, nextOrder]
-      });
+      await createModule(moduleId, selectedCourseForModule, newModuleName, nextOrder);
       setIsModuleModalOpen(false);
       setNewModuleName('');
       await fetchCourses();
     } catch (e) {
       console.error("Error creating module:", e);
       alert("Failed to create module.");
+    }
+  };
+
+  // Pitch Modal State
+  const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
+  const [pitchCourseId, setPitchCourseId] = useState<string | null>(null);
+  const [pitchSummary, setPitchSummary] = useState('');
+  const [pitchScript, setPitchScript] = useState('');
+
+  const handleSavePitch = async () => {
+    if (!client || !pitchCourseId) return;
+    try {
+      await updateCoursePitch(pitchCourseId, pitchSummary, pitchScript);
+      setIsPitchModalOpen(false);
+      await fetchCourses();
+    } catch (e) {
+      console.error("Error updating pitch:", e);
+      alert("Failed to update pitch.");
     }
   };
 
@@ -221,6 +225,31 @@ export default function CourseManagement() {
                         }}>
                           <Plus className="w-6 h-6 mb-2" />
                           <span className="font-bold text-sm">Add Module</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Sales Pitch Settings */}
+                    <div>
+                      <h4 className="font-bold text-erp-text mb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2"><BookOpen className="w-4 h-4 text-green-400" /> Sales Pitch Settings</span>
+                        <Button variant="ghost" className="h-8 text-xs border border-erp-border" onClick={() => {
+                          setPitchCourseId(course.id);
+                          setPitchSummary(course.sales_pitch_summary);
+                          setPitchScript(course.sales_pitch_script);
+                          setIsPitchModalOpen(true);
+                        }}>
+                          Edit Pitch <ArrowRight className="w-3 h-3 ml-1" />
+                        </Button>
+                      </h4>
+                      <div className="bg-erp-surface border border-erp-border rounded-lg p-4 space-y-4">
+                        <div>
+                          <p className="text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-1">Summary</p>
+                          <p className="text-sm text-erp-text">{course.sales_pitch_summary || <span className="italic text-erp-text/30">No summary defined</span>}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-1">Script</p>
+                          <p className="text-sm text-erp-text italic">"{course.sales_pitch_script || <span className="text-erp-text/30">No script defined</span>}"</p>
                         </div>
                       </div>
                     </div>
@@ -353,6 +382,53 @@ export default function CourseManagement() {
               <Button variant="ghost" onClick={() => setIsModuleModalOpen(false)}>Cancel</Button>
               <Button variant="primary" onClick={handleAddModule} disabled={!newModuleName.trim()}>
                 Add Module <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Pitch Modal */}
+      {isPitchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-erp-border bg-slate-900/50">
+              <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-indigo-400" /> Edit Sales Pitch
+              </h2>
+              <button onClick={() => setIsPitchModalOpen(false)} className="text-erp-text/50 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-2">Pitch Summary</label>
+                <input 
+                  type="text" 
+                  value={pitchSummary}
+                  onChange={(e) => setPitchSummary(e.target.value)}
+                  placeholder="Short description for the sales agent"
+                  className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-2">Detailed Pitch Script</label>
+                <textarea 
+                  value={pitchScript}
+                  onChange={(e) => setPitchScript(e.target.value)}
+                  placeholder="The exact script sales agents should read to leads..."
+                  rows={4}
+                  className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-erp-border bg-slate-900/30 flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setIsPitchModalOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={handleSavePitch}>
+                Save Pitch
               </Button>
             </div>
           </div>

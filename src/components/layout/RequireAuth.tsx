@@ -23,6 +23,10 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, allowedRoles
       return <Navigate to="/teacher" replace />;
     } else if (user.role === 'Student') {
       return <Navigate to="/student" replace />;
+    } else if (user.role === 'DM') {
+      return <Navigate to="/dm/dashboard" replace />;
+    } else if (user.role === 'Admin') {
+      return <Navigate to="/admin" replace />;
     } else {
       return <Navigate to="/sales/pipeline" replace />;
     }

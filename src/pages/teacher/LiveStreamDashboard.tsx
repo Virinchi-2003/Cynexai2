@@ -5,34 +5,46 @@ import {
   Code, Sparkles, Loader2, ExternalLink, Radio, Youtube, Pencil, Eraser,
   ChevronDown, BookOpen, Users, CheckCircle, AlertCircle
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { client } from '../../lib/turso';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getCurrentUser } from '../../lib/auth';
 import { generateAIMaterials, generatePostClassSummary } from '../../lib/aiGenerator';
+import { executeCode, Language } from '../../lib/compiler';
 import ReactMarkdown from 'react-markdown';
+import { getInstructorClasses, updateClassMaterials, updateClassStatus, completeClassWithSummary, ClassRow } from '../../lib/api/teacher';
 
 type DrawTool = 'pen' | 'eraser';
 type PanelMode = 'slides' | 'code';
 
-interface ClassRow {
-  id: string;
-  title: string;
-  description: string;
-  type: string;
-  status: string;
-  ai_ppt_markdown: string | null;
-  ai_script: string | null;
-  ai_keypoints: string | null;
-  youtube_video_id: string | null;
-}
+const parseTimeString = (timingStr: string) => {
+  const [startStr, endStr] = timingStr.toLowerCase().split('-');
+  if (!startStr || !endStr) return { start: 0, end: 0 };
+  const isPm = endStr.includes('pm');
+  const parsePart = (part: string) => {
+    let raw = part.replace(/[a-z]/g, '');
+    let [h, m] = raw.split(':');
+    let hr = parseInt(h);
+    let min = m ? parseInt(m) : 0;
+    let isThisPm = isPm;
+    if (part.includes('am')) isThisPm = false;
+    if (part.includes('pm')) isThisPm = true;
+    if (hr === 12 && !isThisPm) hr = 0;
+    if (hr < 12 && isThisPm) hr += 12;
+    return hr + min / 60;
+  };
+  return { start: parsePart(startStr), end: parsePart(endStr) };
+};
 
 export default function LiveStreamDashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const classIdParam = searchParams.get('classId');
+  const classTimeParam = searchParams.get('time');
+  const classDayParam = searchParams.get('day');
+  const user = getCurrentUser();
 
   // ── Data state ──────────────────────────────────────────────────────────────
-  const [classes, setClasses] = useState<ClassRow[]>([]);
   const [classData, setClassData] = useState<ClassRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showClassPicker, setShowClassPicker] = useState(false);
 
   // ── Live state ───────────────────────────────────────────────────────────────
   const [isLive, setIsLive] = useState(false);
@@ -44,7 +56,10 @@ export default function LiveStreamDashboard() {
   // ── Presentation state ───────────────────────────────────────────────────────
   const [panelMode, setPanelMode] = useState<PanelMode>('slides');
   const [slide, setSlide] = useState(1);
-  const [code, setCode] = useState('# Python Class 1\n\ndef greet(name):\n    return f"Hello, {name}! Welcome to CynexAI"\n\nprint(greet("HITEC City"))');
+  const [code, setCode] = useState('# Code Editor\n\ndef demo():\n    print("Hello from CynexAI Studio!")\ndemo()');
+  const [language, setLanguage] = useState<Language>('python');
+  const [output, setOutput] = useState('');
+  const [isExecuting, setIsExecuting] = useState(false);
 
   // ── Drawing state ────────────────────────────────────────────────────────────
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -58,16 +73,12 @@ export default function LiveStreamDashboard() {
   useEffect(() => { fetchClasses(); }, []);
 
   const fetchClasses = async () => {
-    if (!client) { setLoading(false); return; }
+    if (!user) { setLoading(false); return; }
     try {
-      const res = await client.execute(
-        "SELECT id, title, description, type, status, ai_ppt_markdown, ai_script, ai_keypoints, youtube_video_id FROM classes WHERE status != 'completed' ORDER BY order_index ASC LIMIT 50"
-      );
-      const rows = res.rows as unknown as ClassRow[];
-      setClasses(rows);
-      if (rows.length > 0) setClassData(rows[0]);
+      const classes = await getInstructorClasses(user.id, classIdParam || undefined);
+      if (classes.length > 0) setClassData(classes[0]);
     } catch (e) {
-      console.error('Failed to load classes', e);
+      console.error('Failed to load class', e);
     } finally {
       setLoading(false);
     }
@@ -75,20 +86,16 @@ export default function LiveStreamDashboard() {
 
   // ── AI Materials ─────────────────────────────────────────────────────────────
   const handleGenerateMaterials = async () => {
-    if (!classData || !client) return;
+    if (!classData) return;
     setGenerating(true);
     try {
       const { ppt, script, keypoints } = await generateAIMaterials(
         classData.title,
         classData.description || ''
       );
-      await client.execute({
-        sql: 'UPDATE classes SET ai_ppt_markdown = ?, ai_script = ?, ai_keypoints = ? WHERE id = ?',
-        args: [ppt, script, keypoints, classData.id]
-      });
+      await updateClassMaterials(classData.id, ppt, script, keypoints);
       const updated = { ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints };
       setClassData(updated);
-      setClasses(prev => prev.map(c => c.id === classData.id ? updated : c));
     } catch (e) {
       console.error(e);
       alert('AI generation failed. Check your OpenRouter API key in aiGenerator.ts');
@@ -99,24 +106,18 @@ export default function LiveStreamDashboard() {
 
   // ── Class Actions ────────────────────────────────────────────────────────────
   const handleStartClass = async () => {
-    if (!classData || !client) return;
+    if (!classData) return;
     // Mark as live in DB
-    await client.execute({
-      sql: "UPDATE classes SET type = 'live', status = 'in_progress' WHERE id = ?",
-      args: [classData.id]
-    });
+    await updateClassStatus(classData.id, 'in_progress', 'live');
     // Broadcast to students via localStorage (polling)
     localStorage.setItem('cynexai_live_class_id', classData.id);
     localStorage.setItem('cynexai_live_slide', '1');
     localStorage.setItem('cynexai_live_mode', 'slides');
-    // Open Jitsi in separate window for screensharing - STRIP UNDERSCORES/DASHES
-    const jitsiRoom = `CynexAIClass${classData.id.replace(/[^a-zA-Z0-9]/g, '')}`;
-    window.open(`https://meet.jit.si/${jitsiRoom}`, '_blank');
     setIsLive(true);
   };
 
   const handleEndClass = async () => {
-    if (!classData || !client) return;
+    if (!classData) return;
     setEnding(true);
     try {
       // Generate AI post-class summary
@@ -125,10 +126,7 @@ export default function LiveStreamDashboard() {
         classData.ai_keypoints || 'No keypoints generated.'
       );
       // Save everything
-      await client.execute({
-        sql: "UPDATE classes SET status = 'completed', ai_summary = ?, youtube_video_id = ? WHERE id = ?",
-        args: [summary, ytUrl || null, classData.id]
-      });
+      await completeClassWithSummary(classData.id, summary, ytUrl || null);
       // Clear live signal
       localStorage.removeItem('cynexai_live_class_id');
       setIsLive(false);
@@ -153,6 +151,20 @@ export default function LiveStreamDashboard() {
     setPanelMode(m);
     localStorage.setItem('cynexai_live_mode', m);
   };
+
+  const runCode = async () => {
+    setIsExecuting(true);
+    setOutput('Running code...');
+    const result = await executeCode(code, language);
+    setOutput(result);
+    localStorage.setItem('cynexai_live_output', result);
+    setIsExecuting(false);
+  };
+
+  useEffect(() => {
+    localStorage.setItem('cynexai_live_code', code);
+    localStorage.setItem('cynexai_live_lang', language);
+  }, [code, language]);
 
   const openPopOut = () => {
     window.open(`/teacher/presentation-view?classId=${classData?.id}`, '_blank', 'width=1280,height=800,toolbar=no,menubar=no');
@@ -216,6 +228,32 @@ export default function LiveStreamDashboard() {
   const currentSlide = slides[slide - 1] || '# No slides yet';
   const keypoints = (classData?.ai_keypoints || '').split('\n').filter(Boolean);
 
+  // ── Preparation Window Logic ──────────────────────────────────────────────────
+  let canStartClass = true;
+  let preparationMessage = '';
+
+  if (classTimeParam && classDayParam && !isLive) {
+    const today = new Date();
+    let currentDay = today.getDay(); // 0 = Sun, 1 = Mon
+    if (currentDay === 0) currentDay = 7; // Map Sun to 7
+
+    if (parseInt(classDayParam) !== currentDay) {
+      canStartClass = false;
+      preparationMessage = 'This class is not scheduled for today. You are in preparation mode.';
+    } else {
+      const { start, end } = parseTimeString(classTimeParam);
+      const currentHour = today.getHours() + today.getMinutes() / 60;
+      
+      if (currentHour < start - 0.25) { // 15 mins before
+        canStartClass = false;
+        preparationMessage = `Preparation Mode. Class starts at ${classTimeParam}. "Start Class" unlocks 15 mins before.`;
+      } else if (currentHour > end) {
+        canStartClass = false;
+        preparationMessage = 'This class time has passed.';
+      }
+    }
+  }
+
   if (loading) return (
     <div className="flex h-screen items-center justify-center bg-slate-950 text-white gap-3">
       <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
@@ -238,34 +276,15 @@ export default function LiveStreamDashboard() {
       {/* ── Left Sidebar ─────────────────────────────────────────── */}
       <div className="hidden md:flex w-72 bg-[#111118] border-r border-white/5 flex-col shrink-0">
 
-        {/* Class Selector */}
-        <div className="p-4 border-b border-white/5">
-          <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Active Class</div>
-          <button
-            onClick={() => setShowClassPicker(!showClassPicker)}
-            className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-3 py-3 text-left transition-colors"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-600'}`} />
-              <span className="font-bold text-sm truncate">{classData.title}</span>
+        {/* Class Info */}
+        <div className="p-5 border-b border-white/5">
+          <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">{classData.module_title || 'Active Class'}</div>
+          <div className="w-full flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 transition-colors">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className={`w-3 h-3 rounded-full shrink-0 ${isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-500'}`} />
+              <span className="font-bold text-base text-white truncate">{classData.title}</span>
             </div>
-            <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${showClassPicker ? 'rotate-180' : ''}`} />
-          </button>
-
-          {showClassPicker && (
-            <div className="mt-2 bg-[#1a1a28] border border-white/10 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
-              {classes.map(cls => (
-                <button
-                  key={cls.id}
-                  onClick={() => { setClassData(cls); setShowClassPicker(false); setSlide(1); setIsLive(false); }}
-                  className={`w-full text-left px-3 py-2.5 text-sm font-bold hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${cls.id === classData.id ? 'text-indigo-400' : 'text-slate-300'}`}
-                >
-                  {cls.id === classData.id && <span className="text-indigo-400 mr-2">▶</span>}
-                  {cls.title}
-                </button>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Live Viewer Count */}
@@ -312,35 +331,42 @@ export default function LiveStreamDashboard() {
           )}
 
           {hasAI && !isLive && (
-            <Button
-              onClick={handleStartClass}
-              className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white border-green-800 font-bold"
-            >
-              <Play className="w-4 h-4" /> Start Live Class (Jitsi)
-            </Button>
+            <div className="w-full flex flex-col gap-2">
+              <Button
+                onClick={handleStartClass}
+                disabled={!canStartClass}
+                className={`w-full flex items-center justify-center gap-2 font-bold ${
+                  canStartClass 
+                    ? 'bg-green-600 hover:bg-green-500 text-white border-green-800' 
+                    : 'bg-slate-700 text-slate-400 border-slate-600 cursor-not-allowed'
+                }`}
+              >
+                <Play className="w-4 h-4" /> Start Live Class (Jitsi)
+              </Button>
+              {!canStartClass && preparationMessage && (
+                <p className="text-[10px] text-center text-slate-400 leading-tight px-2">
+                  {preparationMessage}
+                </p>
+              )}
+            </div>
           )}
 
           {isLive && (
-            <>
-              <button
-                onClick={() => window.open(`https://meet.jit.si/CynexAI-Class-${classData.id}`, '_blank')}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl py-2.5 text-sm transition-colors"
-              >
-                <Video className="w-4 h-4" /> Rejoin Jitsi
-              </button>
-              <button
-                onClick={() => window.open('https://studio.youtube.com/channel/UC/livestreaming', '_blank')}
-                className="w-full flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 text-white font-bold rounded-xl py-2.5 text-sm transition-colors"
-              >
-                <Youtube className="w-4 h-4" /> Open YouTube Studio
-              </button>
+            <div className="flex flex-col gap-2">
+              <div className="bg-black border border-white/10 rounded-xl overflow-hidden h-48 w-full relative">
+                <iframe
+                  src={`https://meet.jit.si/CynexAIClass${classData.id.replace(/[^a-zA-Z0-9]/g, '')}#config.prejoinPageEnabled=false&interfaceConfig.DISABLE_DOMINANT_SPEAKER_INDICATOR=true`}
+                  allow="camera; microphone; fullscreen; display-capture"
+                  className="absolute inset-0 w-full h-full border-0"
+                />
+              </div>
               <button
                 onClick={() => setShowEndModal(true)}
                 className="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white font-bold rounded-xl py-2.5 text-sm transition-colors"
               >
                 <StopCircle className="w-4 h-4" /> End Class & Save
               </button>
-            </>
+            </div>
           )}
 
           {hasAI && !isLive && (
@@ -440,25 +466,56 @@ export default function LiveStreamDashboard() {
               </div>
             </div>
           ) : (
-            <div className="absolute inset-0 bg-[#0a0a0f]">
-              <textarea
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                className="absolute inset-0 w-full h-full bg-transparent text-green-400 font-mono p-6 text-sm resize-none outline-none z-0"
-                spellCheck={false}
-                placeholder="// Write code here — students see this in real-time"
-              />
-              <canvas
-                ref={canvasRef}
-                width={2560}
-                height={1440}
-                className="absolute inset-0 z-10 w-full h-full cursor-crosshair touch-none"
-                style={{ touchAction: 'none', cursor: drawTool === 'eraser' ? 'cell' : 'crosshair' }}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-              />
+            <div className="absolute inset-0 bg-[#0a0a0f] flex flex-col">
+              <div className="flex-1 relative border-b border-white/5 flex">
+                <textarea
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  className="flex-1 bg-transparent text-green-400 font-mono p-6 text-sm resize-none outline-none z-0"
+                  spellCheck={false}
+                  placeholder="// Write code here — students see this in real-time"
+                />
+                <canvas
+                  ref={canvasRef}
+                  width={2560}
+                  height={1440}
+                  className="absolute inset-0 z-10 w-full h-full cursor-crosshair touch-none"
+                  style={{ touchAction: 'none', cursor: drawTool === 'eraser' ? 'cell' : 'crosshair' }}
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseLeave={stopDrawing}
+                />
+              </div>
+              <div className="shrink-0 h-40 bg-[#0d0d14] relative z-20 flex flex-col border-t border-white/5">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#11111a]">
+                  <select
+                    value={language}
+                    onChange={e => setLanguage(e.target.value as Language)}
+                    className="bg-black/50 text-slate-300 text-xs font-bold px-3 py-1.5 rounded outline-none border border-white/10"
+                  >
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="java">Java</option>
+                    <option value="sqlite3">SQL</option>
+                  </select>
+                  <Button
+                    onClick={runCode}
+                    disabled={isExecuting}
+                    className="h-8 px-4 text-xs font-bold bg-green-600 hover:bg-green-500 text-white"
+                  >
+                    {isExecuting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Play className="w-3.5 h-3.5 mr-2" />}
+                    {isExecuting ? 'Running...' : 'Run Code'}
+                  </Button>
+                </div>
+                <div className="flex-1 p-4 font-mono text-xs overflow-y-auto">
+                  {output ? (
+                    <pre className="text-slate-300 whitespace-pre-wrap">{output}</pre>
+                  ) : (
+                    <span className="text-slate-600 italic">Terminal output will appear here...</span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -2,31 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { client, isTursoConfigured } from '../../lib/turso';
 import { updateLeadStatus, getLeadById } from '../../lib/api/crm';
-import { Lead } from '../../lib/types';
+import { Lead, LeadStatus } from '../../lib/types';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { ArrowLeft, Phone, Calendar, MessageCircle, RefreshCw } from 'lucide-react';
 import { AdmissionForm } from './forms/AdmissionForm';
 import { SaleForm } from './forms/SaleForm';
 import { SalesPitchModal } from './forms/SalesPitchModal';
+import { getCurrentUser } from '../../lib/auth';
 
-const STATUS_BUCKETS = [
-  'Not answering/Lifting',
-  'Busy',
-  'Invalid number',
-  'Interested',
-  'Not Interested',
+const STATUS_BUCKETS: LeadStatus[] = [
+  'New',
+  'Contacted',
   'Demo Scheduled',
   'Demo Completed',
-  'Admission Completed',
-  'Sale Partial Closed',
-  'Sale completed',
-  'Onboarding completed'
+  'Admission',
+  'Closed Won',
+  'Closed Lost'
 ];
 
 export default function LeadDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = getCurrentUser();
   const [lead, setLead] = useState<Lead | null>(null);
   const [showAdmission, setShowAdmission] = useState(false);
   const [showSale, setShowSale] = useState(false);
@@ -45,9 +43,14 @@ export default function LeadDetail() {
   }, [id]);
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newStatus = e.target.value;
+    const newStatus = e.target.value as LeadStatus;
     setIsUpdatingStatus(true);
-    await updateLeadStatus(id as string, newStatus);
+    
+    const result = await updateLeadStatus(id as string, newStatus, user?.id || 'unknown');
+    if (!result.success) {
+      alert(result.error || "Failed to update lead status");
+    }
+    
     await fetchLead();
     setIsUpdatingStatus(false);
   };
@@ -90,14 +93,14 @@ export default function LeadDetail() {
           <label className="block text-sm font-bold text-erp-text/70 mb-2">Current Status (Bucket)</label>
           <div className="flex items-center gap-2">
             <select 
-              value={lead.bucket_stage} 
+              value={lead.status} 
               onChange={handleStatusChange}
               disabled={isUpdatingStatus}
               className="w-full bg-erp-surface border-2 border-erp-border rounded-xl p-3 font-bold text-erp-text focus:outline-none focus:border-erp-primary"
             >
               {/* Legacy support if they are in Bucket A,B,C etc */}
-              {!STATUS_BUCKETS.includes(lead.bucket_stage) && (
-                 <option value={lead.bucket_stage}>Legacy: Bucket {lead.bucket_stage}</option>
+              {!STATUS_BUCKETS.includes(lead.status) && (
+                 <option value={lead.status}>Legacy: Bucket {lead.status}</option>
               )}
               {STATUS_BUCKETS.map(status => (
                 <option key={status} value={status}>{status}</option>

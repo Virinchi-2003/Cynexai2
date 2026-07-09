@@ -1,179 +1,248 @@
 import React, { useState } from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
-import { Calendar, Clock, AlertTriangle, Plus, X } from 'lucide-react';
+import { Calendar, Users, AlertTriangle, Plus, UserX, Clock, BookOpen } from 'lucide-react';
+import { getCurrentUser } from '../../../lib/auth';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TIME_SLOTS = ['09:00 AM', '11:00 AM', '02:00 PM', '04:00 PM', '06:00 PM'];
-
-interface Session {
+interface Batch {
   id: string;
-  day: string;
-  time: string;
+  name: string;
   module: string;
-  teacher: string;
-  room: string;
+  primary_teacher: string;
+  students_count: number;
+  schedule: string;
+  status: string;
+}
+
+interface LeaveRequest {
+  id: string;
+  teacher_name: string;
+  date: string;
+  reason: string;
+  status: 'Pending' | 'Approved' | 'Substitute Assigned';
+  batch_id: string;
 }
 
 export default function TimetableManager() {
-  const [sessions, setSessions] = useState<Session[]>([
-    { id: '1', day: 'Monday', time: '11:00 AM', module: 'HTML/CSS (M1)', teacher: 'Sarah Jenkins', room: 'Virtual A' },
-    { id: '2', day: 'Monday', time: '02:00 PM', module: 'Python Core (M1)', teacher: 'Dr. Alan Math', room: 'Virtual B' },
-    { id: '3', day: 'Wednesday', time: '09:00 AM', module: 'JavaScript (M2)', teacher: 'Sarah Jenkins', room: 'Virtual A' },
+  const currentUser = getCurrentUser();
+  const [activeTab, setActiveTab] = useState<'batches' | 'leaves'>('batches');
+  
+  const [batches, setBatches] = useState<Batch[]>([
+    { id: 'B1', name: 'July Full Stack', module: 'ReactJS', primary_teacher: 'Sandeep', students_count: 24, schedule: 'Mon, Wed, Fri (10:00 AM)', status: 'Active' },
+    { id: 'B2', name: 'Data Science Weekend', module: 'Python Basics', primary_teacher: 'Rahul', students_count: 15, schedule: 'Sat, Sun (09:00 AM)', status: 'Active' },
   ]);
 
-  const [conflicts, setConflicts] = useState<string[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newSession, setNewSession] = useState<Partial<Session>>({
-    day: 'Monday',
-    time: '09:00 AM',
-    module: '',
-    teacher: '',
-    room: ''
-  });
+  const [leaves, setLeaves] = useState<LeaveRequest[]>([
+    { id: 'L1', teacher_name: 'Rahul', date: '2026-07-15', reason: 'Sick Leave', status: 'Pending', batch_id: 'B2' }
+  ]);
 
-  const checkConflicts = (newSess: Partial<Session>) => {
-    const existing = sessions.find(s => 
-      s.day === newSess.day && 
-      s.time === newSess.time && 
-      (s.teacher === newSess.teacher || s.room === newSess.room)
-    );
-    if (existing) {
-      if (existing.teacher === newSess.teacher) return `Teacher ${newSess.teacher} is already booked at this time.`;
-      if (existing.room === newSess.room) return `Room ${newSess.room} is already booked at this time.`;
-    }
-    return null;
-  };
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null);
+  const [substituteTeacher, setSubstituteTeacher] = useState('');
 
-  const handleAddSession = () => {
-    if (!newSession.module || !newSession.teacher || !newSession.room) {
-      alert("Fill all fields");
-      return;
+  const handleAssignSubstitute = () => {
+    if (selectedLeave && substituteTeacher) {
+      setLeaves(leaves.map(l => l.id === selectedLeave.id ? { ...l, status: 'Substitute Assigned' } : l));
+      alert(`Substitute ${substituteTeacher} assigned to cover ${selectedLeave.teacher_name}'s classes.`);
+      setIsAssignModalOpen(false);
+      setSubstituteTeacher('');
     }
-    const conflict = checkConflicts(newSession);
-    if (conflict) {
-      setConflicts([...conflicts, conflict]);
-      return;
-    }
-    setSessions([...sessions, { ...newSession, id: Date.now().toString() } as Session]);
-    setIsModalOpen(false);
-    setNewSession({ day: 'Monday', time: '09:00 AM', module: '', teacher: '', room: '' });
-  };
-
-  const removeSession = (id: string) => {
-    setSessions(sessions.filter(s => s.id !== id));
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-erp-background relative">
+    <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text flex items-center gap-3">
-              <Calendar className="w-8 h-8 text-erp-primary" /> Timetable Engine
+              <Calendar className="w-8 h-8 text-erp-primary" /> Timetable & Batch Dashboard
             </h1>
-            <p className="text-erp-text/70 font-medium mt-1">Manage rolling batch schedules and detect conflicts</p>
+            <p className="text-erp-text/70 font-medium mt-1">Manage batches, modules, and handle teacher substitutes seamlessly.</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
-            <Plus className="w-5 h-5" /> Schedule Class
+          <Button className="flex items-center gap-2">
+            <Plus className="w-5 h-5" /> Create Batch
           </Button>
         </div>
 
-        {conflicts.length > 0 && (
-          <Card className="bg-red-500/10 border-red-500 mb-6">
-            <div className="flex items-center gap-2 text-red-500 font-bold mb-2">
-              <AlertTriangle className="w-5 h-5" /> Conflicts Detected
+        {/* Top Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-erp-surface border border-erp-border p-4 flex items-center gap-4">
+            <div className="p-3 bg-indigo-500/10 rounded-xl"><BookOpen className="w-6 h-6 text-indigo-500" /></div>
+            <div>
+              <p className="text-sm font-bold text-erp-text/50">Active Batches</p>
+              <h3 className="text-2xl font-bold text-erp-text">{batches.length}</h3>
             </div>
-            <ul className="list-disc pl-5 text-red-400 text-sm font-medium">
-              {conflicts.map((c, i) => (
-                <li key={i}>{c}</li>
-              ))}
-            </ul>
-            <Button variant="ghost" onClick={() => setConflicts([])} className="text-red-400 hover:bg-red-500/20 mt-2 px-3 py-1 h-auto text-xs">Clear Warnings</Button>
           </Card>
+          <Card className="bg-erp-surface border border-erp-border p-4 flex items-center gap-4">
+            <div className="p-3 bg-emerald-500/10 rounded-xl"><Users className="w-6 h-6 text-emerald-500" /></div>
+            <div>
+              <p className="text-sm font-bold text-erp-text/50">Total Students</p>
+              <h3 className="text-2xl font-bold text-erp-text">{batches.reduce((acc, b) => acc + b.students_count, 0)}</h3>
+            </div>
+          </Card>
+          <Card className="bg-erp-surface border border-erp-border p-4 flex items-center gap-4">
+            <div className="p-3 bg-amber-500/10 rounded-xl"><Clock className="w-6 h-6 text-amber-500" /></div>
+            <div>
+              <p className="text-sm font-bold text-erp-text/50">Classes Today</p>
+              <h3 className="text-2xl font-bold text-erp-text">4</h3>
+            </div>
+          </Card>
+          <Card className="bg-erp-surface border border-erp-border p-4 flex items-center gap-4">
+            <div className="p-3 bg-rose-500/10 rounded-xl"><UserX className="w-6 h-6 text-rose-500" /></div>
+            <div>
+              <p className="text-sm font-bold text-erp-text/50">Teachers on Leave</p>
+              <h3 className="text-2xl font-bold text-erp-text">{leaves.filter(l => l.status === 'Pending').length}</h3>
+            </div>
+          </Card>
+        </div>
+
+        <div className="flex gap-4 mb-6 border-b border-erp-border">
+          <button
+            className={`pb-2 px-1 font-bold ${activeTab === 'batches' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+            onClick={() => setActiveTab('batches')}
+          >
+            Active Batches
+          </button>
+          <button
+            className={`pb-2 px-1 font-bold ${activeTab === 'leaves' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+            onClick={() => setActiveTab('leaves')}
+          >
+            Leaves & Substitutes
+            {leaves.filter(l => l.status === 'Pending').length > 0 && (
+              <span className="ml-2 bg-rose-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">
+                {leaves.filter(l => l.status === 'Pending').length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {activeTab === 'batches' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {batches.map(batch => (
+              <Card key={batch.id} className="bg-erp-surface border border-erp-border p-5 hover:border-erp-primary transition-colors">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-lg font-bold text-erp-text font-display">{batch.name}</h3>
+                  <span className="px-2 py-1 bg-emerald-500/10 text-emerald-500 text-xs font-bold rounded-lg">{batch.status}</span>
+                </div>
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-erp-text/60 font-medium">Module:</span>
+                    <span className="text-erp-text font-bold">{batch.module}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-erp-text/60 font-medium">Teacher:</span>
+                    <span className="text-erp-text font-bold">{batch.primary_teacher}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-erp-text/60 font-medium">Schedule:</span>
+                    <span className="text-erp-text font-bold">{batch.schedule}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-erp-text/60 font-medium">Students:</span>
+                    <span className="text-erp-text font-bold">{batch.students_count}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" className="flex-1 text-xs">View Students</Button>
+                  <Button variant="secondary" className="flex-1 text-xs">Edit Schedule</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         )}
 
-        <div className="bg-erp-surface rounded-xl border border-erp-border overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead>
-              <tr className="border-b-2 border-erp-border bg-erp-background">
-                <th className="p-4 font-bold text-erp-text/70 w-32 border-r border-erp-border"><Clock className="w-5 h-5" /></th>
-                {DAYS.map(day => (
-                  <th key={day} className="p-4 font-bold text-erp-text text-center border-r border-erp-border last:border-0">{day}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {TIME_SLOTS.map(time => (
-                <tr key={time} className="border-b border-erp-border last:border-0">
-                  <td className="p-4 font-bold text-sm text-erp-text/70 border-r border-erp-border align-top">{time}</td>
-                  {DAYS.map(day => {
-                    const session = sessions.find(s => s.day === day && s.time === time);
-                    return (
-                      <td key={day} className="p-2 border-r border-erp-border last:border-0 min-h-[100px] align-top relative group">
-                        {session ? (
-                          <div className="bg-erp-primary/10 border border-erp-primary/30 p-2 rounded-lg relative">
-                            <button onClick={() => removeSession(session.id)} className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-erp-secondary hover:text-red-400 bg-erp-surface rounded-full p-0.5">
-                              <X className="w-3 h-3" />
-                            </button>
-                            <p className="font-bold text-xs text-erp-primary mb-1 leading-tight">{session.module}</p>
-                            <p className="text-[10px] text-erp-text/70 font-medium">{session.teacher}</p>
-                            <p className="text-[10px] text-erp-text/50">{session.room}</p>
-                          </div>
-                        ) : (
-                          <div className="h-full w-full min-h-[60px] border-2 border-dashed border-transparent group-hover:border-erp-border rounded-lg transition-colors cursor-pointer" onClick={() => { setNewSession({...newSession, day, time}); setIsModalOpen(true); }}></div>
-                        )}
-                      </td>
-                    );
-                  })}
+        {activeTab === 'leaves' && (
+          <div className="bg-erp-surface border border-erp-border rounded-xl overflow-hidden">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-erp-border bg-erp-background/50">
+                  <th className="p-4 font-bold text-sm text-erp-text/60">Teacher</th>
+                  <th className="p-4 font-bold text-sm text-erp-text/60">Date</th>
+                  <th className="p-4 font-bold text-sm text-erp-text/60">Reason</th>
+                  <th className="p-4 font-bold text-sm text-erp-text/60">Status</th>
+                  <th className="p-4 font-bold text-sm text-erp-text/60">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {leaves.map(leave => (
+                  <tr key={leave.id} className="border-b border-erp-border/50 hover:bg-erp-background/20 transition-colors">
+                    <td className="p-4 font-bold text-sm text-erp-text">{leave.teacher_name}</td>
+                    <td className="p-4 font-medium text-sm text-erp-text/80">{leave.date}</td>
+                    <td className="p-4 font-medium text-sm text-erp-text/80">{leave.reason}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 text-xs font-bold rounded-lg ${
+                        leave.status === 'Pending' ? 'bg-amber-500/10 text-amber-500' :
+                        leave.status === 'Substitute Assigned' ? 'bg-indigo-500/10 text-indigo-500' :
+                        'bg-emerald-500/10 text-emerald-500'
+                      }`}>
+                        {leave.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      {leave.status === 'Pending' && (
+                        <Button 
+                          variant="primary" 
+                          className="text-xs py-1.5"
+                          onClick={() => {
+                            setSelectedLeave(leave);
+                            setIsAssignModalOpen(true);
+                          }}
+                        >
+                          Assign Substitute
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+                {leaves.length === 0 && (
+                  <tr><td colSpan={5} className="p-8 text-center text-erp-text/50 font-bold">No leave requests found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {isModalOpen && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md bg-erp-surface">
-            <h2 className="text-xl font-bold font-display text-erp-text mb-4">Schedule Class</h2>
+      {/* Assign Substitute Modal */}
+      {isAssignModalOpen && selectedLeave && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-erp-border bg-slate-900/50">
+              <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-400" /> Assign Substitute
+              </h2>
+              <button onClick={() => setIsAssignModalOpen(false)} className="text-erp-text/50 hover:text-white transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
             
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-1">Day</label>
-                <select className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-erp-text" value={newSession.day} onChange={e => setNewSession({...newSession, day: e.target.value})}>
-                  {DAYS.map(d => <option key={d}>{d}</option>)}
-                </select>
-              </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-erp-text/70 mb-4">
+                <strong>{selectedLeave.teacher_name}</strong> is on leave on <strong>{selectedLeave.date}</strong>. Select a substitute teacher for their batches.
+              </p>
               
               <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-1">Time</label>
-                <select className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-erp-text" value={newSession.time} onChange={e => setNewSession({...newSession, time: e.target.value})}>
-                  {TIME_SLOTS.map(t => <option key={t}>{t}</option>)}
+                <label className="block text-sm font-bold text-erp-text/70 mb-2">Available Substitutes</label>
+                <select 
+                  value={substituteTeacher}
+                  onChange={e => setSubstituteTeacher(e.target.value)}
+                  className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">-- Select Substitute --</option>
+                  <option value="Sandeep (Manager)">Sandeep (Manager)</option>
+                  <option value="Amit (DM)">Amit (DM)</option>
+                  <option value="Sneha (Sales/HR)">Sneha (Sales/HR)</option>
+                  <option value="Vikram (Teacher)">Vikram (Teacher)</option>
                 </select>
+                <p className="text-xs text-erp-text/50 mt-2 font-medium">Managers, DMs, and Sales/HR can also be assigned as substitute teachers.</p>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-1">Module</label>
-                <input className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-erp-text" placeholder="e.g. React Basics (M3)" value={newSession.module} onChange={e => setNewSession({...newSession, module: e.target.value})} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-1">Teacher</label>
-                <input className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-erp-text" placeholder="Teacher Name" value={newSession.teacher} onChange={e => setNewSession({...newSession, teacher: e.target.value})} />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-1">Room</label>
-                <input className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-erp-text" placeholder="e.g. Virtual A, Room 101" value={newSession.room} onChange={e => setNewSession({...newSession, room: e.target.value})} />
+              <div className="pt-4 flex justify-end gap-3">
+                <Button variant="ghost" onClick={() => setIsAssignModalOpen(false)}>Cancel</Button>
+                <Button variant="primary" onClick={handleAssignSubstitute} disabled={!substituteTeacher}>Assign & Notify</Button>
               </div>
             </div>
-
-            <div className="flex gap-4">
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="flex-1">Cancel</Button>
-              <Button onClick={handleAddSession} className="flex-1">Save Class</Button>
-            </div>
-          </Card>
+          </div>
         </div>
       )}
     </div>

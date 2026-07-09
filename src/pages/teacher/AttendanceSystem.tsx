@@ -1,11 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { QrCode, Video, Users, CheckCircle, Copy } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getCurrentUser } from '../../lib/auth';
+import { getActiveLiveClass, logAttendance } from '../../lib/api/teacher';
+import { generateQRAttendance, QRCodeResult } from '../../lib/api/ux';
 
 export default function AttendanceSystem() {
   const navigate = useNavigate();
+  const user = getCurrentUser();
+  const [activeClass, setActiveClass] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [qrData, setQrData] = useState<QRCodeResult | null>(null);
+
+  useEffect(() => {
+    async function fetchClass() {
+      if (!user) return;
+      try {
+        setLoading(true);
+        const cls = await getActiveLiveClass(user.id);
+        
+        if (cls) {
+          setActiveClass(cls);
+          
+
+          const { getUsers } = await import('../../lib/api/users');
+          const allUsers = await getUsers();
+          setStudents(allUsers.filter((u: any) => u.role === 'Student'));
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchClass();
+  }, [user]);
+
+  const handleGenerateQR = async () => {
+    if (!activeClass) return;
+    try {
+      const data = await generateQRAttendance(activeClass.id);
+      setQrData(data);
+    } catch (e) {
+      console.error('Error generating QR', e);
+    }
+  };
+
+  const handleManualCheckIn = async (studentId: string) => {
+    if (!activeClass) return;
+    try {
+      await logAttendance(studentId, activeClass.id);
+      alert('Student marked as present!');
+    } catch(e) {
+      console.error(e);
+      alert('Failed to check in student.');
+    }
+  };
 
   return (
     <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
@@ -14,7 +67,17 @@ export default function AttendanceSystem() {
           <h1 className="text-3xl font-display font-bold text-erp-text flex items-center gap-3">
             <Users className="w-8 h-8 text-blue-500" /> Attendance System
           </h1>
-          <p className="text-erp-text/70 font-medium mt-1">Data Foundations A • Today, 10:00 AM</p>
+          {loading ? (
+            <p className="text-erp-text/70 font-medium mt-1 animate-pulse">Loading active class...</p>
+          ) : activeClass ? (
+            <p className="text-erp-text/70 font-medium mt-1">
+              {activeClass.module_title} • {activeClass.title}
+            </p>
+          ) : (
+            <p className="text-erp-text/70 font-medium mt-1 text-orange-500">
+              No active classes found for attendance.
+            </p>
+          )}
         </div>
         <Button onClick={() => navigate('/teacher')} variant="secondary">Back to Portal</Button>
       </div>
@@ -29,16 +92,24 @@ export default function AttendanceSystem() {
           <h2 className="text-2xl font-bold font-display text-erp-text mb-2">Offline Attendance</h2>
           <p className="text-erp-text/60 mb-8">Project this QR code on the screen for students in the classroom to scan.</p>
           
-          <div className="bg-white p-4 rounded-xl border-4 border-slate-200 mb-6 w-48 h-48 flex items-center justify-center">
-            {/* Fake QR Code using CSS grid */}
-            <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1">
-              {[...Array(25)].map((_, i) => (
-                <div key={i} className={`bg-black ${Math.random() > 0.5 ? 'opacity-100' : 'opacity-0'} rounded-sm`}></div>
-              ))}
-            </div>
+          <div className="bg-white p-4 rounded-xl border-4 border-slate-200 mb-6 w-48 h-48 flex items-center justify-center relative">
+            {qrData ? (
+              <div className="text-black text-center break-all font-mono text-xs">
+                QR: {qrData.qrCode}<br/><br/>
+                Expires: {new Date(qrData.expiresAt).toLocaleTimeString()}
+              </div>
+            ) : (
+              <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1">
+                {[...Array(25)].map((_, i) => (
+                  <div key={i} className={`bg-black ${Math.random() > 0.5 ? 'opacity-100' : 'opacity-0'} rounded-sm`}></div>
+                ))}
+              </div>
+            )}
           </div>
           
-          <Button className="w-full">Regenerate QR Code</Button>
+          <Button className="w-full" disabled={!activeClass} onClick={handleGenerateQR}>
+            {qrData ? 'Regenerate QR Code' : 'Generate QR Code'}
+          </Button>
         </Card>
 
         {/* Online Attendance (Meet Link) */}
@@ -51,9 +122,9 @@ export default function AttendanceSystem() {
           
           <div className="w-full flex items-center gap-2 bg-erp-background border border-erp-border p-3 rounded-lg mb-6 text-left">
             <div className="flex-1 font-mono text-sm text-erp-text/80 truncate">
-              meet.google.com/abc-defg-hij
+              {activeClass ? `meet.google.com/cnx-${activeClass.id.substring(0,6)}` : 'No active class link'}
             </div>
-            <Button variant="ghost" className="p-2 h-auto text-erp-secondary">
+            <Button variant="ghost" className="p-2 h-auto text-erp-secondary" disabled={!activeClass}>
               <Copy className="w-4 h-4" />
             </Button>
           </div>
@@ -69,6 +140,29 @@ export default function AttendanceSystem() {
           </div>
         </Card>
 
+      </div>
+
+      <div className="mt-8">
+        <Card className="bg-erp-surface border-erp-border p-6">
+          <h2 className="text-xl font-bold font-display text-erp-text mb-4">Enrolled Students</h2>
+          {students.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {students.map(student => (
+                <div key={student.id} className="bg-erp-background border border-erp-border p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-erp-text">{student.name}</h3>
+                    <p className="text-xs text-erp-text/60">{student.email}</p>
+                  </div>
+                  <Button size="sm" onClick={() => handleManualCheckIn(student.id)} disabled={!activeClass}>
+                    Check In
+                  </Button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-erp-text/60">No students enrolled yet.</p>
+          )}
+        </Card>
       </div>
     </div>
   );

@@ -76,6 +76,23 @@ app.get('/api/whatsapp/status', (req, res) => {
     return res.json({ status: 'initializing' });
 });
 
+app.post('/api/whatsapp/send', async (req, res) => {
+    if (!isWhatsAppReady) {
+        return res.status(400).json({ error: 'WhatsApp is not ready' });
+    }
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+         return res.status(400).json({ error: 'Phone and message are required' });
+    }
+    const formattedPhone = phone.replace(/\D/g, '') + '@c.us';
+    try {
+         await whatsapp.sendMessage(formattedPhone, message);
+         res.json({ success: true });
+    } catch(e) {
+         res.status(500).json({ error: e.message });
+    }
+});
+
 // Export Razorpay routes if needed later
 app.post('/create-order', (req, res) => {
     res.status(200).json({ status: 'mock', orderId: 'ord_mock123' });

@@ -1,72 +1,108 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { Video, BookOpen, Users, Calendar, Play, Clock, ChevronRight, Zap, CheckCircle, Loader2 } from 'lucide-react';
+import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { client } from '../../lib/turso';
+import { getCurrentUser } from '../../lib/auth';
+import { getTeacherTimetables, getTeacherFirstCourse, getCourseModulesMap, getCourseClassesMap } from '../../lib/api/teacher';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// Hardcoded timetable slots – can later be stored in DB
-const TIMETABLE: Record<number, { time: string; batch: string; color: string }[]> = {
-  1: [{ time: '10:00 AM', batch: 'Data Science Batch A', color: 'border-indigo-500' }, { time: '02:00 PM', batch: 'Aider AI Batch', color: 'border-purple-500' }],
-  2: [{ time: '11:00 AM', batch: 'Caveman Dev Batch', color: 'border-orange-500' }, { time: '03:00 PM', batch: 'Data Science Batch B', color: 'border-indigo-500' }],
-  3: [{ time: '10:00 AM', batch: 'Data Science Batch A', color: 'border-indigo-500' }],
-  4: [{ time: '09:00 AM', batch: 'Aider AI Batch', color: 'border-purple-500' }, { time: '02:00 PM', batch: 'Caveman Dev Batch', color: 'border-orange-500' }],
-  5: [{ time: '10:00 AM', batch: 'Data Science Batch A', color: 'border-indigo-500' }, { time: '12:00 PM', batch: 'Data Science Batch B', color: 'border-indigo-400' }],
-  6: [{ time: '11:00 AM', batch: 'All Batches Review', color: 'border-green-500' }],
-};
-
 export default function TeacherDashboard() {
   const navigate = useNavigate();
+  const user = getCurrentUser();
   const today = new Date().getDay();
 
-  const [nextClass, setNextClass] = useState<any>(null);
-  const [recentCompleted, setRecentCompleted] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activating, setActivating] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(today);
+  const [selectedDay, setSelectedDay] = useState(today === 0 || today === 6 ? 1 : today); // default to Mon if weekend
+  const [selectedBatchId, setSelectedBatchId] = useState<string | 'all'>('all');
+  const [realBatches, setRealBatches] = useState<any[]>([]);
 
-  useEffect(() => {
-    fetchUpcoming();
-  }, []);
+  const [rawTimetable, setRawTimetable] = useState<any[]>([]);
 
-  const fetchUpcoming = async () => {
-    if (!client) { setLoading(false); return; }
-    try {
-      // Next class to teach
-      const res = await client.execute('SELECT * FROM classes WHERE status != "completed" ORDER BY order_index ASC LIMIT 1');
-      if (res.rows.length > 0) setNextClass(res.rows[0]);
+  React.useEffect(() => {
+    const fetchTimetableAndProgress = async () => {
+      import('../../lib/turso').then(async ({ client, isTursoConfigured }) => {
+        if (!isTursoConfigured || !client) return;
+        
+        try {
+          // Fetch timetable by user ID (teacher_id stores the user's id)
+          let matchedRows = await getTeacherTimetables(user?.id || '');
 
-      // Last 3 completed
-      const done = await client.execute('SELECT * FROM classes WHERE status = "completed" ORDER BY order_index DESC LIMIT 3');
-      setRecentCompleted(done.rows as any[]);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
+          // If none found by ID, fall back to all timetables
+          if (matchedRows.length === 0) {
+            matchedRows = await getTeacherTimetables('');
+          }
 
-  const handleGoLive = async () => {
-    if (!nextClass || !client) return;
-    setActivating(true);
-    try {
-      // Mark the class as "live" type so teacher can test Jitsi
-      await client.execute({
-        sql: 'UPDATE classes SET type = "live" WHERE id = ?',
-        args: [nextClass.id]
+          const dayMap: Record<string, number> = { 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7 };
+          
+          const formattedTimetable = matchedRows.map((r: any) => ({
+            id: r.id,
+            batchId: r.batch_id,
+            batchName: r.batch_id,
+            course: r.course_name || r.batch_id,
+            time: r.timing || `${r.start_time} - ${r.end_time}`,
+            day: dayMap[r.day_of_week as string] || 1
+          }));
+          
+          setRawTimetable(formattedTimetable.length > 0 ? formattedTimetable : []);
+
+          // Fetch course + modules/progress independently (don't bail if course null)
+          const course = await getTeacherFirstCourse(user?.id || '');
+          if (!course) {
+            // Still show batches from timetable even without a course
+            const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
+            setRealBatches(uniqueBatches.map((bId: string) => ({
+              id: bId,
+              name: bId,
+              course: formattedTimetable.find((t: any) => t.batchId === bId)?.course || 'Data Science with AI',
+              progress: { modules: [] }
+            })));
+            return;
+          }
+
+          const mRows = await getCourseModulesMap(course.id as string);
+          const cRows = await getCourseClassesMap(course.id as string);
+
+          const dynamicModules = mRows.map((m: any) => {
+            const mClasses = cRows.filter((c: any) => c.module_id === m.id);
+            const completed = mClasses.filter((c: any) => c.status === 'completed').length;
+            return {
+              title: m.title,
+              total: mClasses.length,
+              completed: completed
+            };
+          });
+
+          // Build batch list from timetable slots
+          const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
+          setRealBatches(uniqueBatches.map((bId: string) => ({
+            id: bId,
+            name: bId,
+            course: course.title,
+            progress: { modules: dynamicModules }
+          })));
+        } catch(e) {
+          console.error(e);
+        }
       });
-      navigate('/teacher/live');
-    } catch (e) {
-      console.error(e);
-      setActivating(false);
-    }
-  };
+    };
+    fetchTimetableAndProgress();
+  }, [user]);
 
-  const todaySlots = TIMETABLE[today] || [];
-  const selectedSlots = TIMETABLE[selectedDay] || [];
+  // Group timetable by day (1=Mon ... 5=Fri)
+  const schedule: Record<number, any[]> = {};
+  for (let d = 1; d <= 5; d++) {
+    schedule[d] = rawTimetable.filter((t: any) => t.day === d && (selectedBatchId === 'all' || t.batchId === selectedBatchId));
+  }
+
+  // Find next class for today
+  const todaySlots = schedule[selectedDay] || [];
+  const nextClass = todaySlots.length > 0 ? todaySlots[0] : null;
+
+  const displayBatches = selectedBatchId === 'all' 
+    ? (realBatches.length > 0 ? realBatches : []) 
+    : (realBatches.length > 0 ? realBatches : []).filter((b: any) => b.id === selectedBatchId);
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
@@ -84,7 +120,7 @@ export default function TeacherDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-erp-primary/5 transition-colors border-erp-primary" onClick={() => navigate('/teacher/live')}>
             <Video className="w-8 h-8 text-erp-primary mb-2" />
-            <span className="font-bold text-erp-text text-sm text-center">Start Live Class</span>
+            <span className="font-bold text-erp-text text-sm text-center">Teacher Studio</span>
           </Card>
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-purple-500/5 transition-colors" onClick={() => navigate('/teacher/cms')}>
             <BookOpen className="w-8 h-8 text-purple-400 mb-2" />
@@ -94,142 +130,216 @@ export default function TeacherDashboard() {
             <Users className="w-8 h-8 text-green-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Attendance</span>
           </Card>
-          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-blue-500/5 transition-colors">
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-blue-500/5 transition-colors" onClick={() => navigate('/teacher/timetable')}>
             <Calendar className="w-8 h-8 text-blue-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">My Schedule</span>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Upcoming Class Card */}
-          <div className="md:col-span-2 space-y-6">
-            <Card className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 border-indigo-800/50 p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="w-5 h-5 text-yellow-400" />
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Upcoming Class Banner */}
+            <Card className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 border-indigo-800/50 p-6 shadow-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
+              
+              <div className="flex items-center gap-2 mb-4 relative z-10">
+                <Zap className="w-5 h-5 text-yellow-400 animate-pulse" />
                 <h2 className="font-bold text-white text-lg">Next Upcoming Class</h2>
               </div>
 
-              {loading ? (
-                <div className="flex items-center gap-3 text-slate-400">
-                  <Loader2 className="w-5 h-5 animate-spin" /> Loading...
-                </div>
-              ) : nextClass ? (
-                <>
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
-                    <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-1">Class Title</p>
-                    <h3 className="text-xl font-bold text-white mb-1">{nextClass.title}</h3>
-                    <p className="text-sm text-slate-400 line-clamp-2">{nextClass.description}</p>
-                    <div className="flex gap-4 mt-3">
-                      <span className="text-xs bg-indigo-900/60 text-indigo-300 border border-indigo-700/40 px-3 py-1 rounded-full font-bold uppercase tracking-wide">
-                        {nextClass.type === 'live' ? '🔴 Live Session' : '🎬 Video Lesson'}
-                      </span>
-                      <span className="text-xs bg-slate-800 text-slate-300 border border-slate-700 px-3 py-1 rounded-full font-bold uppercase tracking-wide">
-                        {nextClass.status}
-                      </span>
+              {nextClass ? (
+                <div className="relative z-10">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest">{nextClass.batchName}</p>
+                      <span className="text-xs font-bold text-white bg-indigo-600 px-3 py-1 rounded-full">{nextClass.time}</span>
                     </div>
+                    <h3 className="text-2xl font-display font-bold text-white mb-2">{nextClass.course}</h3>
                   </div>
-                  <div className="flex gap-3">
+                  
+                  <div className="flex flex-col sm:flex-row gap-3">
                     <Button
-                      onClick={handleGoLive}
-                      disabled={activating}
-                      className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white border-green-700 font-bold"
+                      onClick={() => navigate(`/teacher/live?classId=${nextClass.batchId}`)}
+                      className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white border-green-700 font-bold py-4 text-base"
                     >
-                      {activating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                      {activating ? 'Launching...' : 'Go Live Now'}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={() => navigate('/teacher/live')}
-                      className="flex items-center gap-2"
-                    >
-                      Open Dashboard <ChevronRight className="w-4 h-4" />
+                      <Video className="w-5 h-5" /> Launch Teacher Studio
                     </Button>
                   </div>
-                </>
+                </div>
               ) : (
-                <div className="text-slate-400 text-center py-6">
-                  All classes completed! 🎉
+                <div className="text-slate-400 py-4 relative z-10">
+                  No upcoming classes scheduled today. You're all caught up!
                 </div>
               )}
             </Card>
 
-            {/* Recently Completed */}
+            {/* My Modules Progress */}
             <Card>
-              <h2 className="text-lg font-bold text-erp-text mb-4 flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" /> Recently Completed
-              </h2>
-              {recentCompleted.length === 0 ? (
-                <p className="text-erp-text/50 text-sm">No completed classes yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {recentCompleted.map(cls => (
-                    <div key={cls.id} className="flex items-center justify-between bg-erp-surface border border-erp-border rounded-xl px-4 py-3">
-                      <div>
-                        <p className="font-bold text-erp-text text-sm">{cls.title}</p>
-                        <p className="text-xs text-erp-text/50 mt-0.5">Recording saved · AI Summary generated</p>
-                      </div>
-                      <span className="text-[10px] font-bold uppercase bg-green-900/30 text-green-400 border border-green-700/30 px-2 py-1 rounded">Done</span>
-                    </div>
-                  ))}
+              <div className="p-4 border-b-2 border-erp-border flex items-center justify-between">
+                <h2 className="font-bold text-erp-text flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-erp-primary" /> 
+                  My Batches
+                </h2>
+                
+                {/* BATCH FILTER */}
+                <div className="flex items-center gap-2 bg-erp-background border border-erp-border rounded-lg p-1">
+                  <Filter className="w-4 h-4 text-erp-text/50 ml-2" />
+                  <select 
+                    className="bg-transparent text-sm font-bold text-erp-text border-none outline-none cursor-pointer pr-2"
+                    value={selectedBatchId}
+                    onChange={(e) => setSelectedBatchId(e.target.value)}
+                  >
+                    <option value="all">All Batches</option>
+                    {realBatches.map((b: any) => (
+                      <option key={b.id} value={b.id}>{b.name} - {b.course}</option>
+                    ))}
+                  </select>
                 </div>
-              )}
+              </div>
+              <div className="p-4 space-y-4">
+                {displayBatches.length === 0 && (
+                  <div className="text-center p-8 text-erp-text/50">
+                    <AlertCircle className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                    <p>No batches assigned to you yet.</p>
+                  </div>
+                )}
+                {displayBatches.map((b: any) => {
+                  return (
+                    <div key={b.id} className="bg-erp-background border border-erp-border rounded-xl p-4 transition-all hover:border-indigo-500/30">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3 className="font-bold text-erp-text text-lg">{b.name}</h3>
+                          <p className="text-xs font-bold text-indigo-600 mt-0.5">{b.course}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4 space-y-4">
+                        {b.progress.modules.map((mod: any, idx: number) => {
+                          const percent = mod.total > 0 ? Math.round((mod.completed / mod.total) * 100) : 0;
+                          return (
+                            <div key={idx}>
+                              <div className="flex justify-between text-xs font-bold text-erp-text/60 mb-1.5">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                                  {mod.title} Module
+                                </span>
+                                <span>{percent}% ({mod.completed} / {mod.total} Classes)</span>
+                              </div>
+                              <div className="h-2 w-full bg-erp-border rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-indigo-500 rounded-full transition-all duration-1000 ease-out" 
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           </div>
 
-          {/* Timetable */}
-          <div>
-            <Card className="h-full">
-              <h2 className="text-lg font-bold text-erp-text mb-4 flex items-center gap-2">
-                <Clock className="w-5 h-5 text-blue-400" /> Weekly Timetable
-              </h2>
-
-              {/* Day Selector */}
-              <div className="flex gap-1 mb-5 bg-erp-surface rounded-xl p-1">
-                {DAYS.map((d, i) => (
-                  <button
-                    key={d}
-                    onClick={() => setSelectedDay(i)}
-                    className={`flex-1 text-xs font-bold py-1.5 rounded-lg transition-all ${
-                      selectedDay === i
-                        ? 'bg-indigo-600 text-white shadow'
-                        : i === today
-                        ? 'text-indigo-400 bg-indigo-900/20'
-                        : 'text-erp-text/50 hover:text-erp-text'
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
+          {/* Right Column: Weekly Schedule */}
+          <div className="lg:col-span-1" id="weekly-timetable">
+            <Card className="sticky top-6 h-[calc(100vh-8rem)] overflow-hidden flex flex-col">
+              <div className="p-4 border-b-2 border-erp-border">
+                <h2 className="font-bold text-erp-text flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-500" />
+                  Weekly Timetable
+                </h2>
+              </div>
+              
+              <div className="flex p-2 border-b border-erp-border overflow-x-auto no-scrollbar">
+                {DAYS.map((day, idx) => {
+                  if (idx === 0 || idx === 6) return null; // Hide Sat/Sun since classes are Mon-Fri
+                  return (
+                    <button
+                      key={day}
+                      onClick={() => setSelectedDay(idx)}
+                      className={`flex-1 min-w-[3rem] py-2 flex flex-col items-center justify-center rounded-lg transition-colors ${selectedDay === idx ? 'bg-indigo-600 text-white shadow-md' : 'text-erp-text/60 hover:bg-erp-primary/5'}`}
+                    >
+                      <span className="text-[10px] uppercase font-bold tracking-wider">{day}</span>
+                    </button>
+                  );
+                })}
               </div>
 
-              {/* Slots */}
-              <div className="space-y-3">
-                {selectedSlots.length === 0 ? (
-                  <div className="text-center py-8 text-erp-text/40 text-sm">
-                    No classes scheduled {FULL_DAYS[selectedDay]}.
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {(!schedule[selectedDay] || schedule[selectedDay].length === 0) ? (
+                  <div className="h-full flex flex-col items-center justify-center text-erp-text/40 py-8">
+                    <Calendar className="w-12 h-12 mb-3 opacity-20" />
+                    <p className="font-medium text-sm">No classes scheduled</p>
                   </div>
                 ) : (
-                  selectedSlots.map((slot, i) => (
-                    <div key={i} className={`border-l-4 ${slot.color} bg-erp-surface rounded-r-xl px-4 py-3`}>
-                      <p className="font-bold text-erp-text text-sm">{slot.batch}</p>
-                      <p className="text-xs text-erp-text/60 mt-0.5 font-bold flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {slot.time}
-                        {selectedDay === today && <span className="ml-2 text-green-400">Today</span>}
-                      </p>
-                    </div>
-                  ))
+                  (schedule[selectedDay] || []).map((slot: any, i: number) => {
+                    const [startStr] = slot.time.toLowerCase().split('-');
+                    let hr = parseInt(startStr.replace(/[a-z]/g, '').split(':')[0]);
+                    const isPm = slot.time.toLowerCase().includes('pm');
+                    if (startStr.includes('am')) {} 
+                    else if (isPm && hr < 12) hr += 12;
+                    else if (hr === 12 && !isPm && !slot.time.toLowerCase().includes('pm')) hr = 0; // rough am/pm
+                    
+                    let status = 'Upcoming';
+                    let statusColor = 'text-orange-600 bg-orange-500/10';
+                    let canStart = false;
+
+                    const now = new Date();
+                    let currentDay = now.getDay(); // 0=Sun
+                    if (currentDay === 0) currentDay = 7; // Treat Sunday as end of week 7
+                    // For logic: Mon=1..Fri=5, Sat=6, Sun=7
+                    
+                    const slotDay = slot.day; // 1=Mon .. 5=Fri
+                    
+                    if (slotDay < currentDay) {
+                      status = 'Completed';
+                      statusColor = 'text-slate-500 bg-slate-500/10';
+                    } else if (slotDay === currentDay) {
+                      const currentHour = now.getHours() + now.getMinutes() / 60;
+                      if (hr < currentHour - 1) { // ended 1hr after start
+                        status = 'Completed';
+                        statusColor = 'text-slate-500 bg-slate-500/10';
+                      } else if (hr <= currentHour + 1) { // within 1 hour
+                        status = 'Live Now';
+                        statusColor = 'text-green-600 bg-green-500/10 animate-pulse';
+                        canStart = true;
+                      } else {
+                        status = 'Today';
+                        statusColor = 'text-blue-600 bg-blue-500/10';
+                        canStart = true;
+                      }
+                    } else {
+                      canStart = true;
+                    }
+
+                    return (
+                      <div key={i} className={`border-l-4 ${status === 'Live Now' ? 'border-green-500' : status === 'Completed' ? 'border-slate-300 opacity-60' : 'border-indigo-500'} bg-erp-background border border-erp-border border-l-4 rounded-xl p-4 hover:shadow-md transition-shadow`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs font-bold text-erp-text/50">{slot.time}</span>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusColor}`}>{status}</span>
+                        </div>
+                        <h3 className="font-bold text-erp-text mb-1">{slot.course}</h3>
+                        <p className="text-xs font-medium text-indigo-600">{slot.batchName}</p>
+                        
+                        {canStart && (
+                          <Button 
+                            onClick={() => navigate(`/teacher/live?classId=${slot.batchId}`)}
+                            variant={status === 'Live Now' ? 'primary' : 'secondary'}
+                            className={`w-full mt-4 py-2 text-xs flex items-center justify-center gap-1.5 ${status === 'Live Now' ? 'bg-green-600 hover:bg-green-500 border-green-700 text-white' : ''}`}
+                          >
+                            <Play className="w-3 h-3" /> Start Class
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })
                 )}
               </div>
-
-              {selectedDay === today && todaySlots.length > 0 && (
-                <Button
-                  onClick={() => navigate('/teacher/live')}
-                  className="w-full mt-5 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white border-none"
-                >
-                  <Video className="w-4 h-4" /> Open Live Dashboard
-                </Button>
-              )}
             </Card>
           </div>
         </div>

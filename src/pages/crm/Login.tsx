@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { login } from '../../lib/auth';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
-const QUICK_LOGINS = [
-  { label: 'Teacher', emoji: '👨‍🏫', email: 'teacher@cynexai.com', password: 'admin123', color: 'from-indigo-600 to-indigo-800', route: '/teacher' },
-  { label: 'Student', emoji: '📚', email: 'student@cynexai.com', password: 'admin123', color: 'from-green-600 to-green-800', route: '/student' },
-  { label: 'Manager', emoji: '🏢', email: 'manager@cynexai.com', password: 'admin123', color: 'from-purple-600 to-purple-800', route: '/manager' },
-  { label: 'CEO', emoji: '👑', email: 'ceo@cynexai.com', password: 'admin123', color: 'from-yellow-600 to-orange-700', route: '/ceo/dashboard' },
-  { label: 'Sales', emoji: '💼', email: 'sandeep.cynexai@gmail.com', password: 'Sandeep@142', color: 'from-sky-600 to-sky-800', route: '/sales/dashboard' },
-  { label: 'Marketer', emoji: '📣', email: 'dm@cynexai.com', password: 'admin123', color: 'from-pink-600 to-pink-800', route: '/dm/dashboard' },
-];
+
 
 export default function CrmLogin() {
   const [email, setEmail] = useState('');
@@ -44,19 +37,7 @@ export default function CrmLogin() {
     }
   };
 
-  const handleQuickLogin = async (cred: typeof QUICK_LOGINS[0]) => {
-    setLoading(true);
-    setError('');
-    try {
-      const user = await login(cred.email, cred.password);
-      if (user) navigate(cred.route);
-      else setError('Quick login failed. Try manual login.');
-    } catch {
-      setError('Login failed. Check your connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#0a0a14] p-4 gap-6">
@@ -112,24 +93,7 @@ export default function CrmLogin() {
         </form>
       </div>
 
-      {/* Quick login grid */}
-      <div className="w-full max-w-sm">
-        <p className="text-slate-600 text-xs font-bold uppercase tracking-widest text-center mb-3">Quick Demo Login</p>
-        <div className="grid grid-cols-3 gap-2">
-          {QUICK_LOGINS.map(cred => (
-            <button
-              key={cred.label}
-              onClick={() => handleQuickLogin(cred)}
-              disabled={loading}
-              className={`bg-gradient-to-br ${cred.color} hover:opacity-90 rounded-xl p-3 text-center font-bold text-white transition-all active:scale-95 disabled:opacity-50 shadow-lg`}
-            >
-              <div className="text-2xl mb-1">{cred.emoji}</div>
-              <div className="text-xs">{cred.label}</div>
-            </button>
-          ))}
-        </div>
-        <p className="text-center text-slate-700 text-xs mt-3">Password for all demo accounts: <code className="text-slate-500">admin123</code></p>
-      </div>
+
     </div>
   );
 }

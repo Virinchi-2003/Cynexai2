@@ -32,11 +32,24 @@ export default {
           800: '#523112',
           900: '#291907'
         },
-        background: {
-          DEFAULT: 'rgb(var(--color-background) / <alpha-value>)',
-          100: 'rgb(var(--color-bg-100) / <alpha-value>)'
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        surface: 'rgb(var(--surface) / <alpha-value>)',
+        'surface-foreground': 'rgb(var(--surface-foreground) / <alpha-value>)',
+        secondary: {
+          DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--secondary-foreground) / <alpha-value>)',
         },
-        secondary: 'rgb(var(--color-text) / <alpha-value>)',
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
+        },
+        muted: {
+          DEFAULT: 'rgb(var(--muted) / <alpha-value>)',
+          foreground: 'rgb(var(--muted-foreground) / <alpha-value>)',
+        },
+        border: 'rgb(var(--border) / <alpha-value>)',
+        ring: 'rgb(var(--ring) / <alpha-value>)',
       },
       boxShadow: {
         'erp-btn': '0 4px 0 0 rgba(0, 0, 0, 0.1)',

@@ -1,11 +1,188 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
-import { BarChart3, TrendingUp, MousePointerClick, Calendar } from 'lucide-react';
+import { BarChart3, TrendingUp, MousePointerClick, Calendar, Key, AlertCircle, CheckCircle, Upload, Layout, FileText, Search, Sparkles, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getMarketingMetrics, getMarketingCampaigns } from '../../../lib/api/marketing';
+import { getBlogPosts, getScrapedJobs, getAISuggestions, getSEOKeywords, triggerJobScraper } from '../../../lib/api/dm';
+
+type Tab = 'dashboard' | 'blog' | 'jobs' | 'ai' | 'seo';
 
 export default function DMDashboard() {
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  
+  // existing state
+  const [metrics, setMetrics] = useState<any[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [hasApiKey, setHasApiKey] = useState(true); // default true for demo
+  const [loading, setLoading] = useState(true);
+  const [showConfig, setShowConfig] = useState(false);
+  const [metaKey, setMetaKey] = useState('');
+  const [googleKey, setGoogleKey] = useState('');
+
+  // new features state
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+  const [jobs, setJobs] = useState<any[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [keywords, setKeywords] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      if (activeTab === 'dashboard') {
+        setMetrics(await getMarketingMetrics() || []);
+        setCampaigns(await getMarketingCampaigns() || []);
+      } else if (activeTab === 'blog') {
+        setBlogPosts(await getBlogPosts());
+      } else if (activeTab === 'jobs') {
+        setJobs(await getScrapedJobs());
+      } else if (activeTab === 'ai') {
+        setSuggestions(await getAISuggestions('Digital Marketing'));
+      } else if (activeTab === 'seo') {
+        setKeywords(await getSEOKeywords());
+      }
+    } catch (e) {
+      console.error('Error fetching data', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMetric = (platform: string) => metrics.find(m => m.platform === platform);
+
+  const renderTabs = () => (
+    <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <Button variant={activeTab === 'dashboard' ? 'primary' : 'ghost'} onClick={() => setActiveTab('dashboard')} className="flex items-center gap-2">
+        <Layout className="w-4 h-4" /> Dashboard
+      </Button>
+      <Button variant={activeTab === 'blog' ? 'primary' : 'ghost'} onClick={() => setActiveTab('blog')} className="flex items-center gap-2">
+        <FileText className="w-4 h-4" /> Blog Manager
+      </Button>
+      <Button variant={activeTab === 'jobs' ? 'primary' : 'ghost'} onClick={() => setActiveTab('jobs')} className="flex items-center gap-2">
+        <Briefcase className="w-4 h-4" /> Job Scraper
+      </Button>
+      <Button variant={activeTab === 'ai' ? 'primary' : 'ghost'} onClick={() => setActiveTab('ai')} className="flex items-center gap-2">
+        <Sparkles className="w-4 h-4" /> AI Content
+      </Button>
+      <Button variant={activeTab === 'seo' ? 'primary' : 'ghost'} onClick={() => setActiveTab('seo')} className="flex items-center gap-2">
+        <Search className="w-4 h-4" /> SEO Settings
+      </Button>
+    </div>
+  );
+
+  const renderBlog = () => (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold font-display text-erp-text">Blog Posts</h2>
+        <Button>+ New Post</Button>
+      </div>
+      <div className="grid gap-4">
+        {blogPosts.length === 0 ? <p className="text-erp-text/50">No blog posts yet.</p> : blogPosts.map(post => (
+          <Card key={post.id} className="flex justify-between items-center">
+            <div>
+              <h3 className="font-bold text-lg text-erp-text">{post.title}</h3>
+              <p className="text-sm text-erp-text/50">{post.content}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" className="px-3 py-1">Edit</Button>
+              <Button variant="danger" className="px-3 py-1">Delete</Button>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderJobs = () => (
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold font-display text-erp-text">Scraped Jobs</h2>
+        <Button onClick={async () => { await triggerJobScraper('linkedin'); fetchData(); }}>Trigger Scraper</Button>
+      </div>
+      <div className="grid gap-4">
+        {jobs.map(job => (
+          <Card key={job.id}>
+            <h3 className="font-bold text-lg text-erp-text">{job.title}</h3>
+            <p className="text-sm text-erp-text/50">{job.company}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderAI = () => (
+    <div>
+      <h2 className="text-xl font-bold font-display text-erp-text mb-4">AI Content Suggestions</h2>
+      <div className="grid gap-4">
+        {suggestions.map((s, i) => (
+          <Card key={i} className="border-l-4 border-indigo-500">
+            <h3 className="font-bold text-lg text-erp-text">{s.title}</h3>
+            <p className="text-sm text-erp-text/50">{s.description}</p>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderSEO = () => (
+    <div>
+      <h2 className="text-xl font-bold font-display text-erp-text mb-4">SEO Keywords</h2>
+      <div className="flex flex-wrap gap-2">
+        {keywords.map((kw, i) => (
+          <div key={i} className="px-4 py-2 bg-erp-surface rounded-full text-sm font-bold border border-erp-border">
+            {kw}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderDashboard = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card className="flex flex-col border-l-4 border-blue-500">
+          <h3 className="text-sm font-bold text-erp-text/50 uppercase">Meta Ads Spend</h3>
+          <div className="flex items-end gap-2 mt-2">
+            <span className="text-3xl font-display font-bold text-erp-text">₹{getMetric('Meta')?.spend?.toLocaleString() || 0}</span>
+          </div>
+        </Card>
+        <Card className="flex flex-col border-l-4 border-red-500">
+          <h3 className="text-sm font-bold text-erp-text/50 uppercase">Google Ads Spend</h3>
+          <div className="flex items-end gap-2 mt-2">
+            <span className="text-3xl font-display font-bold text-erp-text">₹{getMetric('Google')?.spend?.toLocaleString() || 0}</span>
+          </div>
+        </Card>
+        <Card className="flex flex-col border-l-4 border-erp-primary">
+          <h3 className="text-sm font-bold text-erp-text/50 uppercase">Website Traffic</h3>
+          <div className="flex items-end gap-2 mt-2">
+            <span className="text-3xl font-display font-bold text-erp-text">{getMetric('Website')?.traffic?.toLocaleString() || 0}</span>
+          </div>
+        </Card>
+      </div>
+
+      <h2 className="text-xl font-bold font-display text-erp-text mb-4">Active Campaigns</h2>
+      <div className="grid grid-cols-1 gap-4">
+        {campaigns.map((camp: any) => (
+          <Card key={camp.id} className="flex items-center justify-between hover:border-indigo-500 transition-colors cursor-pointer">
+            <div className="flex items-center gap-4">
+              <div className={`p-4 rounded-xl ${camp.platform === 'Meta' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-red-600'}`}>
+                {camp.platform === 'Meta' ? <BarChart3 className="w-6 h-6" /> : <MousePointerClick className="w-6 h-6" />}
+              </div>
+              <div>
+                <h3 className="font-bold text-lg text-erp-text">{camp.name}</h3>
+                <p className="text-sm font-bold text-erp-text/50">Daily Budget: ₹{camp.budget} • Total Spent: ₹{camp.spent}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    </>
+  );
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
@@ -13,120 +190,23 @@ export default function DMDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text">Marketing Hub</h1>
-            <p className="text-erp-text/70 font-medium mt-1">Meta, Google, and Social Media Performance</p>
+            <p className="text-erp-text/70 font-medium mt-1">Manage Ads, Content, and SEO</p>
           </div>
-          <Button className="flex items-center gap-2" onClick={() => navigate('/dm/planner')}>
-            <Calendar className="w-5 h-5" /> Content Planner
-          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="flex flex-col border-l-4 border-blue-500">
-            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Meta Ads Spend</h3>
-            <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">₹45,200</span>
-              <span className="text-sm font-bold text-green-500 mb-1 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1" /> 12%
-              </span>
-            </div>
-            <p className="text-xs font-bold text-erp-text/50 mt-2">320 Leads Generated (Cost: ₹141/lead)</p>
-          </Card>
-          
-          <Card className="flex flex-col border-l-4 border-red-500">
-            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Google Ads Spend</h3>
-            <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">₹28,500</span>
-              <span className="text-sm font-bold text-green-500 mb-1 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1" /> 8%
-              </span>
-            </div>
-            <p className="text-xs font-bold text-erp-text/50 mt-2">145 Leads Generated (Cost: ₹196/lead)</p>
-          </Card>
-          
-          <Card className="flex flex-col border-l-4 border-erp-primary">
-            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Website Traffic</h3>
-            <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">12,450</span>
-              <span className="text-sm font-bold text-green-500 mb-1 flex items-center">
-                <TrendingUp className="w-4 h-4 mr-1" /> 24%
-              </span>
-            </div>
-            <p className="text-xs font-bold text-erp-text/50 mt-2">Avg. Session: 2m 45s</p>
-          </Card>
-        </div>
+        {renderTabs()}
 
-        <h2 className="text-xl font-bold font-display text-erp-text mb-4">Active Campaigns</h2>
-        <div className="grid grid-cols-1 gap-4">
-          <Card className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-100 p-4 rounded-xl text-blue-600">
-                <BarChart3 className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-erp-text">July Batch - Full Stack (Facebook)</h3>
-                <p className="text-sm font-bold text-erp-text/50">Running since July 1st • Budget: ₹1000/day</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="block font-bold text-erp-text">120 Leads</span>
-              <span className="text-xs font-bold text-green-500">Active</span>
-            </div>
-          </Card>
-          
-          <Card className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="bg-red-100 p-4 rounded-xl text-red-600">
-                <MousePointerClick className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-erp-text">Search - Data Science Keywords (Google)</h3>
-                <p className="text-sm font-bold text-erp-text/50">Running since June 15th • Budget: ₹800/day</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="block font-bold text-erp-text">85 Leads</span>
-              <span className="text-xs font-bold text-green-500">Active</span>
-            </div>
-          </Card>
-        </div>
-
-        <h2 className="text-xl font-bold font-display text-erp-text mt-8 mb-4">Ad Assets & Content Hub</h2>
-        <Card>
-          <div className="flex justify-between items-center mb-6 border-b border-erp-border pb-4">
-            <h3 className="font-bold text-lg">Asset Repository</h3>
-            <Button variant="info" className="flex items-center gap-2 text-sm px-3 py-1.5 h-auto">
-              Upload Assets
-            </Button>
+        {loading ? (
+          <div className="flex justify-center items-center h-64 text-erp-text/50 animate-pulse font-bold">Loading...</div>
+        ) : (
+          <div>
+            {activeTab === 'dashboard' && renderDashboard()}
+            {activeTab === 'blog' && renderBlog()}
+            {activeTab === 'jobs' && renderJobs()}
+            {activeTab === 'ai' && renderAI()}
+            {activeTab === 'seo' && renderSEO()}
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Asset Item */}
-            <div className="border border-erp-border rounded-xl p-3 flex gap-3 hover:border-erp-primary transition-colors cursor-pointer">
-              <div className="w-16 h-16 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0">
-                <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=150&auto=format&fit=crop" alt="Web Dev Banner" className="w-full h-full object-cover" />
-              </div>
-              <div className="flex flex-col justify-center overflow-hidden">
-                <p className="font-bold text-sm text-erp-text truncate">FS_Summer_Banner_01.png</p>
-                <p className="text-xs text-erp-text/50 font-medium mt-0.5">1.2 MB • Updated 2d ago</p>
-                <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full mt-1 w-fit font-bold">Meta Ads</span>
-              </div>
-            </div>
-            
-            {/* Asset Item */}
-            <div className="border border-erp-border rounded-xl p-3 flex gap-3 hover:border-erp-primary transition-colors cursor-pointer">
-              <div className="w-16 h-16 bg-slate-200 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white">
-                  <svg className="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z" /></svg>
-                </div>
-              </div>
-              <div className="flex flex-col justify-center overflow-hidden">
-                <p className="font-bold text-sm text-erp-text truncate">DS_Student_Testimonial.mp4</p>
-                <p className="text-xs text-erp-text/50 font-medium mt-0.5">45 MB • Updated 5d ago</p>
-                <span className="text-[10px] bg-red-100 text-red-700 px-2 py-0.5 rounded-full mt-1 w-fit font-bold">YouTube</span>
-              </div>
-            </div>
-          </div>
-        </Card>
+        )}
       </div>
     </div>
   );

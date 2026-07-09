@@ -1,20 +1,63 @@
-import { client, isTursoConfigured } from '../turso';
+import { client, isTursoConfigured, initTursoDB } from '../turso';
+import { getCurrentUser } from '../auth';
 
 export interface Task {
   id: string;
-  type: string;
   title: string;
   description: string;
-  target_value: number;
-  current_value: number;
   assignee_id: string;
-  created_by: string;
+  created_by?: string;
+  priority: string;
   due_date: string;
-  recurrence_rule: string;
   status: string;
-  check_in_count: number;
-  target_check_in_count: number;
+  related_entity?: string | null;
+  task_type?: 'One-Time' | 'Daily' | 'Yes/No' | 'Number';
+  target_number?: number;
+  current_number?: number;
+  start_date?: string;
+  tags?: string;
+  created_at?: string;
+  updated_at?: string;
+  lead_id?: string | null;
+  student_id?: string | null;
 }
+
+export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
+  const id = 'task_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  const status = 'To Do';
+  
+  if (isTursoConfigured && client) {
+    try {
+      await initTursoDB(); // Ensure tables are initialized and updated
+      await client.execute({
+        sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, related_entity, task_type, target_number, current_number, start_date, tags, created_by, lead_id, student_id) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          id, 
+          task.title, 
+          task.description, 
+          task.assignee_id, 
+          status, 
+          task.priority, 
+          task.due_date, 
+          task.related_entity || null,
+          task.task_type || 'One-Time',
+          task.target_number || null,
+          task.current_number || 0,
+          task.start_date || null,
+          task.tags || null,
+          task.created_by || null,
+          task.lead_id || null,
+          task.student_id || null
+        ]
+      });
+      return id;
+    } catch (e) {
+      console.error("Failed to create task", e);
+    }
+  }
+  return id;
+};
 
 export const getTasksForUser = async (userId: string): Promise<Task[]> => {
   if (isTursoConfigured && client) {
@@ -23,97 +66,347 @@ export const getTasksForUser = async (userId: string): Promise<Task[]> => {
         sql: "SELECT * FROM tasks WHERE assignee_id = ? ORDER BY due_date ASC",
         args: [userId]
       });
-      return result.rows.map(row => ({
-        id: row.id as string,
-        type: row.type as string,
-        title: row.title as string,
-        description: row.description as string,
-        target_value: Number(row.target_value),
-        current_value: Number(row.current_value),
-        assignee_id: row.assignee_id as string,
-        created_by: row.created_by as string,
-        due_date: row.due_date as string,
-        recurrence_rule: row.recurrence_rule as string,
-        status: row.status as string,
-        check_in_count: Number(row.check_in_count || 0),
-        target_check_in_count: Number(row.target_check_in_count || 1)
-      }));
+      return result.rows as unknown as Task[];
     } catch (e) {
       console.error("Failed to fetch tasks", e);
     }
   }
-  
-  // Local storage fallback
-  const localTasks = localStorage.getItem(`erp_tasks_dev_${userId}`);
-  if (localTasks) {
-    return JSON.parse(localTasks);
-  }
-  
-  // Seed demo task
-  const demoTasks = [
-    { id: 'tsk_demo_1', type: 'daily', title: 'Check HR Policies', description: 'Review the new HR policies for Q3.', target_value: 0, current_value: 0, assignee_id: userId, created_by: 'manager', due_date: '2026-07-10', recurrence_rule: 'none', status: 'Pending', check_in_count: 0, target_check_in_count: 1 },
-    { id: 'tsk_demo_2', type: 'daily', title: 'Call 30 Leads', description: 'Reach out to new leads from the Meta campaign.', target_value: 30, current_value: 0, assignee_id: userId, created_by: 'manager', due_date: '2026-07-10', recurrence_rule: 'daily', status: 'Pending', check_in_count: 5, target_check_in_count: 30 }
-  ];
-  localStorage.setItem(`erp_tasks_dev_${userId}`, JSON.stringify(demoTasks));
-  return demoTasks;
+  return [];
 };
 
-export const checkInTask = async (taskId: string, newCount: number, targetCount: number) => {
-  const newStatus = newCount >= targetCount ? 'Completed' : 'Pending';
+export const ensureDailyTasks = async (tasks: Task[], userId: string) => {
+  const today = new Date().toISOString().split('T')[0];
+  const dailyTasks = tasks.filter(t => t.task_type === 'Daily');
   
+  const grouped = new Map<string, Task[]>();
+  dailyTasks.forEach(t => {
+    const arr = grouped.get(t.title) || [];
+    arr.push(t);
+    grouped.set(t.title, arr);
+  });
+  
+  let newTasksCreated = false;
+  for (const [title, groupTasks] of grouped.entries()) {
+    groupTasks.sort((a, b) => new Date(b.due_date || '').getTime() - new Date(a.due_date || '').getTime());
+    const latestTask = groupTasks[0];
+    const latestDateStr = latestTask.due_date ? latestTask.due_date.split('T')[0] : '';
+    
+    if (latestDateStr && latestDateStr < today) {
+      const newTask = {
+        title: latestTask.title,
+        description: latestTask.description,
+        assignee_id: latestTask.assignee_id,
+        priority: latestTask.priority,
+        due_date: today,
+        related_entity: latestTask.related_entity,
+        task_type: 'Daily',
+        target_number: latestTask.target_number,
+        current_number: 0,
+        tags: latestTask.tags,
+        created_by: latestTask.created_by,
+        lead_id: latestTask.lead_id,
+        student_id: latestTask.student_id
+      };
+      await createTask(newTask as any);
+      newTasksCreated = true;
+    }
+  }
+  return newTasksCreated;
+};
+
+export const getTasksByLead = async (leadId: string): Promise<Task[]> => {
   if (isTursoConfigured && client) {
     try {
-      await client.execute({
-        sql: `UPDATE tasks SET check_in_count = ?, status = ? WHERE id = ?`,
-        args: [newCount, newStatus, taskId]
+      const result = await client.execute({
+        sql: "SELECT * FROM tasks WHERE lead_id = ? ORDER BY due_date ASC",
+        args: [leadId]
       });
-      return true;
+      return result.rows as unknown as Task[];
     } catch (e) {
-      console.error("Failed to check in task", e);
+      console.error("Failed to fetch tasks by lead", e);
     }
-  } else {
-    // Local fallback
-    // In local fallback, we update all users just in case (hack for dev mode)
-    for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('erp_tasks_dev_')) {
-        const tasks = JSON.parse(localStorage.getItem(key) || '[]');
-        const tIndex = tasks.findIndex((t: Task) => t.id === taskId);
-        if (tIndex >= 0) {
-          tasks[tIndex].check_in_count = newCount;
-          tasks[tIndex].status = newStatus;
-          localStorage.setItem(key, JSON.stringify(tasks));
-          return true;
-        }
-      }
+  }
+  return [];
+};
+
+export const getTasksByStudent = async (studentId: string): Promise<Task[]> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: "SELECT * FROM tasks WHERE student_id = ? ORDER BY due_date ASC",
+        args: [studentId]
+      });
+      return result.rows as unknown as Task[];
+    } catch (e) {
+      console.error("Failed to fetch tasks by student", e);
     }
+  }
+  return [];
+};
+
+const getTaskById = async (taskId: string): Promise<Task | null> => {
+  if (isTursoConfigured && client) {
+    const result = await client.execute({
+      sql: "SELECT * FROM tasks WHERE id = ?",
+      args: [taskId]
+    });
+    if (result.rows.length > 0) return result.rows[0] as unknown as Task;
+  }
+  return null;
+};
+
+const isAuthorized = (task: Task | null): boolean => {
+  if (!task) return false;
+  const user = getCurrentUser();
+  if (!user) return false;
+  return user.id === task.assignee_id || user.id === task.created_by || user.role === 'CEO' || user.role === 'Manager';
+};
+
+export const updateTaskStatus = async (taskId: string, newStatus: string): Promise<{ success: boolean, error?: string }> => {
+  if (!isTursoConfigured || !client) return { success: false, error: 'DB not configured' };
+  
+  const task = await getTaskById(taskId);
+  if (!isAuthorized(task)) return { success: false, error: 'Unauthorized' };
+
+  try {
+    await client.execute({
+      sql: `UPDATE tasks SET status = ? WHERE id = ?`,
+      args: [newStatus, taskId]
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: 'Update failed' };
+  }
+};
+
+export const updateTask = async (taskId: string, updates: Partial<Task>): Promise<{ success: boolean, error?: string }> => {
+  if (!isTursoConfigured || !client) return { success: false, error: 'DB not configured' };
+
+  const task = await getTaskById(taskId);
+  if (!isAuthorized(task)) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const keys = Object.keys(updates).filter(k => k !== 'id' && k !== 'created_at' && k !== 'updated_at' && k !== 'created_by');
+    if (keys.length === 0) return { success: true };
+
+    const setClause = keys.map(k => `${k} = ?`).join(', ');
+    const args = keys.map(k => (updates as any)[k]);
+    args.push(taskId);
+
+    await client.execute({
+      sql: `UPDATE tasks SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+      args
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: 'Update failed' };
+  }
+};
+
+export const deleteTask = async (taskId: string): Promise<{ success: boolean, error?: string }> => {
+  if (!isTursoConfigured || !client) return { success: false, error: 'DB not configured' };
+
+  const task = await getTaskById(taskId);
+  if (!isAuthorized(task)) return { success: false, error: 'Unauthorized' };
+
+  try {
+    await client.execute({
+      sql: `DELETE FROM tasks WHERE id = ?`,
+      args: [taskId]
+    });
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: 'Delete failed' };
+  }
+};
+
+export const getAllTasks = async (): Promise<Task[]> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute("SELECT * FROM tasks ORDER BY due_date ASC");
+      return result.rows as unknown as Task[];
+    } catch (e) {
+      console.error("Failed to fetch all tasks", e);
+    }
+  }
+  return [];
+};
+
+export const getTasksByDateRange = async (startDate: string, endDate: string): Promise<Task[]> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: "SELECT * FROM tasks WHERE due_date >= ? AND due_date <= ? ORDER BY due_date ASC",
+        args: [startDate, endDate]
+      });
+      return result.rows as unknown as Task[];
+    } catch (e) {
+      console.error("Failed to fetch tasks by date range", e);
+    }
+  }
+  return [];
+};
+
+export const getTasksByCreator = async (creatorId: string): Promise<Task[]> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: "SELECT * FROM tasks WHERE created_by = ? ORDER BY due_date ASC",
+        args: [creatorId]
+      });
+      return result.rows as unknown as Task[];
+    } catch (e) {
+      console.error("Failed to fetch tasks by creator", e);
+    }
+  }
+  return [];
+};
+
+// Prod-Level Asana Features
+export const addTaskComment = async (taskId: string, content: string): Promise<string | null> => {
+  const id = 'comment_' + Date.now().toString(36);
+  const user = getCurrentUser();
+  if (!user || !isTursoConfigured || !client) return null;
+
+  try {
+    await client.execute({
+      sql: "INSERT INTO task_comments (id, task_id, user_id, content) VALUES (?, ?, ?, ?)",
+      args: [id, taskId, user.id, content]
+    });
+    return id;
+  } catch (e) {
+    console.error("Failed to add comment", e);
+  }
+  return null;
+};
+
+export const addSubtask = async (taskId: string, title: string): Promise<string | null> => {
+  const id = 'sub_' + Date.now().toString(36);
+  if (!isTursoConfigured || !client) return null;
+
+  try {
+    await client.execute({
+      sql: "INSERT INTO task_subtasks (id, task_id, title) VALUES (?, ?, ?)",
+      args: [id, taskId, title]
+    });
+    return id;
+  } catch (e) {
+    console.error("Failed to add subtask", e);
+  }
+  return null;
+};
+
+export const getTaskComments = async (taskId: string): Promise<any[]> => {
+  if (isTursoConfigured && client) {
+    const result = await client.execute({
+      sql: "SELECT task_comments.*, erp_users.name as user_name FROM task_comments LEFT JOIN erp_users ON task_comments.user_id = erp_users.id WHERE task_id = ? ORDER BY task_comments.created_at ASC",
+      args: [taskId]
+    });
+    return result.rows as any[];
+  }
+  return [];
+};
+
+export const getTaskSubtasks = async (taskId: string): Promise<any[]> => {
+  if (isTursoConfigured && client) {
+    const result = await client.execute({
+      sql: "SELECT * FROM task_subtasks WHERE task_id = ? ORDER BY created_at ASC",
+      args: [taskId]
+    });
+    return result.rows as any[];
+  }
+  return [];
+};
+
+export const updateSubtaskStatus = async (subtaskId: string, status: string): Promise<boolean> => {
+  if (isTursoConfigured && client) {
+    await client.execute({
+      sql: "UPDATE task_subtasks SET status = ? WHERE id = ?",
+      args: [status, subtaskId]
+    });
+    return true;
   }
   return false;
 };
 
-export const createTask = async (task: Omit<Task, 'id' | 'status' | 'current_value' | 'check_in_count'>) => {
-  const id = 'tsk_' + Date.now().toString(36);
-  if (isTursoConfigured && client) {
-    try {
-      await client.execute({
-        sql: `INSERT INTO tasks (id, type, title, description, target_value, current_value, assignee_id, created_by, due_date, recurrence_rule, status, check_in_count, target_check_in_count) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          id, task.type, task.title, task.description, task.target_value, 0, task.assignee_id, task.created_by, task.due_date, task.recurrence_rule, 'Pending', 0, task.target_check_in_count
-        ]
-      });
-      return id;
-    } catch (e) {
-      console.error("Failed to create task", e);
-    }
-  } else {
-    // Local fallback
-    const key = `erp_tasks_dev_${task.assignee_id}`;
-    const tasks = JSON.parse(localStorage.getItem(key) || '[]');
-    tasks.push({
-      id, ...task, current_value: 0, status: 'Pending', check_in_count: 0
+export const deleteSubtask = async (subtaskId: string): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  try {
+    await client.execute({
+      sql: "DELETE FROM task_subtasks WHERE id = ?",
+      args: [subtaskId]
     });
-    localStorage.setItem(key, JSON.stringify(tasks));
+    return true;
+  } catch (e) {
+    console.error("Failed to delete subtask", e);
+  }
+  return false;
+};
+
+export const updateSubtask = async (subtaskId: string, updates: Record<string, any>): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  
+  try {
+    const keys = Object.keys(updates).filter(k => k !== 'id' && k !== 'task_id' && k !== 'created_at');
+    if (keys.length === 0) return true;
+    
+    const setClause = keys.map(k => `${k} = ?`).join(', ');
+    const args = keys.map(k => updates[k]);
+    args.push(subtaskId);
+    
+    await client.execute({
+      sql: `UPDATE task_subtasks SET ${setClause} WHERE id = ?`,
+      args
+    });
+    return true;
+  } catch (e) {
+    console.error("Failed to update subtask", e);
+  }
+  return false;
+};
+
+export const addTaskDependency = async (taskId: string, dependsOnId: string): Promise<string | null> => {
+  const id = 'dep_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  if (!isTursoConfigured || !client) return null;
+  
+  try {
+    await client.execute({
+      sql: "INSERT INTO task_dependencies (id, task_id, depends_on_id) VALUES (?, ?, ?)",
+      args: [id, taskId, dependsOnId]
+    });
     return id;
+  } catch (e) {
+    console.error("Failed to add task dependency", e);
   }
   return null;
+};
+
+export const removeTaskDependency = async (dependencyId: string): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  
+  try {
+    await client.execute({
+      sql: "DELETE FROM task_dependencies WHERE id = ?",
+      args: [dependencyId]
+    });
+    return true;
+  } catch (e) {
+    console.error("Failed to remove task dependency", e);
+  }
+  return false;
+};
+
+export const getTaskDependencies = async (taskId: string): Promise<any[]> => {
+  if (!isTursoConfigured || !client) return [];
+  
+  try {
+    const result = await client.execute({
+      sql: "SELECT * FROM task_dependencies WHERE task_id = ?",
+      args: [taskId]
+    });
+    return result.rows as any[];
+  } catch (e) {
+    console.error("Failed to get task dependencies", e);
+  }
+  return [];
 };

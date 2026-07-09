@@ -1,0 +1,489 @@
+{
+  "usr_venkatesh": {
+    "batches": [
+      {
+        "id": "batch_1_data_science_with_ai",
+        "name": "Batch 1",
+        "course": "Data Science with AI",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 14,
+              "total": 30
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_2_data_science_with_ai",
+        "name": "Batch 2",
+        "course": "Data Science with AI",
+        "timing": "12-1pm",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 3,
+              "total": 30
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_3_data_science_with_ai",
+        "name": "Batch 3",
+        "course": "Data Science with AI",
+        "timing": "6:30-7:30pm",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 8,
+              "total": 30
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_4_data_science_with_ai",
+        "name": "Batch 4",
+        "course": "Data Science with AI",
+        "timing": "3-4pm",
+        "progress": {
+          "modules": [
+            {
+              "title": "ML",
+              "completed": 6,
+              "total": 40
+            }
+          ]
+        }
+      }
+    ],
+    "timetable": [
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_1_data_science_with_ai",
+        "batchName": "Batch 1",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_1_data_science_with_ai",
+        "batchName": "Batch 1",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_1_data_science_with_ai",
+        "batchName": "Batch 1",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_1_data_science_with_ai",
+        "batchName": "Batch 1",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_1_data_science_with_ai",
+        "batchName": "Batch 1",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 1,
+        "time": "12-1pm",
+        "batchId": "batch_2_data_science_with_ai",
+        "batchName": "Batch 2",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "12-1pm",
+        "batchId": "batch_2_data_science_with_ai",
+        "batchName": "Batch 2",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "12-1pm",
+        "batchId": "batch_2_data_science_with_ai",
+        "batchName": "Batch 2",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "12-1pm",
+        "batchId": "batch_2_data_science_with_ai",
+        "batchName": "Batch 2",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "12-1pm",
+        "batchId": "batch_2_data_science_with_ai",
+        "batchName": "Batch 2",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 1,
+        "time": "6:30-7:30pm",
+        "batchId": "batch_3_data_science_with_ai",
+        "batchName": "Batch 3",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "6:30-7:30pm",
+        "batchId": "batch_3_data_science_with_ai",
+        "batchName": "Batch 3",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "6:30-7:30pm",
+        "batchId": "batch_3_data_science_with_ai",
+        "batchName": "Batch 3",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "6:30-7:30pm",
+        "batchId": "batch_3_data_science_with_ai",
+        "batchName": "Batch 3",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "6:30-7:30pm",
+        "batchId": "batch_3_data_science_with_ai",
+        "batchName": "Batch 3",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 1,
+        "time": "3-4pm",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "3-4pm",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "3-4pm",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "3-4pm",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "3-4pm",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      }
+    ]
+  },
+  "usr_prudhvi": {
+    "batches": [
+      {
+        "id": "batch_5_data_science_with_ai",
+        "name": "Batch 5",
+        "course": "Data Science with AI",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 9,
+              "total": 30
+            },
+            {
+              "title": "Python",
+              "completed": 8,
+              "total": 28
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_5_ai_&_genrative_ai",
+        "name": "Batch 5",
+        "course": "AI & Genrative AI",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 9,
+              "total": 30
+            },
+            {
+              "title": "Python",
+              "completed": 8,
+              "total": 28
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_5_full_stack_python",
+        "name": "Batch 5",
+        "course": "Full stack python",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 9,
+              "total": 30
+            },
+            {
+              "title": "Python",
+              "completed": 8,
+              "total": 28
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_5_30_days_python_full_stack",
+        "name": "Batch 5",
+        "course": "30 days Python full stack",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 9,
+              "total": 30
+            },
+            {
+              "title": "Python",
+              "completed": 8,
+              "total": 28
+            }
+          ]
+        }
+      },
+      {
+        "id": "batch_4_data_science_with_ai",
+        "name": "Batch 4",
+        "course": "Data Science with AI",
+        "timing": "10-11am",
+        "progress": {
+          "modules": [
+            {
+              "title": "SQL",
+              "completed": 30,
+              "total": 30
+            },
+            {
+              "title": "Python",
+              "completed": 28,
+              "total": 28
+            }
+          ]
+        }
+      }
+    ],
+    "timetable": [
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_5_data_science_with_ai",
+        "batchName": "Batch 5",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_5_data_science_with_ai",
+        "batchName": "Batch 5",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_5_data_science_with_ai",
+        "batchName": "Batch 5",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_5_data_science_with_ai",
+        "batchName": "Batch 5",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_5_data_science_with_ai",
+        "batchName": "Batch 5",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_5_ai_&_genrative_ai",
+        "batchName": "Batch 5",
+        "course": "AI & Genrative AI"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_5_ai_&_genrative_ai",
+        "batchName": "Batch 5",
+        "course": "AI & Genrative AI"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_5_ai_&_genrative_ai",
+        "batchName": "Batch 5",
+        "course": "AI & Genrative AI"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_5_ai_&_genrative_ai",
+        "batchName": "Batch 5",
+        "course": "AI & Genrative AI"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_5_ai_&_genrative_ai",
+        "batchName": "Batch 5",
+        "course": "AI & Genrative AI"
+      },
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_5_full_stack_python",
+        "batchName": "Batch 5",
+        "course": "Full stack python"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_5_full_stack_python",
+        "batchName": "Batch 5",
+        "course": "Full stack python"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_5_full_stack_python",
+        "batchName": "Batch 5",
+        "course": "Full stack python"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_5_full_stack_python",
+        "batchName": "Batch 5",
+        "course": "Full stack python"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_5_full_stack_python",
+        "batchName": "Batch 5",
+        "course": "Full stack python"
+      },
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_5_30_days_python_full_stack",
+        "batchName": "Batch 5",
+        "course": "30 days Python full stack"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_5_30_days_python_full_stack",
+        "batchName": "Batch 5",
+        "course": "30 days Python full stack"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_5_30_days_python_full_stack",
+        "batchName": "Batch 5",
+        "course": "30 days Python full stack"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_5_30_days_python_full_stack",
+        "batchName": "Batch 5",
+        "course": "30 days Python full stack"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_5_30_days_python_full_stack",
+        "batchName": "Batch 5",
+        "course": "30 days Python full stack"
+      },
+      {
+        "day": 1,
+        "time": "10-11am",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 2,
+        "time": "10-11am",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 3,
+        "time": "10-11am",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 4,
+        "time": "10-11am",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      },
+      {
+        "day": 5,
+        "time": "10-11am",
+        "batchId": "batch_4_data_science_with_ai",
+        "batchName": "Batch 4",
+        "course": "Data Science with AI"
+      }
+    ]
+  }
+}

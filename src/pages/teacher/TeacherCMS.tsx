@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { BookOpen, Upload, FileText, Plus, Sparkles, Video } from 'lucide-react';
-import { client } from '../../lib/turso';
+import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio } from 'lucide-react';
+import { getTeacherCMSModules, getClassesForModules } from '../../lib/api/teacher';
 import { getCurrentUser } from '../../lib/auth';
 import { useNavigate } from 'react-router-dom';
 
 export default function TeacherCMS() {
   const [modules, setModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedModuleId, setSelectedModuleId] = useState<string>('all');
   const user = getCurrentUser();
   const navigate = useNavigate();
 
@@ -17,28 +18,20 @@ export default function TeacherCMS() {
   }, []);
 
   async function fetchModules() {
-    if (!client || !user) return;
     try {
-      // 1. Fetch modules assigned to this instructor (or all if admin/ceo)
       const isSuper = ['Admin', 'Manager', 'CEO'].includes(user.role);
-      let mRes;
-      if (isSuper) {
-        mRes = await client.execute("SELECT * FROM modules ORDER BY title ASC");
-      } else {
-        mRes = await client.execute({
-          sql: "SELECT * FROM modules WHERE instructor_id = ? ORDER BY title ASC",
-          args: [user.id]
-        });
-      }
+      const resolvedUserId = user.id === 'usr_teacher' ? 'usr_venkatesh' : user.id;
+      
+      const mRows = await getTeacherCMSModules(isSuper, resolvedUserId);
 
       // 2. Fetch classes for those modules
-      if (mRes.rows.length > 0) {
-        const modIds = mRes.rows.map(m => `'${m.id}'`).join(',');
-        const cRes = await client.execute(`SELECT * FROM classes WHERE module_id IN (${modIds}) ORDER BY order_index ASC`);
+      if (mRows.length > 0) {
+        const modIds = mRows.map((m: any) => `'${m.id}'`).join(',');
+        const cRows = await getClassesForModules(modIds);
         
-        const merged = mRes.rows.map(m => ({
+        const merged = mRows.map((m: any) => ({
           ...m,
-          classes: cRes.rows.filter(c => c.module_id === m.id)
+          classes: cRows.filter((c: any) => c.module_id === m.id)
         }));
         setModules(merged);
       } else {
@@ -61,11 +54,23 @@ export default function TeacherCMS() {
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text">Course CMS</h1>
             <p className="text-erp-text/70 font-medium mt-1">Manage your assigned modules and generate AI lessons</p>
           </div>
+          {modules.length > 0 && (
+            <select
+              value={selectedModuleId}
+              onChange={(e) => setSelectedModuleId(e.target.value)}
+              className="bg-erp-surface border border-erp-border text-erp-text rounded-lg px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="all">All Modules</option>
+              {modules.map(m => (
+                <option key={m.id} value={m.id}>{m.title}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {modules.length === 0 ? (
@@ -76,7 +81,7 @@ export default function TeacherCMS() {
           </div>
         ) : (
           <div className="space-y-6">
-            {modules.map(mod => (
+            {modules.filter(mod => selectedModuleId === 'all' || mod.id === selectedModuleId).map(mod => (
               <Card key={mod.id as string} className="border-l-4 border-erp-primary">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -93,7 +98,7 @@ export default function TeacherCMS() {
                       <div key={cls.id as string} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-3 rounded-lg border border-erp-border gap-3">
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${cls.type === 'live' ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-500'}`}>
-                            {cls.type === 'live' ? <RadioIcon className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                            {cls.type === 'live' ? <Radio className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           </div>
                           <div>
                             <span className="font-bold text-sm text-slate-800">{cls.title}</span>

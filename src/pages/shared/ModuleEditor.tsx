@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { FolderOpen, Plus, ArrowRight, Video, FileText, ArrowLeft, X, Edit, Trash2 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { client } from '../../lib/turso';
+import { getModuleDetails, createClassForModule, deleteClass } from '../../lib/api/cms';
 
 export default function ModuleEditor() {
   const navigate = useNavigate();
@@ -25,24 +25,12 @@ export default function ModuleEditor() {
   }, [moduleId]);
 
   const fetchModuleData = async () => {
-    if (!client || !moduleId) return;
     try {
-      // Fetch Module details
-      const modRes = await client.execute({
-        sql: 'SELECT * FROM modules WHERE id = ?',
-        args: [moduleId]
-      });
-      
-      if (modRes.rows.length > 0) {
-        setModuleData(modRes.rows[0]);
+      const data = await getModuleDetails(moduleId as string);
+      if (data.module) {
+        setModuleData(data.module);
       }
-
-      // Fetch Classes for this module
-      const clsRes = await client.execute({
-        sql: 'SELECT * FROM classes WHERE module_id = ? ORDER BY order_index ASC',
-        args: [moduleId]
-      });
-      setClasses(clsRes.rows);
+      setClasses(data.classes as any);
     } catch (e) {
       console.error("Failed to fetch module data", e);
     } finally {
@@ -51,14 +39,11 @@ export default function ModuleEditor() {
   };
 
   const handleAddClass = async () => {
-    if (!client || !moduleId || !newClassTitle) return;
+    if (!moduleId || !newClassTitle) return;
     const classId = 'cls_' + Date.now();
     try {
       const nextOrder = classes.length;
-      await client.execute({
-        sql: 'INSERT INTO classes (id, module_id, title, description, order_index, type) VALUES (?, ?, ?, ?, ?, ?)',
-        args: [classId, moduleId, newClassTitle, '', nextOrder, newClassType]
-      });
+      await createClassForModule(classId, moduleId, newClassTitle, nextOrder, newClassType);
       setIsClassModalOpen(false);
       setNewClassTitle('');
       await fetchModuleData();
@@ -69,13 +54,9 @@ export default function ModuleEditor() {
   };
 
   const handleDeleteClass = async (classId: string) => {
-    if (!client) return;
     if (confirm("Are you sure you want to delete this class?")) {
       try {
-        await client.execute({
-          sql: 'DELETE FROM classes WHERE id = ?',
-          args: [classId]
-        });
+        await deleteClass(classId);
         await fetchModuleData();
       } catch (e) {
         console.error("Failed to delete class", e);

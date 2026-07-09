@@ -5,12 +5,12 @@ export const recordAdmission = async (leadId: string, amount: number, discountLo
     const id = 'adm_' + Date.now().toString(36);
     try {
       await client.execute({
-        sql: `INSERT INTO admissions (id, lead_id, amount, discount_locked, offer_expiry, expected_sale_date, status, referred_by_student_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO admissions (id, lead_id, amount, discount_locked, offer_expiry_date, expected_sale_date, status, referred_by_student_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [id, leadId, amount, discountLocked, expiry, expectedSaleDate, 'Active', referredBy]
       });
-      // Move lead to Admission bucket D
+      // Move lead to Admission status
       await client.execute({
-        sql: `UPDATE leads SET bucket_stage = 'D' WHERE id = ?`,
+        sql: `UPDATE crm_leads SET status = 'Admission' WHERE id = ?`,
         args: [leadId]
       });
       return id;
@@ -32,6 +32,19 @@ export const getAdmissionForLead = async (leadId: string): Promise<any | null> =
   return null;
 };
 
+export const getSaleForLead = async (leadId: string): Promise<any | null> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: "SELECT * FROM sales WHERE lead_id = ? ORDER BY timestamp DESC LIMIT 1",
+        args: [leadId]
+      });
+      if (result.rows.length > 0) return result.rows[0];
+    } catch (e) { console.error(e); }
+  }
+  return null;
+};
+
 export const recordSale = async (leadId: string, courseId: string, totalFee: number, amountPaid: number, admissionId: string | null, salesExecId: string, referredBy: string | null = null, paymentMode: string = 'UPI') => {
   if (isTursoConfigured && client) {
     const id = 'sal_' + Date.now().toString(36);
@@ -41,23 +54,10 @@ export const recordSale = async (leadId: string, courseId: string, totalFee: num
         sql: `INSERT INTO sales (id, lead_id, admission_id, course_id, total_fee, amount_paid, status, sales_exec_id, referred_by_student_id, payment_mode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [id, leadId, admissionId, courseId, totalFee, amountPaid, status, salesExecId, referredBy, paymentMode]
       });
-      // Move lead to proper Sales bucket E
+      // Move lead to Closed Won status
       await client.execute({
-        sql: `UPDATE leads SET bucket_stage = 'E' WHERE id = ?`,
+        sql: `UPDATE crm_leads SET status = 'Closed Won' WHERE id = ?`,
         args: [leadId]
-      });
-      // Create Manager Approval task
-      const apprId = 'appr_' + Date.now().toString(36);
-      await client.execute({
-        sql: `INSERT INTO manager_approvals (id, sale_id, checklist_json, status, notes, approver_id, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        args: [apprId, id, JSON.stringify({
-          payment_verified: false,
-          course_confirmed: false,
-          batch_available: false,
-          docs_received: false,
-          teacher_assignable: false,
-          joining_date_feasible: false
-        }), 'Pending', '', null, null]
       });
       return id;
     } catch (e) { console.error(e); }
@@ -75,12 +75,20 @@ export interface Sale {
   sales_exec_id: string;
   referred_by_student_id: string | null;
   created_at?: string;
+  lead_name?: string;
+  executive_name?: string;
 }
 
 export const getSales = async (): Promise<Sale[]> => {
   if (isTursoConfigured && client) {
     try {
-      const result = await client.execute("SELECT * FROM sales ORDER BY created_at DESC");
+      const result = await client.execute(`
+        SELECT s.*, l.name as lead_name, u.name as executive_name 
+        FROM sales s 
+        LEFT JOIN crm_leads l ON s.lead_id = l.id 
+        LEFT JOIN users u ON s.sales_exec_id = u.id 
+        ORDER BY s.timestamp DESC
+      `);
       return result.rows.map(row => ({
         id: row.id as string,
         lead_id: row.lead_id as string,
@@ -91,34 +99,75 @@ export const getSales = async (): Promise<Sale[]> => {
         status: row.status as string,
         sales_exec_id: row.sales_exec_id as string,
         referred_by_student_id: row.referred_by_student_id as string | null,
-        created_at: row.created_at as string
+        created_at: row.timestamp as string,
+        lead_name: row.lead_name as string,
+        executive_name: row.executive_name as string
       }));
     } catch (e) {
       console.error(e);
     }
   }
 
-  // Local fallback
-  const localSales = localStorage.getItem('erp_sales_dev');
-  if (localSales) {
-    return JSON.parse(localSales);
-  }
+  return [];
+};
 
-  // Seed data
-  const demoSales: Sale[] = [
-    {
-      id: 'sal_demo_1',
-      lead_id: 'lead_demo_1',
-      admission_id: null,
-      course_id: 'Data Science Bootcamp',
-      total_fee: 50000,
-      amount_paid: 25000,
-      status: 'Sale Partial Closed',
-      sales_exec_id: 'usr_dev_sales',
-      referred_by_student_id: null,
-      created_at: new Date().toISOString()
+export const getCoursesForPitch = async () => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute("SELECT id, title, description, price, sales_pitch_summary, sales_pitch_script FROM courses ORDER BY created_at ASC");
+      return result.rows;
+    } catch (e) {
+      console.error(e);
     }
-  ];
-  localStorage.setItem('erp_sales_dev', JSON.stringify(demoSales));
-  return demoSales;
+  }
+  return [];
+};
+
+export const updateCoursePitch = async (id: string, summary: string, script: string) => {
+  if (isTursoConfigured && client) {
+    try {
+      await client.execute({
+        sql: "UPDATE courses SET sales_pitch_summary = ?, sales_pitch_script = ? WHERE id = ?",
+        args: [summary, script, id]
+      });
+      return true;
+    } catch (e) {
+      console.error("Failed to update course pitch", e);
+    }
+  }
+  return false;
+};
+
+export const getCourseModules = async (courseId: string) => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: `
+          SELECT m.title 
+          FROM course_module_mapping cmm
+          JOIN modules m ON cmm.module_id = m.id
+          WHERE cmm.course_id = ? 
+          ORDER BY cmm.order_index ASC
+        `,
+        args: [courseId]
+      });
+      return result.rows.map(r => r.title as string);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  return [];
+};
+
+export const createLead = async (id: string, name: string, phone: string, courseInterest: string, userId: string) => {
+  if (isTursoConfigured && client) {
+    try {
+      await client.execute({
+        sql: 'INSERT INTO crm_leads (id, name, phone, course_interest, source, status, assigned_to) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        args: [id, name, phone, courseInterest, 'Agent Entry', 'New', userId]
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
 };

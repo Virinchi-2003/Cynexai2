@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { updateLeadStatus, getLeadById } from '../../lib/api/crm';
-import { Lead } from '../../lib/types';
+import { updateLeadStatus, getLeadById, getLeadActivities, addActivity } from '../../lib/api/crm';
+import { Lead, CrmActivity } from '../../lib/types';
 import { Card } from '../ui/erp/Card';
 import { Button } from '../ui/erp/Button';
-import { X, Phone, MessageCircle, RefreshCw } from 'lucide-react';
+import { X, Phone, MessageCircle, RefreshCw, Activity, Mail, Users, PenTool, Send } from 'lucide-react';
 import { AdmissionForm } from '../../pages/crm/forms/AdmissionForm';
 import { SaleForm } from '../../pages/crm/forms/SaleForm';
 import { SalesPitchModal } from '../../pages/crm/forms/SalesPitchModal';
+import { getSaleForLead } from '../../lib/api/sales';
+import { getCurrentUser } from '../../lib/auth';
+import { ActivityLog } from './ActivityLog';
 
 const STATUS_BUCKETS = [
-  'Not answering/Lifting',
+  'New',
+  'Not answering',
   'Busy',
   'Invalid number',
   'Interested',
@@ -30,27 +34,78 @@ interface LeadDetailPanelProps {
 
 export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelProps) {
   const [lead, setLead] = useState<Lead | null>(null);
+  const [sale, setSale] = useState<any | null>(null);
   const [showAdmission, setShowAdmission] = useState(false);
   const [showSale, setShowSale] = useState(false);
   const [showPitch, setShowPitch] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  
+  const user = getCurrentUser();
 
-  const fetchLead = async () => {
+  const fetchLeadData = async () => {
     const result = await getLeadById(leadId);
     setLead(result);
+    if (result) {
+      const saleResult = await getSaleForLead(result.id);
+      setSale(saleResult);
+    }
   };
 
   useEffect(() => {
-    fetchLead();
+    fetchLeadData();
   }, [leadId]);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Lead>>({});
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
     setIsUpdatingStatus(true);
-    await updateLeadStatus(leadId, newStatus);
-    await fetchLead();
+    
+    let partialAmount = '';
+    if (newStatus === 'Sale Partial Closed') {
+      const amount = prompt("How much was paid for the partial close?");
+      if (amount) partialAmount = amount;
+    }
+
+    const res = await updateLeadStatus(leadId, newStatus as any, user?.id || '');
+    if (!res.success) {
+      alert(res.error || 'Failed to update status');
+    } else if (user) {
+      let note = `Status changed to: ${newStatus}`;
+      if (partialAmount) note += ` (Amount: ${partialAmount})`;
+      await addActivity(leadId, user.id, 'Note', note);
+    }
+    
+    await fetchLeadData();
     setIsUpdatingStatus(false);
     onUpdate(); // refresh table
+  };
+
+  const handleSaveDetails = async () => {
+    if (!lead) return;
+    const { updateLeadDetails } = await import('../../lib/api/crm');
+    
+    // Track what changed for the activity log
+    const changes: string[] = [];
+    (Object.keys(editForm) as Array<keyof Lead>).forEach(key => {
+      if (editForm[key] !== lead[key] && editForm[key] !== undefined) {
+        changes.push(`${key}: '${lead[key] || 'empty'}' ➔ '${editForm[key]}'`);
+      }
+    });
+
+    const res = await updateLeadDetails(lead.id, editForm);
+    if (res.success) {
+      if (changes.length > 0 && user) {
+        const note = `Updated details:\n- ${changes.join('\n- ')}`;
+        await addActivity(lead.id, user.id, 'Note', note);
+      }
+      await fetchLeadData();
+      setIsEditing(false);
+      onUpdate();
+    } else {
+      alert(res.error || 'Failed to update lead');
+    }
   };
 
   const handleWhatsApp = () => {
@@ -76,28 +131,93 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelPr
         <Card className="mb-6">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h2 className="text-2xl font-bold mb-1 text-erp-text">{lead.name}</h2>
-              <div className="flex items-center text-erp-text/70 font-bold">
-                <Phone className="w-4 h-4 mr-2" />
-                {lead.phone}
-              </div>
+              {isEditing ? (
+                <div className="flex flex-col gap-2 mb-2">
+                  <input className="text-xl font-bold p-2 border-2 rounded-xl" value={editForm.name ?? lead.name} onChange={e => setEditForm({...editForm, name: e.target.value})} />
+                  <input className="text-sm p-2 border-2 rounded-xl" value={editForm.phone ?? lead.phone} onChange={e => setEditForm({...editForm, phone: e.target.value})} />
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold mb-1 text-erp-text">{lead.name}</h2>
+                  <div className="flex items-center text-erp-text/70 font-bold">
+                    <Phone className="w-4 h-4 mr-2" />
+                    {lead.phone}
+                  </div>
+                </>
+              )}
             </div>
-            <div className="inline-block bg-erp-secondary/10 text-erp-secondary font-bold px-3 py-1 rounded-xl text-sm text-right">
-              {lead.course_interest}
+            <div className="flex flex-col items-end gap-2">
+              {isEditing ? (
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  <Button variant="primary" onClick={handleSaveDetails}>Save</Button>
+                </div>
+              ) : (
+                <Button variant="ghost" onClick={() => { setEditForm({}); setIsEditing(true); }} className="text-xs px-3">Edit Details</Button>
+              )}
+              <div className="inline-block bg-erp-secondary/10 text-erp-secondary font-bold px-3 py-1 rounded-xl text-sm text-right h-fit">
+                {lead.course_interest}
+              </div>
             </div>
           </div>
 
+          {isEditing && (
+            <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+              <div><label className="text-xs font-bold">Email</label><input className="w-full p-2 border rounded-md" value={editForm.email ?? lead.email ?? ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">Course</label><input className="w-full p-2 border rounded-md" value={editForm.course_interest ?? lead.course_interest} onChange={e => setEditForm({...editForm, course_interest: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">Grad Year</label><input className="w-full p-2 border rounded-md" value={editForm.grad_year ?? lead.grad_year ?? ''} onChange={e => setEditForm({...editForm, grad_year: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">Qual</label><input className="w-full p-2 border rounded-md" value={editForm.qualification ?? lead.qualification ?? ''} onChange={e => setEditForm({...editForm, qualification: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">IT/Non-IT</label><input className="w-full p-2 border rounded-md" value={editForm.it_background ?? lead.it_background ?? ''} onChange={e => setEditForm({...editForm, it_background: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">Mode</label><input className="w-full p-2 border rounded-md" value={editForm.preferred_mode ?? lead.preferred_mode ?? ''} onChange={e => setEditForm({...editForm, preferred_mode: e.target.value})} /></div>
+              <div><label className="text-xs font-bold">Location</label><input className="w-full p-2 border rounded-md" value={editForm.location ?? lead.location ?? ''} onChange={e => setEditForm({...editForm, location: e.target.value})} /></div>
+            </div>
+          )}
+
+          {!isEditing && (
+            <div className="grid grid-cols-2 gap-2 mt-4 text-sm font-medium text-gray-600">
+              {lead.email && <div><span className="text-gray-400 font-bold">Email:</span> {lead.email}</div>}
+              {lead.grad_year && <div><span className="text-gray-400 font-bold">Grad:</span> {lead.grad_year}</div>}
+              {lead.qualification && <div><span className="text-gray-400 font-bold">Qual:</span> {lead.qualification}</div>}
+              {lead.it_background && <div><span className="text-gray-400 font-bold">IT Background:</span> {lead.it_background}</div>}
+              {lead.preferred_mode && <div><span className="text-gray-400 font-bold">Mode:</span> {lead.preferred_mode}</div>}
+              {lead.location && <div><span className="text-gray-400 font-bold">Location:</span> {lead.location}</div>}
+            </div>
+          )}
+          
+          <div className="mb-4">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Added By</span>
+            <p className="text-sm font-bold text-erp-text">{lead.assigned_to || 'Unknown Agent'}</p>
+          </div>
+          
+          {sale && (
+            <div className="mb-4 bg-green-50 rounded-xl p-4 border border-green-200">
+              <h3 className="text-sm font-bold text-green-900 mb-2 uppercase tracking-wider">Financials</h3>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-green-800">Total Fee</span>
+                <span className="font-bold text-green-900">₹{sale.total_fee}</span>
+              </div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm text-green-800">Amount Paid</span>
+                <span className="font-bold text-green-900">₹{sale.amount_paid}</span>
+              </div>
+              <div className="flex justify-between items-center border-t border-green-200 pt-1 mt-1">
+                <span className="text-sm font-bold text-green-800">Amount Due</span>
+                <span className="font-bold text-red-600">₹{Math.max(0, sale.total_fee - sale.amount_paid)}</span>
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 p-4 bg-erp-background rounded-2xl border-2 border-erp-border">
-            <label className="block text-sm font-bold text-erp-text/70 mb-2">Current Status (Bucket)</label>
+            <label className="block text-sm font-bold text-erp-text/70 mb-2">Current Status (Stage)</label>
             <div className="flex items-center gap-2">
               <select 
-                value={lead.bucket_stage} 
+                value={lead.status} 
                 onChange={handleStatusChange}
                 disabled={isUpdatingStatus}
                 className="w-full bg-erp-surface border-2 border-erp-border rounded-xl p-3 font-bold text-erp-text focus:outline-none focus:border-erp-primary"
               >
-                {!STATUS_BUCKETS.includes(lead.bucket_stage) && (
-                   <option value={lead.bucket_stage}>Legacy: Bucket {lead.bucket_stage}</option>
+                {!STATUS_BUCKETS.includes(lead.status) && (
+                   <option value={lead.status}>Legacy: {lead.status}</option>
                 )}
                 {STATUS_BUCKETS.map(status => (
                   <option key={status} value={status}>{status}</option>
@@ -127,11 +247,20 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelPr
           </Button>
         </div>
 
+        {/* Activity Timeline */}
+        <ActivityLog key={`${leadId}-${lead.status}`} entityType="lead" entityId={leadId} />
+
         <h3 className="text-sm font-bold text-erp-text/50 uppercase mb-3 px-2">Actions</h3>
         <div className="flex flex-col gap-4">
           <Button variant="info" onClick={() => setShowPitch(true)} fullWidth>Sales Pitch Assistant</Button>
           <Button variant="secondary" onClick={() => setShowAdmission(true)} fullWidth>Record Admission</Button>
           <Button variant="primary" onClick={() => setShowSale(true)} fullWidth>Record Sale</Button>
+          
+          {sale && (lead.status === 'Admission' || lead.status === 'Closed Won') && (
+            <Button variant="info" onClick={() => window.open(`/sales/onboarding/${sale.id}`, '_self')} fullWidth className="bg-indigo-600 hover:bg-indigo-700">
+              Start Onboarding
+            </Button>
+          )}
         </div>
       </div>
 

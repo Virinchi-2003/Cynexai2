@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getPendingApprovals, PendingApproval } from '../../../lib/api/manager';
+import { getPendingApprovals, PendingApproval, getManagerAnalytics } from '../../../lib/api/manager';
 import { Card } from '../../../components/ui/erp/Card';
 import { CheckCircle, Users, BookOpen, CheckSquare, Settings, Calendar } from 'lucide-react';
 
 export default function ManagerDashboard() {
   const [approvals, setApprovals] = useState<PendingApproval[]>([]);
+  const [stats, setStats] = useState({ totalStudents: 0, totalLeads: 0, totalRevenue: 0, classesCompleted: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
     getPendingApprovals().then(setApprovals);
+    getManagerAnalytics().then(setStats);
   }, []);
 
   return (
@@ -18,8 +20,28 @@ export default function ManagerDashboard() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text">Manager Hub</h1>
-            <p className="text-erp-text/70 font-medium mt-1">Global operations and approvals</p>
+            <p className="text-erp-text/70 font-medium mt-1">Global operations and analytics</p>
           </div>
+        </div>
+
+        {/* Analytics Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Card className="bg-indigo-50 border-indigo-200 p-4">
+            <h3 className="text-xs font-bold text-indigo-700 uppercase">Total Revenue</h3>
+            <p className="text-2xl font-bold text-indigo-900 mt-1 font-mono">₹{stats.totalRevenue.toLocaleString()}</p>
+          </Card>
+          <Card className="bg-emerald-50 border-emerald-200 p-4">
+            <h3 className="text-xs font-bold text-emerald-700 uppercase">Active Students</h3>
+            <p className="text-2xl font-bold text-emerald-900 mt-1">{stats.totalStudents}</p>
+          </Card>
+          <Card className="bg-blue-50 border-blue-200 p-4">
+            <h3 className="text-xs font-bold text-blue-700 uppercase">Total Leads</h3>
+            <p className="text-2xl font-bold text-blue-900 mt-1">{stats.totalLeads}</p>
+          </Card>
+          <Card className="bg-orange-50 border-orange-200 p-4">
+            <h3 className="text-xs font-bold text-orange-700 uppercase">Classes Completed</h3>
+            <p className="text-2xl font-bold text-orange-900 mt-1">{stats.classesCompleted}</p>
+          </Card>
         </div>
 
         {/* Action Grid */}

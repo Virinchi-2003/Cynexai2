@@ -29,13 +29,8 @@ export default function JitsiMeet({ roomName, displayName = 'Student', classId, 
     const interval = setInterval(async () => {
       try {
         // Dynamic import to avoid circular deps
-        const { client } = await import('../lib/turso');
-        if (!client) return;
-        const res = await client.execute({
-          sql: 'SELECT status FROM classes WHERE id = ?',
-          args: [classId],
-        });
-        const status = res.rows[0]?.status as string | undefined;
+        const { checkClassStatus } = await import('../lib/api/student');
+        const status = await checkClassStatus(classId);
         if (status === 'completed') {
           clearInterval(interval);
           setPhase('class-ended');

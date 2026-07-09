@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { client, isTursoConfigured } from '../../../lib/turso';
-import { approveSale, rejectSale } from '../../../lib/api/manager';
+import { approveSale, rejectSale, getApprovalDetails } from '../../../lib/api/manager';
 import { getCurrentUser } from '../../../lib/auth';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
@@ -25,16 +25,10 @@ export default function ApprovalDetail() {
   useEffect(() => {
     const fetchAppr = async () => {
       if (isTursoConfigured && client) {
-        const res = await client.execute({
-          sql: `SELECT ma.*, s.amount_paid, s.total_fee, s.course_id, l.name as lead_name, l.id as lead_id
-                FROM manager_approvals ma
-                JOIN sales s ON ma.sale_id = s.id
-                JOIN leads l ON s.lead_id = l.id
-                WHERE ma.id = ?`,
-          args: [id as string]
-        });
-        if (res.rows.length > 0) {
-          setSale(res.rows[0]);
+        const details = await getApprovalDetails(id as string);
+        if (details) {
+          setSale(details);
+          setChecks(JSON.parse(details.checklist_json as string || '{}'));
         }
       }
     };

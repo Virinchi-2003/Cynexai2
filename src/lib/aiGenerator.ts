@@ -1,7 +1,7 @@
 // OpenRouter API for AI-powered class material generation
 // Model: google/gemini-flash-1.5 (fast, high-quality, free tier available)
 const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || '';
-const MODEL = 'openai/gpt-3.5-turbo';
+const MODEL = 'google/gemini-2.5-flash';
 
 async function callOpenRouter(prompt: string): Promise<string> {
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -15,7 +15,7 @@ async function callOpenRouter(prompt: string): Promise<string> {
     body: JSON.stringify({
       model: MODEL,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
+      temperature: 0.8,
     }),
   });
 
@@ -41,39 +41,39 @@ export async function generateAIMaterials(
   title: string,
   description: string = ''
 ): Promise<{ ppt: string; keypoints: string; script: string }> {
-  const prompt = `You are an expert curriculum designer and teacher trainer for CynexAI, an EdTech company in Hyderabad, India.
+  const prompt = `You are a highly engaging, senior tech instructor at CynexAI, an elite EdTech company in Hyderabad, India. 
+Your teaching style is playful, deeply insightful, and practical.
 
-Create content for a live online class titled: "${title}"
+Create robust, high-quality content for a live online class titled: "${title}"
 ${description ? `Context: ${description}` : ''}
 
-Generate EXACTLY 3 sections separated by the delimiter ---SPLIT--- (do not use it anywhere else):
+CRITICAL INSTRUCTION: You MUST generate EXACTLY 3 sections separated by the literal string "---SPLIT---" (do not use this string anywhere else).
 
 SECTION 1 - PRESENTATION SLIDES:
-Write 5-8 slides in Markdown. Rules:
-- Use # for slide title (becomes the heading)
-- Use ## for sub-headings within slides
-- Separate slides with exactly ---
-- Use bullet points (- ) for content
-- Keep each slide focused (5-7 bullet max)
-- Do NOT wrap in code blocks
-- Last slide should be "Key Takeaways"
+Write 5-8 highly engaging slides in Markdown. 
+- You MUST use # for slide titles.
+- You MUST use ## for sub-headings.
+- You MUST separate each slide with exactly "---" (3 hyphens).
+- Do NOT output blank slides. Provide 4-6 bullet points per slide with real substance.
+- Do NOT wrap the entire section in markdown code blocks.
+- The last slide should be titled "# Key Takeaways".
 
 ---SPLIT---
 
 SECTION 2 - TEACHER KEYPOINTS:
-Write 5-7 key teaching points / analogies the teacher should remember.
-- Use real-world analogies relevant to Hyderabad (Biryani, Charminar, HITEC City, local IT companies)
-- Format as bullet points starting with -
-- Each point should be a memorable insight or teaching technique
+Write 5-7 key teaching points, witty analogies, and "gotchas" the teacher should remember to say.
+- Use fun, relatable real-world analogies (e.g., relate concepts to Biryani, Charminar, traffic in HITEC City, or funny junior dev mistakes).
+- Format as clean bullet points starting with "-".
+- Keep it punchy and actually useful for an instructor teaching live.
 
 ---SPLIT---
 
 SECTION 3 - TELEPROMPTER SCRIPT:
-Write a natural-sounding 3-4 paragraph script the teacher reads during the class.
-- Informal, conversational tone (like a senior engineer teaching juniors)
-- Include 1-2 local references (Hyderabad / Telangana)
-- Start with a brief introduction, then key concepts, then close with what's next
-- No slide numbering needed, just flowing narrative`;
+Write a natural, conversational, and energetic script (3-4 paragraphs) for the teacher to read or reference.
+- Tone: Highly engaging, slightly playful, like a senior engineer who loves their job.
+- Start with an energetic intro, cover the core "why we care" of the topic, and end with a strong wrap-up.
+- Include at least one relatable local Hyderabad/Indian IT industry joke or reference.
+- Do not include any meta-text (like "Teacher says:"). Just the raw script.`;
 
   try {
     const content = await callOpenRouter(prompt);

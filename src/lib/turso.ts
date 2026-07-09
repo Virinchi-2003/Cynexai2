@@ -648,15 +648,83 @@ export const initTursoDB = async () => {
           onboarding_id TEXT,
           student_code TEXT,
           portal_login_email TEXT,
-          status TEXT
+          status TEXT,
+          preferred_mode TEXT,
+          classes_attended_json TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS courses (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          description TEXT,
+          instructor_id TEXT,
+          status TEXT,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS course_materials (
+          id TEXT PRIMARY KEY,
+          course_id TEXT,
+          title TEXT,
+          url TEXT,
+          type TEXT
         )
       `);
 
       await client.execute(`
         CREATE TABLE IF NOT EXISTS modules (
           id TEXT PRIMARY KEY,
-          name TEXT,
+          title TEXT,
+          description TEXT,
           sequence_order INTEGER
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS course_module_mapping (
+          course_id TEXT,
+          module_id TEXT,
+          order_index INTEGER,
+          PRIMARY KEY (course_id, module_id)
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS classes (
+          id TEXT PRIMARY KEY,
+          module_id TEXT,
+          title TEXT,
+          type TEXT,
+          status TEXT,
+          order_index INTEGER
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS class_questions (
+          id TEXT PRIMARY KEY,
+          class_id TEXT,
+          type TEXT,
+          question_text TEXT,
+          options_json TEXT,
+          correct_answer_idx INTEGER,
+          boilerplate_json TEXT,
+          test_cases_json TEXT,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS student_progress (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          lesson_id TEXT,
+          completed INTEGER,
+          created_at TEXT
         )
       `);
 
@@ -738,6 +806,100 @@ export const initTursoDB = async () => {
         )
       `);
 
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS users (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          email TEXT UNIQUE,
+          password_encrypted TEXT,
+          role TEXT,
+          avatar TEXT,
+          salary REAL,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS company_finances (
+          id TEXT PRIMARY KEY,
+          category TEXT,
+          amount REAL,
+          date TEXT,
+          description TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS gamification_settings (
+          task_type TEXT PRIMARY KEY,
+          is_enabled BOOLEAN,
+          reward_amount INTEGER
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS attendance_logs (
+          id TEXT PRIMARY KEY,
+          batch_id TEXT,
+          student_id TEXT,
+          join_time TEXT,
+          leave_time TEXT,
+          duration_minutes INTEGER
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS task_comments (
+          id TEXT PRIMARY KEY,
+          task_id TEXT,
+          user_id TEXT,
+          content TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS task_subtasks (
+          id TEXT PRIMARY KEY,
+          task_id TEXT,
+          title TEXT,
+          status TEXT DEFAULT 'To Do',
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS task_dependencies (
+          id TEXT PRIMARY KEY,
+          task_id TEXT,
+          depends_on_id TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS marketing_metrics (
+          id TEXT PRIMARY KEY,
+          platform TEXT,
+          spend REAL,
+          leads_generated INTEGER,
+          traffic INTEGER,
+          updated_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS marketing_campaigns (
+          id TEXT PRIMARY KEY,
+          name TEXT,
+          status TEXT,
+          budget REAL,
+          spent REAL,
+          leads INTEGER,
+          platform TEXT
+        )
+      `);
+
       // Sync user created content from LocalStorage
       await syncLocalStorageToTurso();
 
@@ -762,6 +924,51 @@ export const initTursoDB = async () => {
       // Update task table for check-in style tasks
       await addColumn('tasks', 'check_in_count INTEGER DEFAULT 0');
       await addColumn('tasks', 'target_check_in_count INTEGER DEFAULT 1');
+      await addColumn('tasks', 'priority TEXT');
+      await addColumn('tasks', 'related_entity TEXT');
+      await addColumn('tasks', 'task_type TEXT');
+      await addColumn('tasks', 'target_number REAL');
+      await addColumn('tasks', 'current_number REAL');
+      await addColumn('tasks', 'start_date TEXT');
+      await addColumn('tasks', 'tags TEXT');
+      await addColumn('tasks', 'lead_id TEXT');
+      await addColumn('tasks', 'student_id TEXT');
+      
+      // Add sales pitch columns to courses
+      await addColumn('courses', 'sales_pitch_summary TEXT');
+      await addColumn('courses', 'sales_pitch_script TEXT');
+      
+      // Gamification columns for students
+      await addColumn('students', 'streak INTEGER DEFAULT 0');
+      await addColumn('students', 'coins INTEGER DEFAULT 0');
+      await addColumn('students', 'last_streak_date TEXT');
+
+      // Update users table for employees
+      await addColumn('users', 'password_encrypted TEXT');
+      await addColumn('users', 'salary REAL');
+      await addColumn('users', 'avatar TEXT');
+
+      // Timetable & Leaves tables
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS leaves (
+          id TEXT PRIMARY KEY,
+          user_id TEXT,
+          date TEXT,
+          reason TEXT,
+          status TEXT,
+          created_at TEXT
+        )
+      `);
+
+      await addColumn('users', 'permissions_json TEXT');
+      await addColumn('batches', 'course_id TEXT');
+      await addColumn('batches', 'primary_teacher_id TEXT');
+      await addColumn('batches', 'schedule_pattern TEXT');
+      await addColumn('classes', 'batch_id TEXT');
+      await addColumn('classes', 'date TEXT');
+      await addColumn('classes', 'start_time TEXT');
+      await addColumn('classes', 'end_time TEXT');
+      await addColumn('classes', 'teacher_id TEXT');
 
       // Sync sample posts securely and robustly
       await syncSamplePosts();

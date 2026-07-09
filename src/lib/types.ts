@@ -1,14 +1,33 @@
-export type LeadBucket = 
-  | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J';
+export type LeadStatus = 'Not answering' | 'Busy' | 'Invalid number' | 'Interested' | 'Not Interested' | 'Admission Completed' | 'Sale Partial Closed' | 'Onboarded' | 'Demo Scheduled' | 'Demo Completed' | 'New' | 'Contacted';
 
 export interface Lead {
   id: string;
   name: string;
+  email?: string;
   phone: string;
   course_interest: string;
   source: string;
-  bucket_stage: LeadBucket;
+  status: LeadStatus;
   assigned_to: string;
+  assignee_name?: string;
+  notes?: string;
+  grad_year?: string;
+  qualification?: string;
+  it_background?: string;
+  preferred_mode?: string;
+  location?: string;
+  created_at: string;
+  updated_at?: string;
+  last_whatsapp_msg?: string;
+}
+
+export interface CrmActivity {
+  id: string;
+  lead_id?: string;
+  student_id?: string;
+  user_id: string;
+  type: 'Call' | 'Email' | 'Meeting' | 'Note' | 'WhatsApp Sent';
+  content: string;
   created_at: string;
 }
 

@@ -4,8 +4,26 @@ import { Button } from '../../../components/ui/erp/Button';
 import { TrendingUp, Users, DollarSign, Target, Settings, Building2, BrainCircuit, Gift, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { getManagerAnalytics } from '../../../lib/api/manager';
+import { client, isTursoConfigured } from '../../../lib/turso';
+import { getReferrals, getTotalPayroll } from '../../../lib/api/ceo';
+
 export default function CEODashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = React.useState({ totalStudents: 0, totalLeads: 0, totalRevenue: 0, classesCompleted: 0 });
+  const [referrals, setReferrals] = React.useState<any[]>([]);
+  const [totalPayroll, setTotalPayroll] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    getManagerAnalytics().then(setStats);
+    
+    if (isTursoConfigured && client) {
+      getReferrals().then(setReferrals);
+      getTotalPayroll().then(setTotalPayroll);
+    }
+  }, []);
+
+  const conversionRate = stats.totalLeads > 0 ? ((stats.totalStudents / stats.totalLeads) * 100).toFixed(1) : "0.0";
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
@@ -20,45 +38,40 @@ export default function CEODashboard() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <Card className="flex flex-col border-l-4 border-green-500">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Total Revenue</h3>
             <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">₹24.5L</span>
+              <span className="text-3xl font-display font-bold text-erp-text font-mono">₹{stats.totalRevenue.toLocaleString()}</span>
             </div>
-            <p className="text-xs font-bold text-green-500 mt-2 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-1" /> +15% from last month
-            </p>
+          </Card>
+          
+          <Card className="flex flex-col border-l-4 border-red-500">
+            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Payroll / Staff</h3>
+            <div className="flex items-end gap-2 mt-2">
+              <span className="text-3xl font-display font-bold text-erp-text font-mono">₹{totalPayroll.toLocaleString()}</span>
+            </div>
           </Card>
           
           <Card className="flex flex-col border-l-4 border-blue-500">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Active Students</h3>
             <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">1,240</span>
+              <span className="text-3xl font-display font-bold text-erp-text">{stats.totalStudents}</span>
             </div>
-            <p className="text-xs font-bold text-green-500 mt-2 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-1" /> +45 new enrollments
-            </p>
           </Card>
 
           <Card className="flex flex-col border-l-4 border-purple-500">
-            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Marketing Spend</h3>
+            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Total Leads</h3>
             <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">₹73.7K</span>
+              <span className="text-3xl font-display font-bold text-erp-text">{stats.totalLeads}</span>
             </div>
-            <p className="text-xs font-bold text-erp-text/50 mt-2">
-              CAC: ₹1,637 / student
-            </p>
           </Card>
 
-          <Card className="flex flex-col border-l-4 border-yellow-500">
-            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Sales Conversion</h3>
+          <Card className="flex flex-col border-l-4 border-indigo-500">
+            <h3 className="text-sm font-bold text-erp-text/50 uppercase">Conversion Rate</h3>
             <div className="flex items-end gap-2 mt-2">
-              <span className="text-3xl font-display font-bold text-erp-text">8.4%</span>
+              <span className="text-3xl font-display font-bold text-erp-text">{conversionRate}%</span>
             </div>
-            <p className="text-xs font-bold text-green-500 mt-2 flex items-center">
-              <TrendingUp className="w-3 h-3 mr-1" /> +1.2% from last month
-            </p>
           </Card>
         </div>
 
@@ -80,13 +93,15 @@ export default function CEODashboard() {
               <Gift className="w-5 h-5 text-blue-500" /> Pending Referral Payouts
             </h2>
             <div className="space-y-4">
-              <div className="flex justify-between items-center bg-erp-surface p-3 rounded-xl border border-erp-border">
-                <div>
-                  <span className="font-bold text-sm block">Student: Amit Kumar</span>
-                  <span className="text-xs font-bold text-erp-text/50">Referred by: Rahul S. • ₹2,000</span>
+              {referrals.length === 0 ? <p className="text-sm text-erp-text/50 font-bold">No pending payouts.</p> : referrals.map(r => (
+                <div key={r.id} className="flex justify-between items-center bg-erp-surface p-3 rounded-xl border border-erp-border">
+                  <div>
+                    <span className="font-bold text-sm block">Sale ID: {r.id}</span>
+                    <span className="text-xs font-bold text-erp-text/50">Referred by: {r.referred_by_student_id}</span>
+                  </div>
+                  <Button className="h-8 text-xs bg-green-500 hover:bg-green-600">Mark Paid</Button>
                 </div>
-                <Button className="h-8 text-xs bg-green-500 hover:bg-green-600">Mark Paid</Button>
-              </div>
+              ))}
             </div>
           </Card>
           
@@ -97,10 +112,9 @@ export default function CEODashboard() {
             <div className="space-y-4">
               <div className="bg-white/10 p-3 rounded-xl border border-white/20">
                 <p className="text-sm text-blue-100 italic leading-relaxed">
-                  "Based on last week's data, Facebook Ads CAC increased by 15%. I recommend shifting ₹10,000 daily budget to Google Search Ads for the 'Data Science' keyword, which currently shows a 22% better conversion rate."
+                  "Based on last week's data, conversion rate is currently {conversionRate}%. I recommend assigning more tasks to follow up with Demo Leads to increase conversions, as there is a backlog in the 'Demo Scheduled' bucket."
                 </p>
               </div>
-              <Button variant="secondary" className="w-full bg-white text-slate-900 hover:bg-blue-50">Generate New Insights</Button>
             </div>
           </Card>
         </div>

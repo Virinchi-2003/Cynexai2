@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { client, isTursoConfigured } from '../../lib/turso';
+import { isTursoConfigured } from '../../lib/turso';
+import { getAdminStats } from '../../lib/api/admin';
 import { Card } from '../../components/ui/erp/Card';
 import { Users, BookOpen, IndianRupee, TrendingUp } from 'lucide-react';
 
@@ -13,21 +14,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (isTursoConfigured && client) {
-        try {
-          const leadsRes = await client.execute('SELECT COUNT(*) as count FROM leads');
-          const salesRes = await client.execute("SELECT COUNT(*) as count, SUM(amount_paid) as revenue FROM sales WHERE status LIKE 'Sale%'");
-          const studentsRes = await client.execute("SELECT COUNT(*) as count FROM students WHERE status = 'Active'");
-          
-          setStats({
-            totalLeads: Number(leadsRes.rows[0].count) || 0,
-            totalSales: Number(salesRes.rows[0].count) || 0,
-            totalRevenue: Number(salesRes.rows[0].revenue) || 0,
-            activeStudents: Number(studentsRes.rows[0].count) || 0
-          });
-        } catch (e) {
-          console.error(e);
-        }
+      if (isTursoConfigured) {
+        const data = await getAdminStats();
+        setStats(data);
       }
     };
     fetchStats();

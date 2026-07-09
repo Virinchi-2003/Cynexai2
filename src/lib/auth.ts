@@ -1,4 +1,5 @@
-import { client, isTursoConfigured } from './turso';
+import { encryptPassword, decryptPassword } from './crypto';
+import { getUserByEmail } from './api/auth';
 
 export type Role = 'Admin' | 'Manager' | 'Sales/HR' | 'Teacher' | 'Student' | 'CEO' | 'DM';
 
@@ -7,6 +8,7 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  salary?: number;
 }
 
 // Simple local storage key for session
@@ -28,67 +30,32 @@ export const logout = () => {
   window.location.href = '/login';
 };
 
-// Seed function if no users exist
-export const seedInitialUsers = async () => {
-  if (!isTursoConfigured || !client) return;
-  
+export const login = async (email: string, password: string): Promise<User | null> => {
   try {
-    const result = await client.execute("SELECT COUNT(*) as count FROM erp_users");
-    if (result.rows[0].count === 0) {
-      const defaultUsers = [
-        { id: 'usr_sales', name: 'Sandeep', email: 'sandeep.cynexai@gmail.com', password: 'Sandeep@142', role: 'Sales/HR' },
-        { id: 'usr_manager', name: 'Manager', email: 'manager@cynexai.com', password: 'admin123', role: 'Manager' },
-        { id: 'usr_ceo', name: 'CEO', email: 'ceo@cynexai.com', password: 'admin123', role: 'CEO' },
-        { id: 'usr_dm', name: 'Marketer', email: 'dm@cynexai.com', password: 'admin123', role: 'DM' },
-        { id: 'usr_teacher', name: 'Teacher', email: 'teacher@cynexai.com', password: 'admin123', role: 'Teacher' },
-        { id: 'usr_student', name: 'Student', email: 'student@cynexai.com', password: 'admin123', role: 'Student' }
-      ];
-      for (const u of defaultUsers) {
-        await client.execute({
-          sql: `INSERT INTO erp_users (id, name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-          args: [u.id, u.name, u.email, u.password, u.role, new Date().toISOString()]
-        });
+    const row = await getUserByEmail(email);
+    
+    if (row) {
+      // Decrypt password from DB and compare
+      const decryptedDbPassword = decryptPassword(row.password_encrypted as string);
+      
+      if (decryptedDbPassword === password) {
+        const user: User = {
+          id: row.id as string,
+          name: row.name as string,
+          email: row.email as string,
+          role: row.role as Role,
+          salary: Number(row.salary) || 0
+        };
+        localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        return user;
+      } else {
+        console.error("Invalid password.");
       }
-      console.log("Seeded initial users into erp_users");
+    } else {
+      console.error("User not found.");
     }
   } catch (e) {
-    console.error("Failed to seed initial users:", e);
-  }
-};
-
-export const login = async (email: string, password: string): Promise<User | null> => {
-  await seedInitialUsers();
-  
-  if (isTursoConfigured && client) {
-    try {
-      const result = await client.execute({
-        sql: "SELECT id, name, email, role, password_hash FROM erp_users WHERE email = ?",
-        args: [email]
-      });
-      
-      if (result.rows.length > 0) {
-        const row = result.rows[0];
-        // Plaintext comparison for development speed as requested
-        if (row.password_hash === password) {
-          const user: User = {
-            id: row.id as string,
-            name: row.name as string,
-            email: row.email as string,
-            role: row.role as Role
-          };
-          localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-          return user;
-        } else {
-          console.error("Invalid password.");
-        }
-      } else {
-        console.error("User not found.");
-      }
-    } catch (e) {
-      console.error("Login DB error:", e);
-    }
-  } else {
-      console.error("Turso database is not configured. Missing API keys.");
+    console.error("Login DB error:", e);
   }
   
   return null;

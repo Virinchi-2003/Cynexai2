@@ -3,8 +3,9 @@ import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { client } from '../../lib/turso';
+import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion } from '../../lib/api/cms';
 import { generateAIMaterials } from '../../lib/aiGenerator';
+import { isTursoConfigured } from '../../lib/turso';
 
 export default function ClassEditor() {
   const navigate = useNavigate();
@@ -36,14 +37,10 @@ export default function ClassEditor() {
   }, [classId]);
 
   const fetchClassData = async () => {
-    if (!client || !classId) return;
+    if (!classId) return;
     try {
-      const res = await client.execute({
-        sql: 'SELECT * FROM classes WHERE id = ?',
-        args: [classId]
-      });
-      if (res.rows.length > 0) {
-        const data = res.rows[0];
+      const data = await getClassDetails(classId as string);
+      if (data) {
         setClassData(data);
         setClassTitle(data.title as string);
         setYoutubeLink(data.youtube_video_id as string || '');
@@ -62,25 +59,19 @@ export default function ClassEditor() {
   };
 
   const fetchQuestions = async () => {
-    if (!client || !classId) return;
+    if (!classId) return;
     try {
-      const res = await client.execute({
-        sql: 'SELECT * FROM class_questions WHERE class_id = ? ORDER BY created_at ASC',
-        args: [classId]
-      });
-      setQuestions(res.rows);
+      const data = await getClassQuestions(classId as string);
+      setQuestions(data);
     } catch (e) {
       console.error("Failed to fetch questions", e);
     }
   };
 
   const handleSave = async () => {
-    if (!client || !classId) return;
+    if (!classId) return;
     try {
-      await client.execute({
-        sql: 'UPDATE classes SET title = ?, youtube_video_id = ?, meet_link = ? WHERE id = ?',
-        args: [classTitle, youtubeLink, meetLink, classId]
-      });
+      await updateClassMetadata(classId as string, classTitle, youtubeLink, meetLink);
       alert("Class saved successfully!");
       navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`);
     } catch (e) {
@@ -94,11 +85,7 @@ export default function ClassEditor() {
     try {
       const { ppt, keypoints, script } = await generateAIMaterials(classTitle);
       
-      // Save directly to Turso
-      await client.execute({
-        sql: 'UPDATE classes SET ai_ppt_markdown = ?, ai_keypoints = ?, ai_script = ? WHERE id = ?',
-        args: [ppt, keypoints, script, classId]
-      });
+      await updateClassAiMaterials(classId as string, ppt, keypoints, script);
       
       setAiStatus({ ppt: true, script: true });
       alert("AI Materials generated and saved successfully!");
@@ -111,23 +98,19 @@ export default function ClassEditor() {
   };
 
   const handleAddQuestion = async () => {
-    if (!client || !classId || !newQText) return;
+    if (!classId || !newQText) return;
     const questionId = 'q_' + Date.now();
     try {
-      await client.execute({
-        sql: `INSERT INTO class_questions (id, class_id, type, question_text, options_json, correct_answer_idx, boilerplate_json, test_cases_json) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          questionId,
-          classId,
-          newQType,
-          newQText,
-          newQType === 'mcq' ? JSON.stringify(newQOptions) : null,
-          newQType === 'mcq' ? newQCorrectIdx : null,
-          newQType === 'coding' ? JSON.stringify({ code: newQBoilerplate }) : null,
-          newQType === 'coding' ? newQTestCases : null
-        ]
-      });
+      await createClassQuestion(
+        questionId,
+        classId as string,
+        newQType,
+        newQText,
+        newQType === 'mcq' ? JSON.stringify(newQOptions) : null,
+        newQType === 'mcq' ? newQCorrectIdx : null,
+        newQType === 'coding' ? JSON.stringify({ code: newQBoilerplate }) : null,
+        newQType === 'coding' ? newQTestCases : null
+      );
       setNewQText('');
       setNewQOptions(['', '', '', '']);
       setNewQCorrectIdx(0);
@@ -140,13 +123,9 @@ export default function ClassEditor() {
   };
 
   const handleDeleteQuestion = async (qId: string) => {
-    if (!client) return;
     if (confirm("Delete this question?")) {
       try {
-        await client.execute({
-          sql: 'DELETE FROM class_questions WHERE id = ?',
-          args: [qId]
-        });
+        await deleteClassQuestion(qId);
         await fetchQuestions();
       } catch (e) {
         console.error(e);
