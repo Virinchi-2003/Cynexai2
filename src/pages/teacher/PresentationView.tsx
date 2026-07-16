@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getClassForPresentation, updateClassMaterials } from '../../lib/api/teacher';
 import ReactMarkdown from 'react-markdown';
-import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, Wand2, MousePointer2, PlayCircle } from 'lucide-react';
+import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, Wand2, MousePointer2, PlayCircle, Cast, MonitorPlay } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateAIMaterials } from '../../lib/aiGenerator';
 import { executeCode, Language } from '../../lib/compiler';
@@ -19,6 +19,23 @@ export default function PresentationView() {
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Slide scaling
+  const slideContainerRef = useRef<HTMLDivElement>(null);
+  const [slideScale, setSlideScale] = useState(1);
+  useEffect(() => {
+    const updateScale = () => {
+      const c = slideContainerRef.current;
+      if (!c) return;
+      setSlideScale(Math.min(c.clientWidth / 1600, c.clientHeight / 900) * 0.95);
+    };
+    updateScale();
+    const t = setTimeout(updateScale, 100);
+    const obs = new ResizeObserver(updateScale);
+    if (slideContainerRef.current) obs.observe(slideContainerRef.current);
+    window.addEventListener('resize', updateScale);
+    return () => { clearTimeout(t); obs.disconnect(); window.removeEventListener('resize', updateScale); };
+  }, [mode]);
+
   // Editor State
   const [code, setCode] = useState('# Live Code Editor\n\ndef solution():\n    pass\n\nprint("Hello from CynexAI!")');
   const [language, setLanguage] = useState<Language>('python');
@@ -26,7 +43,27 @@ export default function PresentationView() {
   const [isRunning, setIsRunning] = useState(false);
   
   // Draw vs Type
-  const [isDrawMode, setIsDrawMode] = useState(false); // false = typing, true = drawing
+  const [isDrawMode, setIsDrawMode] = useState(false);
+
+  // Screen Cast
+  const [isCasting, setIsCasting] = useState(false);
+  const castStreamRef = useRef<MediaStream | null>(null);
+  const handleCast = async () => {
+    if (isCasting) {
+      castStreamRef.current?.getTracks().forEach(t => t.stop());
+      castStreamRef.current = null;
+      setIsCasting(false);
+      return;
+    }
+    try {
+      const stream = await (navigator.mediaDevices as any).getDisplayMedia({ video: true, audio: true });
+      castStreamRef.current = stream;
+      setIsCasting(true);
+      stream.getVideoTracks()[0].onended = () => { setIsCasting(false); castStreamRef.current = null; };
+    } catch (e) {
+      // user cancelled
+    }
+  };
 
   // Drawing State
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -187,12 +224,23 @@ export default function PresentationView() {
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-white overflow-hidden font-sans select-none">
       {/* Minimal control bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-slate-900/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-30">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <BookOpen className="w-4 h-4" /> Slides
           </button>
           <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Code className="w-4 h-4" /> Code & Draw
+          </button>
+
+          <div className="w-px h-5 bg-white/10 mx-1" />
+
+          {/* Cast / Screen Share */}
+          <button
+            onClick={handleCast}
+            title={isCasting ? 'Stop casting' : 'Cast / Share this screen'}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+          >
+            {isCasting ? <><MonitorPlay className="w-4 h-4" /> Casting…</> : <><Cast className="w-4 h-4" /> Cast</>}
           </button>
         </div>
 
@@ -262,32 +310,74 @@ export default function PresentationView() {
       {/* Main content */}
       <div className="flex-1 relative mt-14 bg-[#0A0F1C]">
         {mode === 'slides' ? (
-          <div className="absolute inset-0 flex items-center justify-center p-12 overflow-hidden bg-gradient-to-br from-[#0B0B1A] via-[#0F172A] to-[#0A0F1C]">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/10 blur-[120px] rounded-full pointer-events-none" />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={slide}
-                initial={{ opacity: 0, y: 20, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -20, scale: 1.02 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="w-full max-w-5xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-16 shadow-2xl relative z-10"
-              >
-                <div className="prose prose-invert prose-2xl max-w-none 
-                  prose-headings:font-display prose-headings:font-bold prose-headings:text-indigo-300
-                  prose-h1:text-6xl prose-h1:mb-8 prose-h1:tracking-tight prose-h1:text-center
-                  prose-h2:text-4xl prose-h2:mb-6 prose-h2:text-white
-                  prose-p:text-slate-300 prose-p:leading-relaxed
-                  prose-li:text-slate-300 prose-li:marker:text-indigo-500
-                  prose-strong:text-white prose-strong:font-bold">
-                  <ReactMarkdown>{currentSlide}</ReactMarkdown>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-            <div className="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-20">
+          <div className="absolute inset-0 overflow-hidden bg-gradient-to-br from-[#0B0B1A] via-[#0F172A] to-[#0A0F1C]" ref={slideContainerRef}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+            
+            {/* Positioning wrapper */}
+            <div style={{
+              position: 'absolute',
+              width: '1600px',
+              height: '900px',
+              top: '50%',
+              left: '50%',
+              transform: `translate(-50%, -50%) scale(${slideScale})`,
+              transformOrigin: 'center center',
+            }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={slide}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
+                  className="bg-[#f5e4dd] border-4 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden p-8"
+                >
+                  {/* Retro Background Grid */}
+                  <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+
+                  {/* Decorative Folders */}
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-8 z-0">
+                    {['bg-[#f4a7a1]', 'bg-[#a3c9c4]', 'bg-[#f2c180]', 'bg-[#e77a71]', 'bg-[#a3c9c4]'].map((color, idx) => (
+                      <div key={idx} className={`w-14 h-12 ${color} border-2 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
+                        <div className={`absolute -top-3 left-0 w-6 h-3 ${color} border-2 border-black border-b-0`} />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Main Content Window */}
+                  <div className="ml-28 flex-1 bg-[#f5e4dd] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col relative z-10 overflow-hidden">
+                    <div className="h-10 border-b-4 border-black flex items-center justify-end px-4 gap-2 bg-[#f4a7a1]">
+                      <div className="w-5 h-5 border-2 border-black bg-white" />
+                      <div className="w-5 h-5 border-2 border-black bg-white" />
+                      <div className="w-5 h-5 border-2 border-black bg-white flex items-center justify-center font-bold text-xs">X</div>
+                    </div>
+                    <div className="flex-1 px-14 py-10 flex flex-col justify-center items-center text-center overflow-hidden">
+                      <ReactMarkdown
+                        components={{
+                          h1: ({node, ...props}) => <h1 style={{fontSize:'64px', fontWeight:900, textTransform:'uppercase', letterSpacing:'-2px', marginBottom:'32px', lineHeight:1.1, wordBreak:'break-word', color:'#000'}} {...props} />,
+                          h2: ({node, ...props}) => <h2 style={{fontSize:'40px', fontWeight:800, textTransform:'uppercase', marginBottom:'24px', lineHeight:1.2, wordBreak:'break-word', color:'#000'}} {...props} />,
+                          p:  ({node, ...props}) => <p  style={{fontSize:'28px', fontWeight:600, marginBottom:'16px', lineHeight:1.5, wordBreak:'break-word', color:'#111', maxWidth:'1200px'}} {...props} />,
+                          ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'16px 0', width:'100%', maxWidth:'1300px'}} {...props} />,
+                          li: ({node, ...props}) => (
+                            <li style={{display:'flex', alignItems:'flex-start', gap:'16px', padding:'14px 20px', background:'rgba(255,255,255,0.5)', border:'2px solid #000', boxShadow:'4px 4px 0 #000', marginBottom:'12px', fontSize:'26px', fontWeight:700, wordBreak:'break-word', color:'#000'}}>
+                              <span style={{width:'16px', height:'16px', minWidth:'16px', background:'#e77a71', border:'2px solid #000', display:'inline-block', marginTop:'6px'}} />
+                              <span {...props} />
+                            </li>
+                          ),
+                          img: ({node, ...props}) => <img style={{border:'4px solid #000', boxShadow:'8px 8px 0 #000', maxHeight:'300px', objectFit:'cover', margin:'0 auto 24px'}} {...props} />
+                        }}
+                      >{currentSlide}</ReactMarkdown>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
               {slides.map((_, i) => (
                 <button key={i} onClick={() => changeSlide(i + 1)}
-                  className={`h-2 rounded-full transition-all duration-300 ${slide === i + 1 ? 'bg-indigo-500 w-8 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-white/20 w-2 hover:bg-white/40'}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${slide === i + 1 ? 'bg-[#e77a71] w-8' : 'bg-white/20 w-2 hover:bg-white/40'}`}
                 />
               ))}
             </div>

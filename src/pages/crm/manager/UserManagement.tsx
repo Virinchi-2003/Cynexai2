@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
-import { Users, Key, DollarSign, Plus, X, Lock, Unlock, Eye, EyeOff, Edit } from 'lucide-react';
+import { Users, Key, DollarSign, Plus, X, Lock, Unlock, Eye, EyeOff, Edit, Search, Filter, Trash2 } from 'lucide-react';
 import { decryptPassword } from '../../../lib/crypto';
 import { getCurrentUser } from '../../../lib/auth';
-import { getUsers, saveUser, patchUser, updateStudentAttended } from '../../../lib/api/users';
+import { getUsers, saveUser, patchUser, updateStudentAttended, getFilterOptions, getCourseCurriculum, deleteUser } from '../../../lib/api/users';
 import { DataTable } from '../../../components/ui/erp/DataTable';
 
 interface ERPUser {
@@ -18,9 +18,12 @@ interface ERPUser {
   permissions_json?: string;
   classes_attended_json?: string;
   preferred_mode?: string;
+  joining_date?: string;
+  batch_number?: string;
+  course?: string;
 }
 
-const ClassesAttendedCell = ({ user, onUpdate }: { user: ERPUser, onUpdate: (user: ERPUser, json: string) => void }) => {
+const ClassesAttendedCell = ({ user, curriculum }: { user: ERPUser, curriculum: Record<string, string[]> }) => {
   let data: Record<string, number> = {};
   try {
     data = JSON.parse(user.classes_attended_json || '{}');
@@ -28,27 +31,20 @@ const ClassesAttendedCell = ({ user, onUpdate }: { user: ERPUser, onUpdate: (use
     data = {};
   }
   
-  if (Object.keys(data).length === 0) {
-    data = { "General": 0 };
-  }
-
-  const handleAdjust = (mod: string, delta: number) => {
-    const newData = { ...data, [mod]: Math.max(0, (data[mod] || 0) + delta) };
-    onUpdate(user, JSON.stringify(newData));
-  };
+  const courseModules = (user.course && curriculum[user.course]) ? curriculum[user.course] : Object.keys(data);
+  if (courseModules.length === 0) courseModules.push('General');
 
   return (
-    <div className="flex flex-col gap-2">
-      {Object.entries(data).map(([mod, count]) => (
-        <div key={mod} className="flex items-center gap-3 bg-erp-background p-1.5 rounded-lg border border-erp-border">
-          <span className="text-xs font-bold w-16 truncate" title={mod}>{mod}</span>
-          <div className="flex items-center gap-1 bg-erp-surface rounded-md">
-            <button onClick={() => handleAdjust(mod, -1)} className="px-2 py-0.5 text-red-500 hover:bg-red-50 rounded-l-md font-bold">-</button>
-            <span className="text-xs font-bold w-4 text-center">{count}</span>
-            <button onClick={() => handleAdjust(mod, 1)} className="px-2 py-0.5 text-green-500 hover:bg-green-50 rounded-r-md font-bold">+</button>
+    <div className="flex gap-1 w-32 h-2 items-center">
+      {courseModules.map(mod => {
+        const count = data[mod] || 0;
+        const progress = Math.min(100, (count / 20) * 100);
+        return (
+          <div key={mod} title={`${mod}: ${count} Classes`} className="flex-1 h-full bg-erp-border/30 rounded-sm overflow-hidden cursor-help">
+            <div className="h-full bg-indigo-500 transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };
@@ -63,6 +59,11 @@ export default function UserManagement() {
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState<string>('');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  // Filter Options State
+  const [courses, setCourses] = useState<string[]>([]);
+  const [batches, setBatches] = useState<string[]>([]);
+  const [curriculum, setCurriculum] = useState<Record<string, string[]>>({});
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,6 +87,16 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsersData();
   }, [filters, sortBy, sortDir]);
+
+  useEffect(() => {
+    getFilterOptions().then(res => {
+      setCourses(res.courses);
+      setBatches(res.batches);
+    });
+    getCourseCurriculum().then(res => {
+      setCurriculum(res);
+    });
+  }, []);
 
   const fetchUsersData = async () => {
     try {
@@ -198,37 +209,51 @@ export default function UserManagement() {
     }
   };
 
+  const handleDelete = async (row: ERPUser) => {
+    if (window.confirm(`Are you sure you want to completely delete ${row.name}? This action cannot be undone.`)) {
+      try {
+        await deleteUser(row.id, row.email);
+        setUsers(prev => prev.filter(u => u.id !== row.id));
+      } catch (e) {
+        console.error("Failed to delete user", e);
+        alert("Failed to delete user. Please try again.");
+      }
+    }
+  };
+
   const staffColumns = [
-    { key: 'name', header: 'Name', editable: true },
-    { key: 'email', header: 'Email', editable: true },
-    { key: 'role', header: 'Role', editable: true },
-    { key: 'status', header: 'Status', editable: true },
-    { key: 'salary', header: 'Salary', editable: currentUser?.role === 'CEO' },
-    { key: 'actions', header: 'Actions', render: (row: any) => (
-      <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
-        <Edit className="w-4 h-4" />
-      </button>
+    { key: 'name', header: 'Name' },
+    { key: 'email', header: 'Email' },
+    { key: 'role', header: 'Role' },
+    { key: 'status', header: 'Status' },
+    { key: 'salary', header: 'Salary' },
+    { key: 'actions', header: 'Actions', filterable: false, render: (row: any) => (
+      <div className="flex items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit User">
+          <Edit className="w-4 h-4" />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); handleDelete(row); }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete User">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
     )}
   ];
 
   const studentColumns = [
-    { key: 'name', header: 'Name', editable: true },
-    { key: 'email', header: 'Portal Login', editable: true },
-    { key: 'preferred_mode', header: 'Mode', editable: true },
-    { key: 'classes_attended', header: 'Classes', render: (row: any) => <ClassesAttendedCell user={row} onUpdate={async (u, json) => {
-      // Optimistic update
-      setUsers(prev => prev.map(usr => usr.id === u.id ? { ...usr, classes_attended_json: json } : usr));
-      try {
-        await updateStudentAttended(u.email, json);
-      } catch (e) {
-        fetchUsersData();
-      }
-    }} /> },
-    { key: 'status', header: 'Status', editable: true },
-    { key: 'actions', header: 'Actions', render: (row: any) => (
-      <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors">
-        <Edit className="w-4 h-4" />
-      </button>
+    { key: 'name', header: 'Name' },
+    { key: 'email', header: 'Portal Login' },
+    { key: 'preferred_mode', header: 'Mode' },
+    { key: 'classes_attended', header: 'Classes', render: (row: any) => <ClassesAttendedCell user={row} curriculum={curriculum} /> },
+    { key: 'status', header: 'Status' },
+    { key: 'actions', header: 'Actions', filterable: false, render: (row: any) => (
+      <div className="flex items-center gap-1">
+        <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit User">
+          <Edit className="w-4 h-4" />
+        </button>
+        <button onClick={(e) => { e.stopPropagation(); handleDelete(row); }} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete User">
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
     )}
   ];
 
@@ -252,31 +277,178 @@ export default function UserManagement() {
         <div className="flex gap-4 mb-6 border-b border-erp-border">
           <button
             className={`pb-2 px-1 font-bold ${activeTab === 'staff' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
-            onClick={() => setActiveTab('staff')}
+            onClick={() => {
+              setActiveTab('staff');
+              setFilters({}); // Clear filters when switching tabs
+            }}
           >
             Staff Members
           </button>
           <button
             className={`pb-2 px-1 font-bold ${activeTab === 'students' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
-            onClick={() => setActiveTab('students')}
+            onClick={() => {
+              setActiveTab('students');
+              setFilters({}); // Clear filters when switching tabs
+            }}
           >
             Students
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center h-64 text-erp-text/50 font-bold">Loading users...</div>
-        ) : (
+        {/* Global Filter Bar */}
+        <div className="bg-erp-surface border border-erp-border p-4 rounded-xl mb-6 flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-xs font-bold text-erp-text/70 uppercase tracking-wider mb-2">Search Users</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/50" />
+              <input 
+                type="text" 
+                value={filters.search || ''}
+                placeholder="Search by Name, Email, or ID..." 
+                className="w-full bg-erp-background border border-erp-border rounded-lg pl-10 pr-4 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500"
+                onChange={(e) => handleFilter('search', e.target.value)}
+              />
+            </div>
+          </div>
+          {activeTab === 'students' && (
+            <>
+              <div className="w-48">
+                <label className="block text-xs font-bold text-erp-text/70 uppercase tracking-wider mb-2">Course</label>
+                <select 
+                  className="w-full bg-erp-background border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500"
+                  onChange={(e) => handleFilter('course', e.target.value)}
+                >
+                  <option value="">All Courses</option>
+                  {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="w-32">
+                <label className="block text-xs font-bold text-erp-text/70 uppercase tracking-wider mb-2">Batch</label>
+                <select 
+                  className="w-full bg-erp-background border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500"
+                  onChange={(e) => handleFilter('batch', e.target.value)}
+                >
+                  <option value="">All Batches</option>
+                  {batches.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          <div className="w-40">
+            <label className="block text-xs font-bold text-erp-text/70 uppercase tracking-wider mb-2">Joined After</label>
+            <input 
+              type="date" 
+              className="w-full bg-erp-background border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500"
+              onChange={(e) => handleFilter('startDate', e.target.value)}
+            />
+          </div>
+          <div className="w-40">
+            <label className="block text-xs font-bold text-erp-text/70 uppercase tracking-wider mb-2">Joined Before</label>
+            <input 
+              type="date" 
+              className="w-full bg-erp-background border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500"
+              onChange={(e) => handleFilter('endDate', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="relative">
+          {loading && (
+            <div className="absolute inset-0 bg-erp-surface/50 flex items-center justify-center z-10 rounded-xl">
+              <span className="font-bold text-erp-text/70 bg-erp-surface px-4 py-2 rounded shadow">Loading users...</span>
+            </div>
+          )}
           <DataTable
             columns={columns}
             data={users}
             onSort={handleSort}
-            onFilter={handleFilter}
             onEdit={handleEdit}
             sortBy={sortBy}
             sortDir={sortDir}
+            renderExpandedRow={activeTab === 'students' ? (row) => {
+              let moduleProgress: Record<string, number> = {};
+              try {
+                moduleProgress = JSON.parse(row.classes_attended_json || '{}');
+              } catch (e) {
+                moduleProgress = {};
+              }
+              const modules = Object.keys(moduleProgress).length > 0 ? moduleProgress : { 'General': 0 };
+
+              return (
+                <div className="p-6 bg-erp-background/50 flex flex-col md:flex-row gap-8">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-erp-text/70 uppercase tracking-wider mb-4">Student Details</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                      <div>
+                        <p className="text-xs text-erp-text/50 mb-1">Batch Number</p>
+                        <p className="font-medium text-erp-text">{row.batch_number || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-erp-text/50 mb-1">Course</p>
+                        <p className="font-medium text-erp-text">{row.course || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-erp-text/50 mb-1">Joining Date</p>
+                        <p className="font-medium text-erp-text">{row.joining_date || 'N/A'}</p>
+                      </div>
+                      <div className="col-span-2 md:col-span-3 mt-4">
+                        <p className="text-xs text-erp-text/50 mb-3 uppercase tracking-wider font-bold">Module Progress</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+                          {(() => {
+                            let moduleProgress: Record<string, number> = {};
+                            try { moduleProgress = JSON.parse(row.classes_attended_json || '{}'); } catch (e) {}
+                            
+                            const courseModules = (row.course && curriculum[row.course]) ? curriculum[row.course] : Object.keys(moduleProgress);
+                            if (courseModules.length === 0) courseModules.push('General');
+
+                            return courseModules.map((mod: string) => {
+                              const count = moduleProgress[mod] || 0;
+                              return (
+                                <div key={mod} className="flex flex-col gap-2 bg-erp-background p-3 rounded-lg border border-erp-border">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-xs font-bold truncate pr-2" title={mod}>{mod}</span>
+                                    <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">{count} Cls</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button 
+                                      onClick={async () => {
+                                        const newData = { ...moduleProgress, [mod]: Math.max(0, count - 1) };
+                                        const jsonStr = JSON.stringify(newData);
+                                        setUsers(prev => prev.map(u => u.id === row.id ? { ...u, classes_attended_json: jsonStr } : u));
+                                        try { await updateStudentAttended(row.email, jsonStr); } catch (e) { fetchUsersData(); }
+                                      }} 
+                                      className="w-5 h-5 rounded bg-erp-surface text-red-500 hover:bg-red-50 border border-erp-border flex items-center justify-center font-bold transition-colors text-[10px]"
+                                    >-</button>
+                                    <div className="flex-1 h-1.5 bg-erp-surface rounded-full overflow-hidden">
+                                      {count > 0 ? (
+                                        <div className="h-full bg-indigo-500 rounded-full transition-all duration-300" style={{ width: `${Math.min(100, (count / 20) * 100)}%` }} />
+                                      ) : (
+                                        <div className="h-full bg-erp-border/30 rounded-full w-full" />
+                                      )}
+                                    </div>
+                                    <button 
+                                      onClick={async () => {
+                                        const newData = { ...moduleProgress, [mod]: Math.max(0, count + 1) };
+                                        const jsonStr = JSON.stringify(newData);
+                                        setUsers(prev => prev.map(u => u.id === row.id ? { ...u, classes_attended_json: jsonStr } : u));
+                                        try { await updateStudentAttended(row.email, jsonStr); } catch (e) { fetchUsersData(); }
+                                      }} 
+                                      className="w-5 h-5 rounded bg-erp-surface text-green-500 hover:bg-green-50 border border-erp-border flex items-center justify-center font-bold transition-colors text-[10px]"
+                                    >+</button>
+                                  </div>
+                                </div>
+                              );
+                            });
+                          })()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            } : undefined}
           />
-        )}
+        </div>
 
         {/* Edit User Modal */}
         {isModalOpen && (

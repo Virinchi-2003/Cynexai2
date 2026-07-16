@@ -1,0 +1,5 @@
+Date,NAME,MOBILE NUMBER,Grad year,email,Qualification,IT/NON IT,Mode(offline/online),location,Course Interest,Source,Status
+2024-03-01,John Smith,9876543210,2022,john.smith@example.com,B.Tech,IT,Online,New York,Data Science,LinkedIn,New
+2024-03-02,Alice Johnson,9988776655,2023,alice.j@example.com,BCA,IT,Offline,San Francisco,Full Stack,Website,Interested
+2024-03-03,Bob Williams,8877665544,2021,,Degree,Non-IT,Hybrid,Chicago,AI/ML,Referral,Contacted
+2024-03-04,Emma Davis,7766554433,2024,emma.davis@example.com,MCA,IT,Online,London,Data Science,Facebook,Demo Scheduled

@@ -5,6 +5,7 @@ import { Clock, CheckCircle, MessageSquare, MoreVertical, AlertCircle } from 'lu
 
 interface Props {
   tasks: Task[];
+  users: any[];
   onTaskClick: (task: Task) => void;
   onUpdate: () => void;
 }
@@ -30,7 +31,11 @@ const TYPE_LABELS: Record<string, string> = {
   'Number':   '📊 Track',
 };
 
-export const TaskBoardView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate }) => {
+export const TaskBoardView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpdate }) => {
+  const getUserName = (id: string) => {
+    const user = users.find(u => u.id === id);
+    return user ? user.name : id;
+  };
   const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
@@ -169,8 +174,10 @@ export const TaskBoardView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate })
 
                               {/* Footer: due date + assignee avatar */}
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
-                                <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[9px] font-bold uppercase border border-indigo-200">
-                                  {(task.assignee_id || '??').slice(0, 2)}
+                                <div className="flex items-center gap-2" title={getUserName(task.assignee_id)}>
+                                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[9px] font-bold uppercase border border-indigo-200">
+                                    {getUserName(task.assignee_id).slice(0, 2)}
+                                  </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {task.due_date && (

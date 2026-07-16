@@ -201,6 +201,10 @@ export default function LeadPipeline() {
               }
             }
           }
+          else if (h.includes('status') || h.includes('stage')) {
+            const statusVal = values[index];
+            if (statusVal) leadData.status = statusVal as LeadStatus;
+          }
         });
 
         if (leadData.name && (leadData.phone || leadData.email)) {

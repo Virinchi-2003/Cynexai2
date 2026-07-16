@@ -753,18 +753,70 @@ export const initTursoDB = async () => {
       `);
 
       await client.execute(`
+        CREATE TABLE IF NOT EXISTS projects (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          description TEXT,
+          color TEXT,
+          owner_id TEXT,
+          status TEXT,
+          created_at TEXT
+        )
+      `);
+
+      await client.execute(`
         CREATE TABLE IF NOT EXISTS tasks (
           id TEXT PRIMARY KEY,
           type TEXT,
           title TEXT,
+          description TEXT,
           target_value REAL,
           current_value REAL,
           assignee_id TEXT,
+          project_id TEXT,
+          priority TEXT,
           due_date TEXT,
           recurrence_rule TEXT,
-          status TEXT
+          status TEXT,
+          created_by TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          related_entity TEXT,
+          task_type TEXT,
+          target_number REAL,
+          current_number REAL,
+          start_date TEXT,
+          tags TEXT,
+          lead_id TEXT,
+          student_id TEXT
         )
       `);
+
+      // Migration for existing databases
+      const taskColumnsToAdd = [
+        'description TEXT',
+        'project_id TEXT',
+        'priority TEXT',
+        'created_by TEXT',
+        'created_at TEXT',
+        'updated_at TEXT',
+        'related_entity TEXT',
+        'task_type TEXT',
+        'target_number REAL',
+        'current_number REAL',
+        'start_date TEXT',
+        'tags TEXT',
+        'lead_id TEXT',
+        'student_id TEXT'
+      ];
+      
+      for (const col of taskColumnsToAdd) {
+        try {
+          await client.execute(`ALTER TABLE tasks ADD COLUMN ${col}`);
+        } catch (e) {
+          // Ignore if column already exists
+        }
+      }
 
       await client.execute(`
         CREATE TABLE IF NOT EXISTS whatsapp_templates (
@@ -897,6 +949,76 @@ export const initTursoDB = async () => {
           spent REAL,
           leads INTEGER,
           platform TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS badges (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          badge_type TEXT,
+          badge_name TEXT,
+          awarded_at TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS announcements (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          body TEXT,
+          is_active INTEGER DEFAULT 1,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS referrals (
+          id TEXT PRIMARY KEY,
+          referrer_student_id TEXT,
+          referred_lead_id TEXT,
+          status TEXT DEFAULT 'Pending',
+          reward_paid INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS mock_interviews (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          transcript TEXT,
+          feedback TEXT,
+          score REAL,
+          coins_awarded INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS job_listings (
+          id TEXT PRIMARY KEY,
+          title TEXT,
+          company TEXT,
+          location TEXT,
+          qualifications TEXT,
+          source_url TEXT,
+          expire_date TEXT,
+          is_active INTEGER DEFAULT 1,
+          scraped_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS qa_responses (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          class_id TEXT,
+          question_id TEXT,
+          answer_idx INTEGER,
+          is_correct INTEGER,
+          code_answer TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `);
 

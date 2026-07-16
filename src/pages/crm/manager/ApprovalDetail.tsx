@@ -41,7 +41,8 @@ export default function ApprovalDetail() {
     const user = getCurrentUser();
     if (!user) return;
     await approveSale(id as string, user.id, sale.sale_id);
-    navigate(`/crm/manager/onboarding/${sale.sale_id}`);
+    // Student is now onboarded, task is created, just return to manager dash
+    navigate(`/crm/manager`);
   };
 
   const handleReject = async () => {

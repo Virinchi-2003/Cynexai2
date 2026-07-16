@@ -10,6 +10,7 @@ export interface Task {
   priority: string;
   due_date: string;
   status: string;
+  project_id?: string | null;
   related_entity?: string | null;
   task_type?: 'One-Time' | 'Daily' | 'Yes/No' | 'Number';
   target_number?: number;
@@ -25,21 +26,24 @@ export interface Task {
 export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
   const id = 'task_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   const status = 'To Do';
+  const created_at = new Date().toISOString();
+  const updated_at = created_at;
   
   if (isTursoConfigured && client) {
     try {
       await initTursoDB(); // Ensure tables are initialized and updated
       await client.execute({
-        sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, related_entity, task_type, target_number, current_number, start_date, tags, created_by, lead_id, student_id) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, project_id, related_entity, task_type, target_number, current_number, start_date, tags, created_by, lead_id, student_id, created_at, updated_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, 
           task.title, 
-          task.description, 
+          task.description || '', 
           task.assignee_id, 
           status, 
-          task.priority, 
-          task.due_date, 
+          task.priority || 'Medium', 
+          task.due_date || null, 
+          task.project_id || null,
           task.related_entity || null,
           task.task_type || 'One-Time',
           task.target_number || null,
@@ -48,7 +52,9 @@ export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
           task.tags || null,
           task.created_by || null,
           task.lead_id || null,
-          task.student_id || null
+          task.student_id || null,
+          created_at,
+          updated_at
         ]
       });
       return id;
@@ -69,6 +75,21 @@ export const getTasksForUser = async (userId: string): Promise<Task[]> => {
       return result.rows as unknown as Task[];
     } catch (e) {
       console.error("Failed to fetch tasks", e);
+    }
+  }
+  return [];
+};
+
+export const getTasksByProject = async (projectId: string): Promise<Task[]> => {
+  if (isTursoConfigured && client) {
+    try {
+      const result = await client.execute({
+        sql: "SELECT * FROM tasks WHERE project_id = ? ORDER BY due_date ASC",
+        args: [projectId]
+      });
+      return result.rows as unknown as Task[];
+    } catch (e) {
+      console.error("Failed to fetch tasks by project", e);
     }
   }
   return [];

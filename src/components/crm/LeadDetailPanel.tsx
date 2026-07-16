@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { updateLeadStatus, getLeadById, getLeadActivities, addActivity } from '../../lib/api/crm';
+import { updateLeadStatus, getLeadById, getLeadActivities, addActivity, deleteLead } from '../../lib/api/crm';
 import { Lead, CrmActivity } from '../../lib/types';
 import { Card } from '../ui/erp/Card';
 import { Button } from '../ui/erp/Button';
-import { X, Phone, MessageCircle, RefreshCw, Activity, Mail, Users, PenTool, Send } from 'lucide-react';
+import { X, Phone, MessageCircle, RefreshCw, Activity, Mail, Users, PenTool, Send, Trash2 } from 'lucide-react';
 import { AdmissionForm } from '../../pages/crm/forms/AdmissionForm';
 import { SaleForm } from '../../pages/crm/forms/SaleForm';
 import { SalesPitchModal } from '../../pages/crm/forms/SalesPitchModal';
@@ -108,6 +108,20 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelPr
     }
   };
 
+  const handleDeleteLead = async () => {
+    if (!lead) return;
+    const confirmDelete = window.confirm(`Are you sure you want to permanently delete lead: ${lead.name}?`);
+    if (!confirmDelete) return;
+
+    const res = await deleteLead(lead.id);
+    if (res.success) {
+      onClose();
+      onUpdate();
+    } else {
+      alert(res.error || 'Failed to delete lead');
+    }
+  };
+
   const handleWhatsApp = () => {
     if (lead) {
       const msg = encodeURIComponent(`Hi ${lead.name}, welcome to CynexAI! I'm reaching out regarding your interest in our ${lead.course_interest} course.`);
@@ -158,6 +172,11 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelPr
               <div className="inline-block bg-erp-secondary/10 text-erp-secondary font-bold px-3 py-1 rounded-xl text-sm text-right h-fit">
                 {lead.course_interest}
               </div>
+              {(user?.role === 'CEO' || user?.role === 'Manager') && !isEditing && (
+                <Button variant="ghost" onClick={handleDeleteLead} className="text-xs px-3 text-red-500 hover:text-red-700 hover:bg-red-50 mt-1">
+                  <Trash2 className="w-3.5 h-3.5 mr-1 inline" /> Delete
+                </Button>
+              )}
             </div>
           </div>
 

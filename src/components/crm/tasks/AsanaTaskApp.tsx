@@ -1,29 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { Task, getTasksForUser, getAllTasks, getTasksByCreator, createTask, getTasksByDateRange } from '../../../lib/api/tasks';
+import { Task, getTasksForUser, getAllTasks, getTasksByCreator, createTask, getTasksByProject } from '../../../lib/api/tasks';
+import { Project, getProjects } from '../../../lib/api/projects';
 import { getCurrentUser } from '../../../lib/auth';
 import { Button } from '../../ui/erp/Button';
 import { TaskListView } from './TaskListView';
 import { TaskBoardView } from './TaskBoardView';
 import { TaskCalendarView } from './TaskCalendarView';
 import { TaskDetailPanel } from './TaskDetailPanel';
-import { LayoutList, LayoutGrid, CalendarDays, Plus, Search, X } from 'lucide-react';
+import { TaskAppSidebar } from './TaskAppSidebar';
+import { ProjectModal } from './ProjectModal';
+import { LayoutList, LayoutGrid, CalendarDays, Plus, Search, X, FolderOpen } from 'lucide-react';
 import { getErpUsers } from '../../../lib/api/manager';
 
 type ViewMode = 'list' | 'board' | 'calendar';
-type FilterMode = 'today' | 'my' | 'all' | 'assigned';
 
 export default function AsanaTaskApp() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [currentView, setCurrentView] = useState('my-tasks'); // 'my-tasks', 'inbox', 'home', or 'project_ID'
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
+  
   const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [taskFilter, setTaskFilter] = useState<FilterMode>('today');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
+  const [showNewProject, setShowNewProject] = useState(false);
+  
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState('');
-  const [newTaskType, setNewTaskType] = useState<'One-Time' | 'Daily' | 'Yes/No' | 'Number'>('One-Time');
-  const [newTaskTargetNumber, setNewTaskTargetNumber] = useState('10');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [newTaskPriority, setNewTaskPriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
+  
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -32,26 +38,29 @@ export default function AsanaTaskApp() {
   const loadData = async () => {
     if (!user) return;
     try {
+      // Load Projects
+      const projs = await getProjects();
+      setProjects(projs);
+
+      // Load Tasks based on view
       let fetched: Task[] = [];
-      if (taskFilter === 'my') {
-        const myTasks = await getTasksForUser(user.id);
-        const createdNew = await ensureDailyTasks(myTasks, user.id);
-        fetched = createdNew ? await getTasksForUser(user.id) : myTasks;
-      } else if (taskFilter === 'today') {
-        const allMyTasks = await getTasksForUser(user.id);
-        await ensureDailyTasks(allMyTasks, user.id);
-        const refreshedTasks = await getTasksForUser(user.id);
-        const today = new Date().toISOString().split('T')[0];
-        fetched = refreshedTasks.filter(t => !t.due_date || t.due_date <= today);
-      } else if (taskFilter === 'all') {
-        fetched = await getAllTasks();
-      } else if (taskFilter === 'assigned') {
+      if (currentView === 'my-tasks') {
+        fetched = await getTasksForUser(user.id);
+      } else if (currentView === 'delegated') {
         fetched = await getTasksByCreator(user.id);
+        // Filter out tasks assigned to self if you want, or just show all created by you
+        fetched = fetched.filter(t => t.assignee_id !== user.id);
+      } else if (currentView === 'all-tasks') {
+        fetched = await getAllTasks();
+      } else if (currentView.startsWith('project_') && currentProjectId) {
+        fetched = await getTasksByProject(currentProjectId);
+      } else if (currentView === 'home' || currentView === 'inbox') {
+        // Inbox could show recently assigned or commented
+        // Home could show a mix of recent projects and tasks
+        // For now, default to my tasks
+        fetched = await getTasksForUser(user.id);
       }
-      if (viewMode === 'calendar') {
-        // For calendar, always fetch wider range for better view
-        fetched = await (taskFilter === 'all' ? getAllTasks() : getTasksForUser(user.id));
-      }
+      
       setTasks(fetched);
     } catch (e) {
       console.error(e);
@@ -63,7 +72,7 @@ export default function AsanaTaskApp() {
     if (user && ['Manager', 'CEO', 'Admin'].includes(user.role)) {
       getErpUsers().then(setUsers);
     }
-  }, [taskFilter, viewMode]);
+  }, [currentView, currentProjectId]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,12 +85,11 @@ export default function AsanaTaskApp() {
       created_by: user.id,
       priority: newTaskPriority,
       due_date: newTaskDueDate,
-      task_type: newTaskType,
-      target_number: newTaskType === 'Number' ? parseInt(newTaskTargetNumber, 10) || 10 : undefined,
+      project_id: currentProjectId, // Auto-assign to current project if in project view
+      task_type: 'One-Time',
     });
 
     setNewTaskTitle('');
-    setNewTaskType('One-Time');
     setNewTaskDueDate('');
     setNewTaskPriority('Medium');
     setShowNewTask(false);
@@ -94,34 +102,49 @@ export default function AsanaTaskApp() {
     ? tasks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()))
     : tasks;
 
-  const tabClass = (active: boolean) =>
-    `text-sm font-bold pb-2 border-b-2 transition-colors whitespace-nowrap ${
-      active ? 'border-erp-primary text-erp-text' : 'border-transparent text-erp-text/50 hover:text-erp-text/80'
-    }`;
-
   const viewBtnClass = (active: boolean) =>
     `p-2 rounded-lg transition-colors ${
       active ? 'bg-erp-primary text-white shadow-sm' : 'text-erp-text/50 hover:text-erp-text hover:bg-erp-surface'
     }`;
 
+  const currentProject = projects.find(p => p.id === currentProjectId);
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background relative">
-      <div className={`flex-1 flex flex-col p-4 md:p-8 min-w-0 h-full transition-all duration-300 overflow-y-auto ${selectedTask ? 'hidden lg:flex lg:pr-4' : 'w-full'}`}>
+      
+      {/* Sidebar */}
+      <TaskAppSidebar 
+        currentView={currentView}
+        onViewChange={(view, projectId) => {
+          setCurrentView(view);
+          setCurrentProjectId(projectId || null);
+          setSelectedTask(null); // Close details on view change
+        }}
+        projects={projects}
+        onNewProject={() => setShowNewProject(true)}
+      />
 
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col p-4 md:p-8 min-w-0 h-full transition-all duration-300 overflow-y-auto ${selectedTask ? 'hidden lg:flex lg:pr-4' : 'w-full'}`}>
+        
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-erp-text">Tasks</h1>
-            <div className="flex gap-5 mt-3 overflow-x-auto no-scrollbar">
-              <button onClick={() => setTaskFilter('today')} className={tabClass(taskFilter === 'today')}>Today</button>
-              <button onClick={() => setTaskFilter('my')} className={tabClass(taskFilter === 'my')}>All My Tasks</button>
-              {isManagerOrAbove && (
-                <>
-                  <button onClick={() => setTaskFilter('assigned')} className={tabClass(taskFilter === 'assigned')}>Assigned by Me</button>
-                  <button onClick={() => setTaskFilter('all')} className={tabClass(taskFilter === 'all')}>All Tasks</button>
-                </>
-              )}
-            </div>
+        <div className="flex flex-col md:flex-row md:items-start justify-between mb-6 gap-4 border-b border-erp-border/50 pb-4">
+          <div className="flex items-center gap-3">
+            {currentProject ? (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 rounded shadow-sm" style={{ backgroundColor: currentProject.color || '#94a3b8' }} />
+                  <h1 className="text-3xl font-display font-bold text-erp-text">{currentProject.name}</h1>
+                </div>
+                {currentProject.description && (
+                  <p className="text-sm text-erp-text/60 mt-1">{currentProject.description}</p>
+                )}
+              </div>
+            ) : (
+              <h1 className="text-3xl font-display font-bold text-erp-text capitalize">
+                {currentView.replace('-', ' ')}
+              </h1>
+            )}
           </div>
 
           <div className="flex items-center gap-3 flex-shrink-0">
@@ -132,7 +155,7 @@ export default function AsanaTaskApp() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Search..."
+                placeholder="Search tasks..."
                 className="bg-white border-2 border-erp-border rounded-xl pl-9 pr-3 py-2 text-sm w-40 focus:outline-none focus:border-erp-primary font-medium transition-all focus:w-52"
               />
             </div>
@@ -151,9 +174,9 @@ export default function AsanaTaskApp() {
             </div>
 
             {/* Add Task */}
-            <Button onClick={() => setShowNewTask(v => !v)} className="flex items-center gap-2 flex-shrink-0">
+            <Button onClick={() => setShowNewTask(v => !v)} className="flex items-center gap-2 flex-shrink-0 bg-emerald-600 hover:bg-emerald-500">
               <Plus className="w-4 h-4" />
-              Add Task
+              New Task
             </Button>
           </div>
         </div>
@@ -194,26 +217,6 @@ export default function AsanaTaskApp() {
                 </select>
               )}
               <select
-                value={newTaskType}
-                onChange={e => setNewTaskType(e.target.value as any)}
-                className="bg-erp-surface border-none outline-none text-xs font-bold px-2 py-1.5 rounded-lg text-erp-text/70 w-28"
-              >
-                <option value="One-Time">📌 One-Time</option>
-                <option value="Daily">🔁 Daily</option>
-                <option value="Yes/No">✅ Yes/No</option>
-                <option value="Number">📊 Number</option>
-              </select>
-              {newTaskType === 'Number' && (
-                <input
-                  type="number"
-                  value={newTaskTargetNumber}
-                  onChange={e => setNewTaskTargetNumber(e.target.value)}
-                  placeholder="Target #"
-                  className="bg-erp-surface border-none outline-none text-xs font-bold px-2 py-1.5 rounded-lg text-erp-text/90 w-20"
-                  required
-                />
-              )}
-              <select
                 value={newTaskPriority}
                 onChange={e => setNewTaskPriority(e.target.value as any)}
                 className="bg-erp-surface border-none outline-none text-xs font-bold px-2 py-1.5 rounded-lg text-erp-text/70 w-24"
@@ -236,11 +239,6 @@ export default function AsanaTaskApp() {
           <span className="text-sm font-bold text-erp-text/50">
             {filteredTasks.length} task{filteredTasks.length !== 1 ? 's' : ''}
           </span>
-          {searchQuery && (
-            <span className="text-xs font-medium text-erp-primary bg-erp-primary/10 px-2 py-0.5 rounded-full">
-              Filtered: "{searchQuery}"
-            </span>
-          )}
           <div className="flex gap-2 ml-auto">
             {['To Do', 'In Progress', 'Review', 'Done'].map(s => {
               const count = filteredTasks.filter(t => t.status === s).length;
@@ -255,31 +253,45 @@ export default function AsanaTaskApp() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 min-h-0">
-          {viewMode === 'list' && (
-            <TaskListView tasks={filteredTasks} onTaskClick={setSelectedTask} onUpdate={loadData} />
-          )}
-          {viewMode === 'board' && (
-            <TaskBoardView tasks={filteredTasks} onTaskClick={setSelectedTask} onUpdate={loadData} />
-          )}
-          {viewMode === 'calendar' && (
-            <TaskCalendarView tasks={filteredTasks} onTaskClick={setSelectedTask} />
+        <div className="flex-1 min-h-0 bg-erp-surface/30 rounded-2xl p-1 border border-erp-border/50">
+          {filteredTasks.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-erp-text/40 space-y-3">
+              <FolderOpen className="w-12 h-12 stroke-1" />
+              <p className="font-medium text-sm">No tasks found here</p>
+            </div>
+          ) : (
+            <>
+              {viewMode === 'list' && <TaskListView tasks={filteredTasks} users={users} onTaskClick={setSelectedTask} onUpdate={loadData} />}
+              {viewMode === 'board' && <TaskBoardView tasks={filteredTasks} users={users} onTaskClick={setSelectedTask} onUpdate={loadData} />}
+              {viewMode === 'calendar' && <TaskCalendarView tasks={filteredTasks} onTaskClick={setSelectedTask} />}
+            </>
           )}
         </div>
       </div>
 
       {/* Slide-out Detail Panel */}
       {selectedTask && (
-        <div className="absolute inset-0 z-20 bg-erp-background lg:relative lg:inset-auto lg:w-[420px] lg:flex-shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] border-l-2 border-erp-border h-full animate-in slide-in-from-right duration-250">
+        <div className="absolute inset-0 z-20 bg-erp-background lg:relative lg:inset-auto lg:w-[450px] lg:flex-shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.08)] border-l-2 border-erp-border h-full animate-in slide-in-from-right duration-250">
           <TaskDetailPanel
             task={selectedTask}
             onClose={() => setSelectedTask(null)}
-            onUpdate={() => {
-              loadData();
-            }}
+            onUpdate={loadData}
             currentUserRole={user?.role || ''}
           />
         </div>
+      )}
+
+      {/* New Project Modal */}
+      {showNewProject && (
+        <ProjectModal
+          onClose={() => setShowNewProject(false)}
+          onSuccess={(newId) => {
+            setShowNewProject(false);
+            loadData();
+            setCurrentView(`project_${newId}`);
+            setCurrentProjectId(newId);
+          }}
+        />
       )}
     </div>
   );

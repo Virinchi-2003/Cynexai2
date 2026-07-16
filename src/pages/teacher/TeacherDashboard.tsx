@@ -1,13 +1,33 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter } from 'lucide-react';
+import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getTeacherTimetables, getTeacherFirstCourse, getCourseModulesMap, getCourseClassesMap } from '../../lib/api/teacher';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+const parseCourseJSON = (str: string) => {
+  if (!str) return '';
+  try {
+    const parsed = JSON.parse(str);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed.join(', ') : str;
+  } catch { return str; }
+};
+
+const parseBatchJSON = (str: string) => {
+  if (!str) return '';
+  try {
+    const parsed = JSON.parse(str);
+    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+       const allBatches = Object.values(parsed).flat() as string[];
+       return [...new Set(allBatches)].join(', ');
+    }
+    return str;
+  } catch { return str; }
+};
 
 export default function TeacherDashboard() {
   const navigate = useNavigate();
@@ -39,8 +59,8 @@ export default function TeacherDashboard() {
           const formattedTimetable = matchedRows.map((r: any) => ({
             id: r.id,
             batchId: r.batch_id,
-            batchName: r.batch_id,
-            course: r.course_name || r.batch_id,
+            batchName: parseBatchJSON(r.batch_id),
+            course: parseCourseJSON(r.course_name) || parseBatchJSON(r.batch_id),
             time: r.timing || `${r.start_time} - ${r.end_time}`,
             day: dayMap[r.day_of_week as string] || 1
           }));
@@ -53,8 +73,8 @@ export default function TeacherDashboard() {
             // Still show batches from timetable even without a course
             const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
             setRealBatches(uniqueBatches.map((bId: string) => ({
-              id: bId,
-              name: bId,
+              id: bId as string,
+              name: parseBatchJSON(bId as string) || 'All Batches',
               course: formattedTimetable.find((t: any) => t.batchId === bId)?.course || 'Data Science with AI',
               progress: { modules: [] }
             })));
@@ -77,8 +97,8 @@ export default function TeacherDashboard() {
           // Build batch list from timetable slots
           const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
           setRealBatches(uniqueBatches.map((bId: string) => ({
-            id: bId,
-            name: bId,
+            id: bId as string,
+            name: parseBatchJSON(bId as string) || 'All Batches',
             course: course.title,
             progress: { modules: dynamicModules }
           })));
@@ -117,7 +137,7 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Quick Nav */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-erp-primary/5 transition-colors border-erp-primary" onClick={() => navigate('/teacher/live')}>
             <Video className="w-8 h-8 text-erp-primary mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Teacher Studio</span>
@@ -133,6 +153,10 @@ export default function TeacherDashboard() {
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-blue-500/5 transition-colors" onClick={() => navigate('/teacher/timetable')}>
             <Calendar className="w-8 h-8 text-blue-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">My Schedule</span>
+          </Card>
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-violet-500/5 transition-colors" onClick={() => navigate('/teacher/settings')}>
+            <Settings className="w-8 h-8 text-violet-400 mb-2" />
+            <span className="font-bold text-erp-text text-sm text-center">AI Settings</span>
           </Card>
         </div>
 

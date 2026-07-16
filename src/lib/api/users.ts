@@ -19,21 +19,37 @@ async function executeWithRetry(query: string, args: any[] = [], retries = MAX_R
 
 export async function getUsers(filters?: Record<string, any>, sortBy?: string, sortDir?: string): Promise<any[]> {
   try {
-    let query = 'SELECT u.*, s.classes_attended_json, s.preferred_mode FROM users u LEFT JOIN students s ON u.email = s.portal_login_email';
+    let query = 'SELECT u.*, s.classes_attended_json, s.preferred_mode, s.batch_number, s.course, s.topic_completed, s.joining_date FROM users u LEFT JOIN students s ON u.email = s.portal_login_email';
     const args: any[] = [];
     
     if (filters && Object.keys(filters).length > 0) {
       const conditions = [];
       for (const [key, val] of Object.entries(filters)) {
-        if (typeof val === 'object' && val !== null && val._neq !== undefined) {
-          conditions.push(`${key} != ?`);
-          args.push(val._neq);
-        } else if (typeof val === 'string' && val.trim() !== '') {
-          conditions.push(`${key} LIKE ?`);
-          args.push(`%${val}%`);
-        } else {
-          conditions.push(`${key} = ?`);
+        if (!val) continue;
+
+        if (key === 'search') {
+          conditions.push(`(u.name LIKE ? OR u.email LIKE ? OR u.id LIKE ?)`);
+          args.push(`%${val}%`, `%${val}%`, `%${val}%`);
+        } else if (key === 'course') {
+          conditions.push(`s.course = ?`);
           args.push(val);
+        } else if (key === 'batch') {
+          conditions.push(`s.batch_number = ?`);
+          args.push(val);
+        } else if (key === 'startDate') {
+          conditions.push(`s.joining_date >= ?`);
+          args.push(val);
+        } else if (key === 'endDate') {
+          conditions.push(`s.joining_date <= ?`);
+          args.push(val);
+        } else if (key === 'role') {
+          if (typeof val === 'object' && val !== null && val._neq !== undefined) {
+            conditions.push(`u.role != ?`);
+            args.push(val._neq);
+          } else {
+            conditions.push(`u.role = ?`);
+            args.push(val);
+          }
         }
       }
       if (conditions.length > 0) {
@@ -41,10 +57,22 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
       }
     }
     
-    if (sortBy) {
-      query += ` ORDER BY u.${sortBy}`;
-      if (sortDir) {
-        query += ` ${sortDir}`;
+    if (sortBy && sortBy !== 'actions') {
+      // Map UI keys to DB columns
+      const sortColumnMap: Record<string, string> = {
+        'name': 'u.name',
+        'email': 'u.email',
+        'role': 'u.role',
+        'status': 'u.status',
+        'salary': 'u.salary'
+      };
+      const dbColumn = sortColumnMap[sortBy];
+      
+      if (dbColumn) {
+        query += ` ORDER BY ${dbColumn}`;
+        if (sortDir === 'desc' || sortDir === 'asc') {
+          query += ` ${sortDir.toUpperCase()}`;
+        }
       }
     }
 
@@ -56,6 +84,42 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
   } catch (error) {
     console.error('Failed to fetch users', error);
     return [];
+  }
+}
+
+export async function getFilterOptions(): Promise<{courses: string[], batches: string[]}> {
+  try {
+    const res = await executeWithRetry('SELECT DISTINCT course, batch_number FROM students WHERE course IS NOT NULL OR batch_number IS NOT NULL');
+    const courses = Array.from(new Set(res.rows.map((r: any) => String(r.course)).filter(c => c && c !== 'null')));
+    const batches = Array.from(new Set(res.rows.map((r: any) => String(r.batch_number)).filter(b => b && b !== 'null')));
+    return { courses, batches };
+  } catch (error) {
+    console.error('Failed to get filter options', error);
+    return { courses: [], batches: [] };
+  }
+}
+
+export async function getCourseCurriculum(): Promise<Record<string, string[]>> {
+  try {
+    const res = await executeWithRetry(`
+      SELECT c.title as course_title, m.title as module_title 
+      FROM courses c 
+      JOIN course_module_mapping cmm ON c.id = cmm.course_id 
+      JOIN modules m ON cmm.module_id = m.id
+      ORDER BY c.title, cmm.order_index
+    `);
+    
+    const mapping: Record<string, string[]> = {};
+    for (const row of res.rows) {
+      const course = String(row.course_title);
+      const mod = String(row.module_title);
+      if (!mapping[course]) mapping[course] = [];
+      mapping[course].push(mod);
+    }
+    return mapping;
+  } catch (error) {
+    console.error('Failed to get course curriculum', error);
+    return {};
   }
 }
 
@@ -106,6 +170,21 @@ export async function updateStudentAttended(email: string, classesAttendedJson: 
     );
   } catch (error) {
     console.error('Failed to update student attended classes', error);
+    throw error;
+  }
+}
+
+export async function deleteUser(id: string, email: string): Promise<void> {
+  try {
+    // Delete from users table
+    await executeWithRetry("DELETE FROM users WHERE id = ?", [id]);
+    
+    // Attempt to delete from students table as well if email exists
+    if (email) {
+      await executeWithRetry("DELETE FROM students WHERE portal_login_email = ?", [email]);
+    }
+  } catch (error) {
+    console.error('Failed to delete user', error);
     throw error;
   }
 }

@@ -92,9 +92,10 @@ export async function getActiveLiveClass(instructorId: string): Promise<any> {
       `SELECT c.id, c.title, c.description, c.module_id, m.title as module_title
        FROM classes c
        JOIN modules m ON c.module_id = m.id
-       WHERE m.instructor_id = ? AND c.status IN ('live', 'in_progress', 'upcoming')
+       WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) 
+         AND c.status IN ('live', 'in_progress', 'upcoming')
        ORDER BY c.order_index ASC LIMIT 1`,
-      [instructorId]
+      [instructorId, instructorId]
     );
     return res.rows.length > 0 ? res.rows[0] : null;
   } catch (e) {
@@ -115,21 +116,45 @@ export async function logAttendance(studentId: string, classId: string): Promise
   }
 }
 
+export async function getLiveAttendance(classId: string): Promise<any[]> {
+  try {
+    const res = await executeWithRetry(`
+      SELECT a.student_id, u.name as student_name, b.name as batch_name, c.title as course_name, a.join_time
+      FROM attendance_logs a
+      JOIN users u ON a.student_id = u.id
+      LEFT JOIN students s ON u.id = s.id
+      LEFT JOIN batches b ON s.batch_id = b.id
+      LEFT JOIN courses c ON b.course_id = c.id
+      WHERE a.batch_id = ?
+      ORDER BY a.join_time DESC
+    `, [classId]);
+    return res.rows;
+  } catch (e) {
+    console.error("Failed to get live attendance", e);
+    return [];
+  }
+}
+
 export async function getInstructorClasses(instructorId: string, specificClassId?: string): Promise<ClassRow[]> {
   try {
-    if (specificClassId && specificClassId.startsWith('slot_')) {
+    if (specificClassId && (specificClassId.startsWith('slot_') || specificClassId.startsWith('ts_'))) {
       const slotRes = await executeWithRetry('SELECT course_name FROM timetable_slots WHERE id = ?', [specificClassId]);
       if (slotRes.rows.length > 0) {
-        const courseName = slotRes.rows[0].course_name;
+        const courseName = slotRes.rows[0].course_name as string;
+        let parsedCourses: string[] = [];
+        try { parsedCourses = JSON.parse(courseName); } catch (e) { parsedCourses = [courseName]; }
+        const coursePlaceholders = parsedCourses.map(() => '?').join(',');
+
         const res = await executeWithRetry(
           `SELECT c.id, c.title, c.description, c.type, c.status, 
                   c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
                   m.title as module_title
            FROM classes c 
            JOIN modules m ON c.module_id = m.id 
-           WHERE m.instructor_id = ? AND m.title = ? AND c.status != 'completed' 
+           WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) 
+             AND m.title IN (${coursePlaceholders}) AND c.status != 'completed' 
            ORDER BY c.order_index ASC LIMIT 1`,
-          [instructorId, courseName]
+          [instructorId, instructorId, ...parsedCourses]
         );
         if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
       }
@@ -144,8 +169,8 @@ export async function getInstructorClasses(instructorId: string, specificClassId
                 m.title as module_title
          FROM classes c 
          JOIN modules m ON c.module_id = m.id 
-         WHERE c.id = ? AND m.instructor_id = ?`,
-        [specificClassId, instructorId]
+         WHERE c.id = ? AND (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?))`,
+        [specificClassId, instructorId, instructorId]
       );
       return res.rows as unknown as ClassRow[];
     } else {
@@ -155,9 +180,9 @@ export async function getInstructorClasses(instructorId: string, specificClassId
                 m.title as module_title
          FROM classes c 
          JOIN modules m ON c.module_id = m.id 
-         WHERE m.instructor_id = ? AND c.status != 'completed' 
+         WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) AND c.status != 'completed' 
          ORDER BY c.order_index ASC LIMIT 1`,
-        [instructorId]
+        [instructorId, instructorId]
       );
       return res.rows as unknown as ClassRow[];
     }
@@ -175,6 +200,18 @@ export async function updateClassMaterials(classId: string, ppt: string, script:
     );
   } catch (e) {
     console.error("Failed to update materials", e);
+    throw e;
+  }
+}
+
+export async function updateClassDetails(classId: string, title: string, description: string): Promise<void> {
+  try {
+    await executeWithRetry(
+      "UPDATE classes SET title = ?, description = ? WHERE id = ?",
+      [title, description, classId]
+    );
+  } catch (e) {
+    console.error("Failed to update class details", e);
     throw e;
   }
 }
@@ -229,8 +266,8 @@ export async function getTeacherCMSModules(isSuper: boolean, instructorId: strin
       return res.rows;
     } else {
       const res = await executeWithRetry(
-        "SELECT * FROM modules WHERE instructor_id = ? ORDER BY title ASC",
-        [instructorId]
+        "SELECT m.* FROM modules m WHERE m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?) ORDER BY m.title ASC",
+        [instructorId, instructorId]
       );
       return res.rows;
     }

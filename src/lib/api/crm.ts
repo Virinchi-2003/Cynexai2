@@ -243,6 +243,25 @@ export const updateLeadDetails = async (id: string, updates: Partial<Lead>): Pro
   }
 };
 
+export const deleteLead = async (id: string): Promise<{ success: boolean, error?: string }> => {
+  if (!isTursoConfigured || !client) return { success: false, error: 'Database not connected' };
+  try {
+    await client.execute({
+      sql: `DELETE FROM crm_leads WHERE id = ?`,
+      args: [id]
+    });
+    // Also delete associated activities (optional, assuming CASCADE or cleanup)
+    await client.execute({
+      sql: `DELETE FROM crm_activities WHERE lead_id = ?`,
+      args: [id]
+    });
+    return { success: true };
+  } catch (e: any) {
+    console.error("Failed to delete lead", e);
+    return { success: false, error: e.message };
+  }
+};
+
 export const getCRMAnalytics = async (startDate?: string, endDate?: string, userId?: string) => {
   if (!isTursoConfigured || !client) {
     return { totalLeads: 0, activeAdmissions: 0, demoScheduled: 0, demoCompleted: 0, totalRevenue: 0, collectedRevenue: 0, monthlyData: [], leadSources: [], conversionRate: { overall: "0.0", demoToAdmission: "0.0" }, statusCounts: [], executivePerformance: [] };

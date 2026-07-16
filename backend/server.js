@@ -5,6 +5,8 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { createClient } = require('@libsql/client');
+const multer = require('multer');
+const { processVoiceTurn, generateInitialQuestionVoice } = require('./voiceLogic');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -96,6 +98,63 @@ app.post('/api/whatsapp/send', async (req, res) => {
 // Export Razorpay routes if needed later
 app.post('/create-order', (req, res) => {
     res.status(200).json({ status: 'mock', orderId: 'ord_mock123' });
+});
+
+
+const upload = multer({ storage: multer.memoryStorage() });
+
+app.post('/api/voice-interview/start', async (req, res) => {
+    try {
+        const { context, voice = 'aura-asteria-en' } = req.body;
+
+        const result = await generateInitialQuestionVoice(
+            context || 'Student in training', 
+            voice, 
+            process.env.GROQ_VOICE_API,
+            process.env.DEEPGRAM_VOICE_API
+        );
+
+        res.json({
+            aiResponse: result.aiText,
+            audioBase64: result.audioBuffer.toString('base64')
+        });
+    } catch (error) {
+        console.error("Voice start error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/voice-interview', upload.single('audio'), async (req, res) => {
+    try {
+        const chatHistory = req.body?.chatHistory;
+        const context = req.body?.context || 'Student in training';
+        const turnCount = parseInt(req.body?.turnCount || '1', 10);
+        const voice = req.body?.voice || 'aura-asteria-en';
+        const audioBuffer = req.file?.buffer;
+
+        if (!audioBuffer) return res.status(400).json({ error: 'No audio file provided' });
+
+        const result = await processVoiceTurn(
+            audioBuffer, 
+            chatHistory, 
+            context,
+            turnCount,
+            voice,
+            process.env.GROQ_VOICE_API, 
+            process.env.DEEPGRAM_VOICE_API
+        );
+
+        // Send audio buffer back as base64 and texts as headers, or just a JSON response with audio as base64 string
+        res.json({
+            transcript: result.transcript,
+            aiResponse: result.aiResponse,
+            audioBase64: result.audioBuffer.toString('base64')
+        });
+
+    } catch (error) {
+        console.error("Voice interview error:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
 app.get('/', (req, res) => {

@@ -59,6 +59,18 @@ export const recordSale = async (leadId: string, courseId: string, totalFee: num
         sql: `UPDATE crm_leads SET status = 'Closed Won' WHERE id = ?`,
         args: [leadId]
       });
+      
+      // Create Manager Approval task automatically upon sale
+      const apprId = 'appr_' + Date.now().toString(36);
+      await client.execute({
+        sql: `INSERT INTO manager_approvals (id, sale_id, checklist_json, status, notes, approver_id, decided_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        args: [apprId, id, JSON.stringify({
+          payment_verified: false,
+          course_confirmed: false,
+          docs_received: false
+        }), 'Pending', '', null, null]
+      });
+
       return id;
     } catch (e) { console.error(e); }
   }
@@ -77,16 +89,18 @@ export interface Sale {
   created_at?: string;
   lead_name?: string;
   executive_name?: string;
+  course_name?: string;
 }
 
 export const getSales = async (): Promise<Sale[]> => {
   if (isTursoConfigured && client) {
     try {
       const result = await client.execute(`
-        SELECT s.*, l.name as lead_name, u.name as executive_name 
+        SELECT s.*, l.name as lead_name, u.name as executive_name, c.title as course_name
         FROM sales s 
         LEFT JOIN crm_leads l ON s.lead_id = l.id 
-        LEFT JOIN users u ON s.sales_exec_id = u.id 
+        LEFT JOIN erp_users u ON s.sales_exec_id = u.id 
+        LEFT JOIN courses c ON s.course_id = c.id
         ORDER BY s.timestamp DESC
       `);
       return result.rows.map(row => ({
@@ -101,7 +115,8 @@ export const getSales = async (): Promise<Sale[]> => {
         referred_by_student_id: row.referred_by_student_id as string | null,
         created_at: row.timestamp as string,
         lead_name: row.lead_name as string,
-        executive_name: row.executive_name as string
+        executive_name: row.executive_name as string,
+        course_name: row.course_name as string
       }));
     } catch (e) {
       console.error(e);

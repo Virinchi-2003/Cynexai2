@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getActiveLiveClass, logAttendance } from '../../lib/api/teacher';
 import { generateQRAttendance, QRCodeResult } from '../../lib/api/ux';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function AttendanceSystem() {
   const navigate = useNavigate();
@@ -92,17 +93,21 @@ export default function AttendanceSystem() {
           <h2 className="text-2xl font-bold font-display text-erp-text mb-2">Offline Attendance</h2>
           <p className="text-erp-text/60 mb-8">Project this QR code on the screen for students in the classroom to scan.</p>
           
-          <div className="bg-white p-4 rounded-xl border-4 border-slate-200 mb-6 w-48 h-48 flex items-center justify-center relative">
+          <div className="bg-white p-4 rounded-xl border-4 border-slate-200 mb-6 flex flex-col items-center justify-center">
             {qrData ? (
-              <div className="text-black text-center break-all font-mono text-xs">
-                QR: {qrData.qrCode}<br/><br/>
-                Expires: {new Date(qrData.expiresAt).toLocaleTimeString()}
-              </div>
+              <>
+                <QRCodeSVG 
+                  value={JSON.stringify({ classId: activeClass.id, token: qrData.qrCode })} 
+                  size={160} 
+                  level="H" 
+                />
+                <div className="text-slate-500 font-mono text-[10px] mt-4">
+                  Expires: {new Date(qrData.expiresAt).toLocaleTimeString()}
+                </div>
+              </>
             ) : (
-              <div className="w-full h-full grid grid-cols-5 grid-rows-5 gap-1">
-                {[...Array(25)].map((_, i) => (
-                  <div key={i} className={`bg-black ${Math.random() > 0.5 ? 'opacity-100' : 'opacity-0'} rounded-sm`}></div>
-                ))}
+              <div className="w-40 h-40 bg-slate-100 flex items-center justify-center rounded">
+                <QrCode className="w-10 h-10 text-slate-300" />
               </div>
             )}
           </div>

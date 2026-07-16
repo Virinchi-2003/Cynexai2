@@ -36,7 +36,7 @@ import SalesPitchPage from './pages/crm/SalesPitchPage';
 // Manager Imports
 import ManagerDashboard from './pages/crm/manager/ManagerDashboard';
 import ApprovalDetail from './pages/crm/manager/ApprovalDetail';
-import OnboardingFlow from './pages/crm/manager/OnboardingFlow';
+import BatchAssignment from './pages/crm/manager/BatchAssignment';
 import UserManagement from './pages/crm/manager/UserManagement';
 import GamificationSettings from './pages/crm/manager/GamificationSettings';
 
@@ -58,6 +58,7 @@ import MockInterview from './pages/student/MockInterview';
 import AttendancePage from './pages/student/AttendancePage';
 import Leaderboard from './pages/student/Leaderboard';
 import StudentLayout from './components/layout/StudentLayout';
+import EnrollPage from './pages/EnrollPage';
 
 // DM Imports
 import DMDashboard from './pages/crm/dm/DMDashboard';
@@ -73,28 +74,48 @@ import TeacherDashboard from './pages/teacher/TeacherDashboard';
 import TeacherCMS from './pages/teacher/TeacherCMS';
 import PresentationView from './pages/teacher/PresentationView';
 import TeacherTimetable from './pages/teacher/TeacherTimetable';
+import TeacherSettings from './pages/teacher/TeacherSettings';
 
 // Security Imports
 import { RequireAuth } from './components/layout/RequireAuth';
 
-const CRMLayout = ({ children }: { children: React.ReactNode }) => (
-  <div className="h-screen bg-erp-background font-sans selection:bg-erp-primary/30 flex flex-col md:flex-row overflow-hidden">
-    {/* Desktop Sidebar */}
-    <div className="hidden md:block w-64 flex-shrink-0 border-r-2 border-erp-border bg-erp-surface">
-      <Sidebar />
-    </div>
-    
-    {/* Main Content Area */}
-    <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-      {children}
-    </div>
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-    {/* Mobile Bottom Navigation */}
-    <div className="md:hidden flex-shrink-0">
-      <MobileNavigation />
+const CRMLayout = ({ children }: { children: React.ReactNode }) => {
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
+  
+  return (
+    <div className="h-screen bg-erp-background font-sans selection:bg-erp-primary/30 flex flex-col md:flex-row overflow-hidden relative">
+      {/* Desktop Sidebar */}
+      <div 
+        className={`hidden md:block flex-shrink-0 border-r-2 border-erp-border bg-erp-surface transition-all duration-300 relative ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden border-r-0'}`}
+      >
+        <div className="w-64 h-full">
+          <Sidebar />
+        </div>
+      </div>
+      
+      {/* Toggle Button */}
+      <button 
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        className="hidden md:flex absolute top-1/2 -translate-y-1/2 z-[200] bg-erp-surface border-2 border-erp-border rounded-full p-1 shadow-md hover:bg-erp-background transition-colors"
+        style={{ left: isSidebarOpen ? '15.5rem' : '0.5rem' }}
+      >
+        {isSidebarOpen ? <ChevronLeft className="w-4 h-4 text-erp-text" /> : <ChevronRight className="w-4 h-4 text-erp-text" />}
+      </button>
+      
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
+        {children}
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="md:hidden flex-shrink-0">
+        <MobileNavigation />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const HomePage = () => (
   <>
@@ -198,6 +219,8 @@ function App() {
         {/* Shared Routes */}
         <Route path="/profile" element={<SharedLayout><Profile /></SharedLayout>} />
         <Route path="/chat" element={<SharedLayout><ChatPortal /></SharedLayout>} />
+        <Route path="/Enroll" element={<EnrollPage />} />
+        <Route path="/enroll" element={<EnrollPage />} />
         
         {/* Manager Routes */}
         <Route path="/manager" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><ManagerDashboard /></ManagerLayout></RequireAuth>} />
@@ -210,8 +233,8 @@ function App() {
         <Route path="/manager/timetable" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><TimetableManager /></ManagerLayout></RequireAuth>} />
         <Route path="/manager/approvals/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><ApprovalDetail /></ManagerLayout></RequireAuth>} />
         
-        {/* Onboarding is done by Sales/HR, then approved by Manager */}
-        <Route path="/sales/onboarding/:id" element={<RequireAuth allowedRoles={['Sales/HR', 'Manager', 'CEO']}><SalesLayout><OnboardingFlow /></SalesLayout></RequireAuth>} />
+        {/* Onboarding is assigned by Manager via Tasks */}
+        <Route path="/manager/assign-batch/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><BatchAssignment /></ManagerLayout></RequireAuth>} />
 
         {/* DM Routes */}
         <Route path="/dm/dashboard" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><DMDashboard /></DMLayout></RequireAuth>} />
@@ -227,6 +250,11 @@ function App() {
         <Route path="/ceo/courses" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><CourseManagement /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/courses/:courseId/modules/:moduleId" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><ModuleEditor /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/courses/:courseId/modules/:moduleId/classes/:classId" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><ClassEditor /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/timetable" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><TimetableManager /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/sales-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesDashboard /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/sales-pipeline" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><LeadPipeline /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/sales-history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesList /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/dm-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><DMDashboard /></CEOLayout></RequireAuth>} />
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherLayout><TeacherDashboard /></TeacherLayout>} />
@@ -237,6 +265,7 @@ function App() {
         <Route path="/teacher/attendance" element={<TeacherLayout><AttendanceSystem /></TeacherLayout>} />
         {/* Fullscreen presentation route (No Layout) */}
         <Route path="/teacher/presentation-view" element={<RequireAuth allowedRoles={['Teacher', 'Manager', 'CEO']}><PresentationView /></RequireAuth>} />
+        <Route path="/teacher/settings" element={<TeacherLayout><TeacherSettings /></TeacherLayout>} />
 
         {/* Admin & Student Routes */}
         <Route path="/admin/dashboard" element={<RequireAuth allowedRoles={['CEO']}><CRMLayout><AdminDashboard /></CRMLayout></RequireAuth>} />

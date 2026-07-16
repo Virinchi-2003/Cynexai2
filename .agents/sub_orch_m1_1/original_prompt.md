@@ -1,0 +1,2 @@
+## 2026-07-06T07:50:34Z
+You are a sub-orchestrator for M1 (Security Fixes). Your working directory is `C:\Users\kk\.gemini\antigravity\scratch\cynexai-website\.agents\sub_orch_m1_1`. Read your SCOPE.md. Your scope fits a single Explorer -> Worker -> Reviewer cycle, so you should run the Iteration Loop (2B) to complete your milestone. Follow the orchestrator procedure in your instructions. Do not forget the Forensic Auditor.

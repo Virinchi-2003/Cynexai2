@@ -4,16 +4,22 @@ import { CheckCircle, Circle, MoreVertical, Clock } from 'lucide-react';
 
 interface Props {
   tasks: Task[];
+  users: any[];
   onTaskClick: (task: Task) => void;
   onUpdate: () => void;
 }
 
-export const TaskListView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate }) => {
+export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpdate }) => {
   const handleToggleStatus = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation();
     const newStatus = task.status === 'Done' ? 'To Do' : 'Done';
     await updateTaskStatus(task.id, newStatus);
     onUpdate();
+  };
+
+  const getUserName = (id: string) => {
+    const user = users.find(u => u.id === id);
+    return user ? user.name : id;
   };
 
   const getPriorityColor = (priority: string) => {
@@ -53,7 +59,9 @@ export const TaskListView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate }) 
           </tr>
         </thead>
         <tbody className="divide-y divide-erp-border">
-          {tasks.map(task => (
+          {tasks.map(task => {
+            const assigneeName = getUserName(task.assignee_id);
+            return (
             <tr 
               key={task.id} 
               onClick={() => onTaskClick(task)}
@@ -84,11 +92,11 @@ export const TaskListView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate }) 
                 </div>
               </td>
               <td className="p-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" title={assigneeName}>
                   <div className="w-6 h-6 rounded-full bg-erp-primary/10 text-erp-primary flex items-center justify-center text-[10px] font-bold uppercase overflow-hidden border border-erp-primary/20">
-                    {task.assignee_id.slice(0,2)}
+                    {assigneeName.slice(0,2)}
                   </div>
-                  <span className="text-xs text-erp-text/70 truncate max-w-[80px]">{task.assignee_id}</span>
+                  <span className="text-xs text-erp-text/70 truncate max-w-[80px]">{assigneeName}</span>
                 </div>
               </td>
               <td className="p-3">
@@ -124,7 +132,8 @@ export const TaskListView: React.FC<Props> = ({ tasks, onTaskClick, onUpdate }) 
                 </button>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

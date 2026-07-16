@@ -1,0 +1,9 @@
+- [x] Read worker handoff
+- [x] Inspect `src/lib/api/manager.ts`
+- [x] Inspect `src/lib/api/admin.ts`
+- [x] Inspect `src/lib/api/crm.ts`
+- [x] Inspect `src/pages/crm/SalesDashboard.tsx`
+- [x] Run `npm run build` or `npm run typecheck`
+- [x] Write `handoff.md`
+- [x] Send verdict to parent
+- [x] Finish

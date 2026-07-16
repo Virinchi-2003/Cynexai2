@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Task, updateTask, deleteTask, getTaskComments, getTaskSubtasks, addTaskComment, addSubtask, updateSubtaskStatus } from '../../../lib/api/tasks';
+import { Project, getProjects } from '../../../lib/api/projects';
 import { Button } from '../../ui/erp/Button';
-import { X, Calendar, Flag, User, Trash2, CheckCircle, AlignLeft, MessageSquare, CheckSquare, Send, Circle } from 'lucide-react';
+import { X, Calendar, Flag, User, Trash2, CheckCircle, AlignLeft, MessageSquare, CheckSquare, Send, Circle, FolderOpen } from 'lucide-react';
 import { getErpUsers } from '../../../lib/api/manager';
 import { getCurrentUser } from '../../../lib/auth';
 
@@ -22,14 +23,17 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
   const [subtasks, setSubtasks] = useState<any[]>([]);
   const [newComment, setNewComment] = useState('');
   const [newSubtask, setNewSubtask] = useState('');
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const currentUser = getCurrentUser();
 
   const loadExtraData = async () => {
     const fetchedComments = await getTaskComments(task.id);
     const fetchedSubtasks = await getTaskSubtasks(task.id);
+    const fetchedProjects = await getProjects();
     setComments(fetchedComments);
     setSubtasks(fetchedSubtasks);
+    setProjects(fetchedProjects);
   };
 
   useEffect(() => {
@@ -59,6 +63,7 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
       task_type: editedTask.task_type,
       target_number: editedTask.target_number,
       current_number: editedTask.current_number,
+      project_id: editedTask.project_id,
     });
     setIsSaving(false);
     onUpdate();
@@ -160,6 +165,22 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
             ) : (
               <span className="font-medium text-erp-text px-2 py-1 -mx-2">{editedTask.assignee_id}</span>
             )}
+          </div>
+
+          <div className="col-span-4 text-erp-text/60 flex items-center gap-2 font-medium">
+            <FolderOpen className="w-4 h-4" /> Project
+          </div>
+          <div className="col-span-8">
+            <select 
+              value={editedTask.project_id || ''}
+              onChange={(e) => handleChange('project_id', e.target.value)}
+              className="bg-transparent hover:bg-erp-background px-2 py-1 -mx-2 rounded outline-none border-none text-erp-text font-medium cursor-pointer max-w-full"
+            >
+              <option value="">No Project</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
           </div>
 
           <div className="col-span-4 text-erp-text/60 flex items-center gap-2 font-medium">
@@ -296,6 +317,13 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
             className="w-full min-h-[100px] bg-transparent border-none outline-none resize-y text-sm text-erp-text placeholder-erp-text/40 p-2 hover:bg-erp-background focus:bg-erp-background focus:ring-1 ring-erp-border rounded transition-colors"
             placeholder="Add more details to this task..."
           />
+          {editedTask.description?.includes('/manager/assign-batch/') && (
+            <div className="mt-3">
+              <Button onClick={() => window.open(editedTask.description?.match(/(\/manager\/assign-batch\/[^\s]+)/)?.[0], '_self')} variant="primary" className="bg-indigo-600 hover:bg-indigo-700 w-full">
+                🚀 Take Action: Assign Batch
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Activity & Comments Feed */}
