@@ -113,7 +113,7 @@ export default function EnrollPage() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
                 />
               </div>
             </div>
@@ -129,7 +129,7 @@ export default function EnrollPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+91 98765 43210"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
                 />
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function EnrollPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@example.com"
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
               />
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function EnrollPage() {
                   value={formData.college}
                   onChange={handleChange}
                   placeholder="University Name"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
                 />
               </div>
             </div>
@@ -176,7 +176,7 @@ export default function EnrollPage() {
                   value={formData.batch}
                   onChange={handleChange}
                   placeholder="e.g. 2024"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
                 />
               </div>
             </div>
@@ -192,7 +192,7 @@ export default function EnrollPage() {
                   name="dob"
                   value={formData.dob}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-700"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
                 />
               </div>
             </div>
@@ -205,14 +205,17 @@ export default function EnrollPage() {
                   name="course"
                   value={formData.course}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-700 appearance-none"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 appearance-none"
                 >
                   <option value="" disabled>Select a course</option>
-                  <option value="Full Stack Development">Full Stack Development</option>
-                  <option value="Data Science & AI">Data Science & AI</option>
-                  <option value="Cyber Security">Cyber Security</option>
-                  <option value="Cloud Computing">Cloud Computing</option>
+                  <option value="Testing">Testing</option>
+                  <option value="Full stack Java">Full stack Java</option>
+                  <option value="Full Stack Python">Full Stack Python</option>
+                  <option value="AI & Generative AI">AI & Generative AI</option>
+                  <option value="Data Science with AI">Data Science with AI</option>
                   <option value="Digital Marketing">Digital Marketing</option>
+                  <option value="Data Analytics">Data Analytics</option>
+                  <option value="SAP">SAP</option>
                 </select>
                 <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
