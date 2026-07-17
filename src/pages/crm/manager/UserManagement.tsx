@@ -204,9 +204,9 @@ export default function UserManagement() {
   const [curriculum, setCurriculum] = useState<Record<string, string[]>>({});
 
   // Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<ERPUser | null>(null);
-  const [isExistingStudent, setIsExistingStudent] = useState(false);
 
   // Form
   const [name, setName] = useState('');
@@ -280,7 +280,7 @@ export default function UserManagement() {
     setIsExistingStudent(false);
   };
 
-  const handleOpenModal = (user: ERPUser | null) => {
+  const handleOpenModal = (user: ERPUser | null, type?: 'staff' | 'student') => {
     if (user) {
       setEditUser(user);
       setName(user.name); setEmail(user.email);
@@ -296,17 +296,29 @@ export default function UserManagement() {
         try { setPermissions(JSON.parse(user.permissions_json)); }
         catch { setPermissions({ crm: false, timetable: false, leaves: false, settings: false }); }
       }
+      
+      if (user.role === 'Student') {
+        setIsStudentModalOpen(true);
+      } else {
+        setIsStaffModalOpen(true);
+      }
     } else {
       setEditUser(null);
       resetForm();
+      if (type === 'student') {
+        setRole('Student');
+        setIsStudentModalOpen(true);
+      } else {
+        setRole('Sales/HR');
+        setIsStaffModalOpen(true);
+      }
     }
-    setIsModalOpen(true);
   };
 
-  const handleSaveUser = async () => {
+  const handleSaveUser = async (isStudentForm: boolean) => {
     if (!name.trim() || !email.trim()) { alert('Name and email are required.'); return; }
     try {
-      const userRole = isExistingStudent ? 'Student' : role;
+      const userRole = isStudentForm ? 'Student' : role;
       await saveUser({ id: editUser?.id || '', name, email, password, role: userRole, status, salary: Number(salary) || 0, permissions_json: JSON.stringify(permissions) });
 
       // If student, also update student profile
@@ -324,7 +336,8 @@ export default function UserManagement() {
         }
       }
       await fetchUsersData();
-      setIsModalOpen(false);
+      setIsStaffModalOpen(false);
+      setIsStudentModalOpen(false);
     } catch (e) {
       console.error('Failed to save user', e);
       alert('Failed to save user. Check if email is already in use.');
@@ -421,13 +434,13 @@ export default function UserManagement() {
                 <Button variant="secondary" className="flex items-center gap-2 text-sm" onClick={() => setShowCsvModal(true)}>
                   <FileSpreadsheet className="w-4 h-4" /> Import CSV
                 </Button>
-                <Button className="flex items-center gap-2 text-sm" onClick={() => { setRole('Student'); setIsExistingStudent(true); handleOpenModal(null); }}>
+                <Button className="flex items-center gap-2 text-sm" onClick={() => handleOpenModal(null, 'student')}>
                   <UserPlus className="w-4 h-4" /> Add Student
                 </Button>
               </>
             )}
             {activeTab === 'staff' && (
-              <Button className="flex items-center gap-2 text-sm" onClick={() => { setRole('Sales/HR'); setIsExistingStudent(false); handleOpenModal(null); }}>
+              <Button className="flex items-center gap-2 text-sm" onClick={() => handleOpenModal(null, 'staff')}>
                 <Plus className="w-4 h-4" /> Add Staff
               </Button>
             )}
@@ -544,30 +557,19 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* ─── Add/Edit User Modal ─── */}
-      {isModalOpen && (
+      {/* ─── Add/Edit Staff Modal ─── */}
+      {isStaffModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-5 border-b border-erp-border bg-erp-background/50">
               <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
                 <Key className="w-5 h-5 text-indigo-400" />
-                {editUser ? 'Edit User' : (isExistingStudent ? 'Add Student' : 'Create Staff')}
+                {editUser ? 'Edit Staff Member' : 'Create Staff Member'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-erp-text/50 hover:text-erp-text"><X className="w-6 h-6" /></button>
+              <button onClick={() => setIsStaffModalOpen(false)} className="text-erp-text/50 hover:text-erp-text"><X className="w-6 h-6" /></button>
             </div>
 
             <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
-              {/* Existing student toggle */}
-              {!editUser && (
-                <div className="flex items-center gap-3 p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-erp-text">
-                    <input type="checkbox" checked={isExistingStudent} onChange={e => { setIsExistingStudent(e.target.checked); setRole(e.target.checked ? 'Student' : 'Sales/HR'); }}
-                      className="w-4 h-4 accent-indigo-500" />
-                    This is an existing student (not a new staff member)
-                  </label>
-                </div>
-              )}
-
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -587,111 +589,150 @@ export default function UserManagement() {
                   <select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
                     <option value="Active">Active</option>
                     <option value="Suspended">Suspended</option>
-                    {(isExistingStudent || role === 'Student' || editUser?.role === 'Student') && <option value="Alumni">Alumni</option>}
                   </select>
                 </div>
               </div>
 
               {/* Staff-only fields */}
-              {!isExistingStudent && (editUser?.role !== 'Student') && (
-                <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Role</label>
-                      <select value={role} onChange={e => setRole(e.target.value)} className={inputCls}>
-                        {['Sales/HR', 'Manager', 'Teacher', 'CEO', 'DM'].map(r => <option key={r} value={r}>{r}</option>)}
-                      </select>
-                    </div>
-                    {currentUser?.role === 'CEO' && (
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Salary (₹)</label>
-                        <input type="number" value={salary} onChange={e => setSalary(Number(e.target.value))} className={inputCls} />
-                      </div>
-                    )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Role</label>
+                  <select value={role} onChange={e => setRole(e.target.value)} className={inputCls}>
+                    {['Sales/HR', 'Manager', 'Teacher', 'CEO', 'DM'].map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                {currentUser?.role === 'CEO' && (
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Salary (₹)</label>
+                    <input type="number" value={salary} onChange={e => setSalary(Number(e.target.value))} className={inputCls} />
                   </div>
-                  <div className="border-t border-erp-border pt-4">
-                    <label className="block text-xs font-bold text-erp-text/60 mb-2 uppercase tracking-wider">Access Control</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['crm', 'timetable', 'leaves', 'settings'].map(perm => (
-                        <label key={perm} className="flex items-center gap-2 text-sm text-erp-text/80 cursor-pointer">
-                          <input type="checkbox" checked={permissions[perm] || false}
-                            onChange={e => setPermissions(p => ({ ...p, [perm]: e.target.checked }))}
-                            className="w-4 h-4 rounded accent-indigo-500" />
-                          {perm.charAt(0).toUpperCase() + perm.slice(1)} Access
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Student profile fields */}
-              {(isExistingStudent || role === 'Student' || editUser?.role === 'Student') && (
-                <>
-                  <div className="border-t border-erp-border pt-4">
-                    <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Academic Info</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Course</label>
-                        <select value={stuCourse} onChange={e => setStuCourse(e.target.value)} className={inputCls}>
-                          <option value="">Select Course</option>
-                          {courses.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Batch</label>
-                        <input type="text" value={stuBatch} onChange={e => setStuBatch(e.target.value)} className={inputCls} placeholder="e.g. July 2026" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Joining Date</label>
-                        <input type="date" value={stuJoining} onChange={e => setStuJoining(e.target.value)} className={inputCls} />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="border-t border-erp-border pt-4">
-                    <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Personal Details</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Phone</label>
-                        <input type="tel" value={stuPhone} onChange={e => setStuPhone(e.target.value)} className={inputCls} placeholder="10-digit mobile" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Date of Birth</label>
-                        <input type="date" value={stuDob} onChange={e => setStuDob(e.target.value)} className={inputCls} />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Blood Group</label>
-                        <select value={stuBlood} onChange={e => setStuBlood(e.target.value)} className={inputCls}>
-                          <option value="">Select</option>
-                          {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(b => <option key={b} value={b}>{b}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Emergency Contact</label>
-                        <input type="tel" value={stuEmergency} onChange={e => setStuEmergency(e.target.value)} className={inputCls} placeholder="Guardian phone" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Father's Name</label>
-                        <input type="text" value={stuFather} onChange={e => setStuFather(e.target.value)} className={inputCls} />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Mother's Name</label>
-                        <input type="text" value={stuMother} onChange={e => setStuMother(e.target.value)} className={inputCls} />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block text-xs font-bold text-erp-text/60 mb-1">Address</label>
-                        <textarea rows={2} value={stuAddress} onChange={e => setStuAddress(e.target.value)} className={`${inputCls} resize-none`} placeholder="Full residential address" />
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
+                )}
+              </div>
+              <div className="border-t border-erp-border pt-4">
+                <label className="block text-xs font-bold text-erp-text/60 mb-2 uppercase tracking-wider">Access Control</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['crm', 'timetable', 'leaves', 'settings'].map(perm => (
+                    <label key={perm} className="flex items-center gap-2 text-sm text-erp-text/80 cursor-pointer">
+                      <input type="checkbox" checked={permissions[perm] || false}
+                        onChange={e => setPermissions(p => ({ ...p, [perm]: e.target.checked }))}
+                        className="w-4 h-4 rounded accent-indigo-500" />
+                      {perm.charAt(0).toUpperCase() + perm.slice(1)} Access
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="p-5 border-t border-erp-border flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={handleSaveUser}>
-                {editUser ? 'Save Changes' : 'Create User'}
+              <Button variant="ghost" onClick={() => setIsStaffModalOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => handleSaveUser(false)}>
+                {editUser ? 'Save Changes' : 'Create Staff Member'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Add/Edit Student Modal ─── */}
+      {isStudentModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+            <div className="flex justify-between items-center p-5 border-b border-erp-border bg-erp-background/50">
+              <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
+                <Key className="w-5 h-5 text-indigo-400" />
+                {editUser ? 'Edit Student' : 'Add New Student'}
+              </h2>
+              <button onClick={() => setIsStudentModalOpen(false)} className="text-erp-text/50 hover:text-erp-text"><X className="w-6 h-6" /></button>
+            </div>
+
+            <div className="p-5 space-y-5 max-h-[70vh] overflow-y-auto">
+              {/* Basic Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Full Name *</label>
+                  <input type="text" value={name} onChange={e => setName(e.target.value)} className={inputCls} placeholder="e.g. Rahul Sharma" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Email / Portal Login *</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputCls} placeholder="email@cynexai.com" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Password</label>
+                  <input type="text" value={password} onChange={e => setPassword(e.target.value)} className={`${inputCls} font-mono`} placeholder="Leave blank for default: cynex123" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Status</label>
+                  <select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
+                    <option value="Active">Active</option>
+                    <option value="Suspended">Suspended</option>
+                    <option value="Alumni">Alumni</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Student profile fields */}
+              <div className="border-t border-erp-border pt-4">
+                <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Academic Info</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Course</label>
+                    <select value={stuCourse} onChange={e => setStuCourse(e.target.value)} className={inputCls}>
+                      <option value="">Select Course</option>
+                      {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Batch</label>
+                    <input type="text" value={stuBatch} onChange={e => setStuBatch(e.target.value)} className={inputCls} placeholder="e.g. July 2026" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Joining Date</label>
+                    <input type="date" value={stuJoining} onChange={e => setStuJoining(e.target.value)} className={inputCls} />
+                  </div>
+                </div>
+              </div>
+              <div className="border-t border-erp-border pt-4">
+                <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Personal Details</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Phone</label>
+                    <input type="tel" value={stuPhone} onChange={e => setStuPhone(e.target.value)} className={inputCls} placeholder="10-digit mobile" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Date of Birth</label>
+                    <input type="date" value={stuDob} onChange={e => setStuDob(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Blood Group</label>
+                    <select value={stuBlood} onChange={e => setStuBlood(e.target.value)} className={inputCls}>
+                      <option value="">Select</option>
+                      {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Emergency Contact</label>
+                    <input type="tel" value={stuEmergency} onChange={e => setStuEmergency(e.target.value)} className={inputCls} placeholder="Guardian phone" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Father's Name</label>
+                    <input type="text" value={stuFather} onChange={e => setStuFather(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Mother's Name</label>
+                    <input type="text" value={stuMother} onChange={e => setStuMother(e.target.value)} className={inputCls} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Address</label>
+                    <textarea rows={2} value={stuAddress} onChange={e => setStuAddress(e.target.value)} className={`${inputCls} resize-none`} placeholder="Full residential address" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-erp-border flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setIsStudentModalOpen(false)}>Cancel</Button>
+              <Button variant="primary" onClick={() => handleSaveUser(true)}>
+                {editUser ? 'Save Changes' : 'Add Student'}
               </Button>
             </div>
           </div>
