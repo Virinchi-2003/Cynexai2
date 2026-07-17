@@ -192,8 +192,8 @@ export default function TimetableManager() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 pb-32">
+    <div className="flex flex-col w-full bg-erp-background overflow-y-auto">
+      <div className="flex flex-col p-4 md:p-8 min-w-0 pb-32">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text flex items-center gap-3">

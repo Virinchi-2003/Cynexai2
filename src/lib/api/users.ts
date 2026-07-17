@@ -278,7 +278,10 @@ export async function updateStudentProfile(studentId: string, profile: {
 export async function bulkImportStudents(rows: {
   name: string; email: string; phone?: string;
   course?: string; batch_number?: string; joining_date?: string;
-  status?: string; password?: string;
+  training_start_date?: string; status?: string; password?: string;
+  gender?: string; blood_group?: string; address?: string;
+  emergency_contact?: string; fees_total?: number; fees_paid?: number;
+  dob?: string;
 }[]): Promise<{ imported: number; errors: string[] }> {
   const { encryptPassword } = await import('../crypto');
   let imported = 0;
@@ -294,6 +297,8 @@ export async function bulkImportStudents(rows: {
       const studentId = `stu_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
       const studentCode = `CNX-${new Date().getFullYear()}-${String(imported + 1).padStart(4, '0')}`;
       const encPw = encryptPassword(row.password || 'cynex123');
+      const feesTotal = Number(row.fees_total) || 0;
+      const feesPaid = Number(row.fees_paid) || 0;
 
       await executeWithRetry(
         `INSERT OR IGNORE INTO users (id, name, email, phone, role, status, password_hash, password_encrypted)
@@ -301,9 +306,18 @@ export async function bulkImportStudents(rows: {
         [userId, row.name, row.email, row.phone || '', row.status || 'Active', encPw, encPw]
       );
       await executeWithRetry(
-        `INSERT OR IGNORE INTO students (id, student_code, portal_login_email, status, course, batch_number, joining_date, phone)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [studentId, studentCode, row.email, row.status || 'Active', row.course || null, row.batch_number || null, row.joining_date || null, row.phone || null]
+        `INSERT OR IGNORE INTO students (
+          id, student_code, portal_login_email, status, course, batch_number, joining_date, phone,
+          training_start_date, gender, blood_group, address, emergency_contact,
+          fees_total, fees_paid, fees_pending, dob
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          studentId, studentCode, row.email, row.status || 'Active',
+          row.course || null, row.batch_number || null, row.joining_date || null, row.phone || null,
+          row.training_start_date || null, row.gender || null, row.blood_group || null,
+          row.address || null, row.emergency_contact || null,
+          feesTotal, feesPaid, feesTotal - feesPaid, row.dob || null
+        ]
       );
       imported++;
     } catch (err: any) {

@@ -824,13 +824,17 @@ export const initTursoDB = async () => {
       await client.execute(`
         CREATE TABLE IF NOT EXISTS batches (
           id TEXT PRIMARY KEY,
+          name TEXT,
           module_id TEXT,
           min_students INTEGER,
           max_students INTEGER,
           target_capacity INTEGER,
           current_enrolled INTEGER,
           start_date TEXT,
-          status TEXT
+          status TEXT,
+          course_id TEXT,
+          primary_teacher_id TEXT,
+          created_at TEXT
         )
       `);
 
@@ -1264,13 +1268,32 @@ export const initTursoDB = async () => {
 
       await addColumn('users', 'permissions_json TEXT');
       await addColumn('batches', 'course_id TEXT');
+      await addColumn('batches', 'name TEXT');
       await addColumn('batches', 'primary_teacher_id TEXT');
+      await addColumn('batches', 'created_at TEXT');
       await addColumn('batches', 'schedule_pattern TEXT');
       await addColumn('classes', 'batch_id TEXT');
       await addColumn('classes', 'date TEXT');
       await addColumn('classes', 'start_time TEXT');
       await addColumn('classes', 'end_time TEXT');
       await addColumn('classes', 'teacher_id TEXT');
+
+      // timetable_slots - main scheduling table
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS timetable_slots (
+          id TEXT PRIMARY KEY,
+          batch_id TEXT,
+          day_of_week TEXT,
+          start_time TEXT,
+          end_time TEXT,
+          course_name TEXT,
+          teacher_id TEXT,
+          timing TEXT,
+          status TEXT DEFAULT 'one-time',
+          week_start TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
 
       // Sync sample posts securely and robustly
       await syncSamplePosts();

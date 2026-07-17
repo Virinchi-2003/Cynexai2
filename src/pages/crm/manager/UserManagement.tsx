@@ -250,7 +250,10 @@ export default function UserManagement() {
   const [approveForm, setApproveForm] = useState({ student_id: '', password: '' });
 
   const downloadSampleCsv = () => {
-    const csvContent = "name,email,phone,course,batch_number,joining_date,status,existing_student_y_n\nJohn Doe,john@example.com,1234567890,Frontend,July 2026,2026-07-15,Active,Y\nJane Doe,jane@example.com,0987654321,Backend,Aug 2026,2026-08-01,Active,N";
+    const headers = 'name,email,phone,course,batch_number,joining_date,training_start_date,status,gender,blood_group,address,emergency_contact,fees_total,fees_paid,dob,existing_student_y_n';
+    const row1 = 'Rahul Sharma,rahul@example.com,9876543210,Data Science with AI,July 2026,2026-07-15,2026-07-20,Active,Male,B+,"123 Main St, Mumbai",9876500000,50000,25000,2003-05-10,Y';
+    const row2 = 'Priya Patel,priya@example.com,9123456789,Python Full Stack,Aug 2026,2026-08-01,2026-08-05,Active,Female,O+,"456 Park Ave, Pune",9123400000,45000,45000,2002-11-22,Y';
+    const csvContent = [headers, row1, row2].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -589,7 +592,6 @@ export default function UserManagement() {
                     {[
                       ['Name', row.name], ['Email', row.email], ['Phone', row.phone],
                       ['DOB', row.dob], ['Blood Group', row.blood_group],
-                      ['Father', row.father_name], ['Mother', row.mother_name],
                       ['Emergency', row.emergency_contact], ['Address', row.address],
                       ['Course', row.course], ['Batch', row.batch_number],
                       ['Joining Date', row.joining_date], ['Status', row.status], ['Mode', row.preferred_mode]
