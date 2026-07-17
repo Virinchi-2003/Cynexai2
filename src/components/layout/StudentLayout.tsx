@@ -5,7 +5,7 @@ import { client } from '../../lib/turso';
 import {
   Home, ClipboardCheck, Trophy, Mic2, Gift, Briefcase,
   Flame, Coins, Shield, GraduationCap, LogOut, Moon, Sun,
-  Menu, X, ChevronRight, Zap, Bell,
+  Menu, X, ChevronRight, Bell,
 } from 'lucide-react';
 import { useTheme } from '../../lib/ThemeContext';
 
@@ -20,7 +20,7 @@ interface GamificationData {
 }
 
 const NAV_ITEMS = [
-  { to: '/student',             icon: Home,          label: 'Dashboard',     short: 'Home'      },
+  { to: '/student',             icon: Home,           label: 'Dashboard',    short: 'Home'      },
   { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',   short: 'Attend'    },
   { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank'      },
   { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview' },
@@ -28,13 +28,12 @@ const NAV_ITEMS = [
   { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career'    },
 ];
 
-// Bottom nav shows first 5 items
 const BOTTOM_NAV = NAV_ITEMS.slice(0, 5);
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const user = getCurrentUser();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const user      = getCurrentUser();
   const { isDark, toggleTheme } = useTheme();
 
   const [data, setData] = useState<GamificationData>({
@@ -73,100 +72,133 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   };
 
   const initials = user?.name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'ST';
+  const isActive = (to: string) => to === '/student' ? location.pathname === '/student' : location.pathname.startsWith(to);
 
-  const isActive = (to: string) => {
-    if (to === '/student') return location.pathname === '/student';
-    return location.pathname.startsWith(to);
+  // ── Theme-aware palette ────────────────────────────────────────────────────
+  const T = isDark ? {
+    pageBg:      '#050814',
+    sidebarBg:   '#0d1526',
+    border:      'rgba(255,255,255,0.05)',
+    tabBarBg:    'rgba(13,21,38,0.97)',
+    profileCard: 'rgba(6,182,212,0.05)',
+    profileBorder: 'rgba(6,182,212,0.12)',
+    navSectionLabel: 'rgba(255,255,255,0.2)',
+    navMuted:    'rgba(255,255,255,0.35)',
+    navActive:   '#06b6d4',
+    navActiveBg: 'rgba(6,182,212,0.12)',
+    text:        '#e2e8f0',
+    textMuted:   'rgba(255,255,255,0.35)',
+    avatarBorder: '#0d1526',
+    xpTrack:     'rgba(255,255,255,0.08)',
+    closeBtn:    'rgba(255,255,255,0.07)',
+    closeBtnTxt: 'rgba(255,255,255,0.6)',
+    inactiveTab: 'rgba(255,255,255,0.3)',
+  } : {
+    pageBg:      '#f1f5f9',
+    sidebarBg:   '#ffffff',
+    border:      'rgba(0,0,0,0.07)',
+    tabBarBg:    'rgba(255,255,255,0.97)',
+    profileCard: 'rgba(6,182,212,0.05)',
+    profileBorder: 'rgba(6,182,212,0.15)',
+    navSectionLabel: '#94a3b8',
+    navMuted:    '#64748b',
+    navActive:   '#0891b2',
+    navActiveBg: 'rgba(8,145,178,0.08)',
+    text:        '#0f172a',
+    textMuted:   '#64748b',
+    avatarBorder: '#ffffff',
+    xpTrack:     'rgba(0,0,0,0.08)',
+    closeBtn:    'rgba(0,0,0,0.05)',
+    closeBtnTxt: '#475569',
+    inactiveTab: '#94a3b8',
   };
 
-  // ── Sidebar inner content ──────────────────────────────────────────────────
+  // ── Sidebar content (shared between desktop + mobile overlay) ─────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-y-auto">
 
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 16px rgba(6,182,212,0.35)' }}>
+      <div className="px-5 pt-6 pb-5 flex items-center gap-3 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${T.border}` }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+          style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 16px rgba(6,182,212,0.35)' }}>
           <GraduationCap className="w-5 h-5 text-white" />
         </div>
         <div>
           <p className="font-black text-base leading-tight" style={{ color: '#06b6d4' }}>CynexAI</p>
-          <p className="text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.3)' }}>Student Portal</p>
+          <p className="text-[10px] font-bold" style={{ color: T.textMuted }}>Student Portal</p>
         </div>
       </div>
 
-      {/* Profile Card */}
-      <div className="mx-3 mt-4 p-4 rounded-2xl" style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.12)' }}>
-        {/* Avatar + name */}
+      {/* Profile card */}
+      <div className="mx-3 mt-4 p-4 rounded-2xl"
+        style={{ background: T.profileCard, border: `1px solid ${T.profileBorder}` }}>
         <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 relative"
             style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 16px rgba(6,182,212,0.4)' }}>
             {initials}
-            {/* Online dot */}
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2" style={{ borderColor: '#0d1526' }} />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2"
+              style={{ borderColor: T.avatarBorder }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white font-bold text-sm truncate">{user?.name ?? 'Student'}</p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md text-white"
-                style={{ background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }}>
-                LVL {data.level}
-              </span>
-            </div>
+            <p className="font-bold text-sm truncate" style={{ color: T.text }}>{user?.name ?? 'Student'}</p>
+            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md text-white inline-block mt-0.5"
+              style={{ background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }}>
+              LVL {data.level}
+            </span>
           </div>
           {data.notifications > 0 && (
-            <div className="relative">
-              <Bell className="w-4 h-4" style={{ color: 'rgba(255,255,255,0.4)' }} />
+            <div className="relative flex-shrink-0">
+              <Bell className="w-4 h-4" style={{ color: T.navMuted }} />
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
                 {data.notifications}
               </span>
             </div>
           )}
         </div>
-
-        {/* XP bar */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-bold" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <div className="flex justify-between text-[10px] font-bold" style={{ color: T.textMuted }}>
             <span>XP Progress</span>
-            <span>{data.completedClasses % 10}/10</span>
+            <span>{data.completedClasses % 10}/10 classes</span>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
+          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: T.xpTrack }}>
             <div className="h-full rounded-full transition-all duration-700"
               style={{ width: `${data.xpPct}%`, background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }} />
           </div>
         </div>
       </div>
 
-      {/* Stat Chips */}
+      {/* Stat chips */}
       <div className="mx-3 mt-3 grid grid-cols-3 gap-2">
         {[
-          { icon: Flame,  value: data.streak,    label: 'Streak', color: '#f97316' },
-          { icon: Coins,  value: data.coins,     label: 'Coins',  color: '#f59e0b' },
-          { icon: Shield, value: data.badgeCount, label: 'Badges', color: '#8b5cf6' },
+          { icon: Flame,  value: data.streak,     label: 'Streak', color: '#f97316' },
+          { icon: Coins,  value: data.coins,       label: 'Coins',  color: '#f59e0b' },
+          { icon: Shield, value: data.badgeCount,  label: 'Badges', color: '#8b5cf6' },
         ].map(({ icon: Icon, value, label, color }) => (
-          <div key={label} className="rounded-xl py-2.5 text-center" style={{ background: `${color}09`, border: `1px solid ${color}22` }}>
+          <div key={label} className="rounded-xl py-2.5 text-center"
+            style={{ background: `${color}12`, border: `1px solid ${color}28` }}>
             <Icon className="w-4 h-4 mx-auto mb-0.5" style={{ color }} />
             <div className="text-sm font-black leading-none" style={{ color }}>{value}</div>
-            <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: `${color}70` }}>{label}</div>
+            <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: T.textMuted }}>{label}</div>
           </div>
         ))}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 mt-4 space-y-0.5 overflow-y-auto">
-        <p className="text-[9px] font-black uppercase tracking-widest px-3 mb-2" style={{ color: 'rgba(255,255,255,0.2)' }}>Navigation</p>
+      <nav className="flex-1 px-3 mt-4 space-y-0.5 min-h-0">
+        <p className="text-[9px] font-black uppercase tracking-widest px-3 mb-2"
+          style={{ color: T.navSectionLabel }}>Navigation</p>
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
           const active = isActive(to);
           return (
-            <button
-              key={to}
+            <button key={to}
               onClick={() => { navigate(to); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 group relative"
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150"
               style={{
-                background: active ? 'rgba(6,182,212,0.12)' : 'transparent',
-                color: active ? '#06b6d4' : 'rgba(255,255,255,0.45)',
-                borderLeft: active ? '2px solid #06b6d4' : '2px solid transparent',
-              }}
-            >
+                background: active ? T.navActiveBg : 'transparent',
+                color: active ? T.navActive : T.navMuted,
+                borderLeft: `2px solid ${active ? T.navActive : 'transparent'}`,
+              }}>
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span className="flex-1 text-left">{label}</span>
               {active && <ChevronRight className="w-3.5 h-3.5 opacity-60" />}
@@ -176,21 +208,17 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       </nav>
 
       {/* Bottom actions */}
-      <div className="p-3 space-y-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      <div className="p-3 space-y-1 flex-shrink-0" style={{ borderTop: `1px solid ${T.border}` }}>
         <button onClick={toggleTheme}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.7)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium"
+          style={{ color: T.navMuted }}>
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           {isDark ? 'Light Mode' : 'Dark Mode'}
         </button>
         <button
-          onClick={() => { localStorage.clear(); navigate('/login'); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
-          onMouseEnter={e => (e.currentTarget.style.color = '#f87171')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
+          onClick={() => { localStorage.removeItem('cynexai_user'); navigate('/login'); }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium hover:text-red-400 transition-colors"
+          style={{ color: T.navMuted }}>
           <LogOut className="w-4 h-4" />
           Sign Out
         </button>
@@ -199,22 +227,23 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden" style={{ background: '#050814', color: '#e2e8f0' }}>
+    <div className="flex h-screen w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
 
-      {/* ── Desktop Sidebar ── */}
-      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col" style={{ background: '#0d1526', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col"
+        style={{ background: T.sidebarBg, borderRight: `1px solid ${T.border}` }}>
         <SidebarContent />
       </aside>
 
-      {/* ── Mobile: Full-screen Menu Overlay ── */}
+      {/* Mobile overlay menu */}
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <aside className="relative w-72 flex flex-col z-10" style={{ background: '#0d1526', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)' }}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="relative w-72 flex flex-col z-10"
+            style={{ background: T.sidebarBg, borderRight: `1px solid ${T.border}` }}>
+            <button onClick={() => setMobileMenuOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center z-10"
+              style={{ background: T.closeBtn, color: T.closeBtnTxt }}>
               <X className="w-4 h-4" />
             </button>
             <SidebarContent />
@@ -222,43 +251,43 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
       )}
 
-      {/* ── Main ── */}
+      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        {/* Mobile Top Header */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: '#0d1526', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        {/* Mobile top header */}
+        <div className="md:hidden flex items-center justify-between px-4 py-3 flex-shrink-0"
+          style={{ background: T.sidebarBg, borderBottom: `1px solid ${T.border}` }}>
           <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)' }}>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)' }}>
               <GraduationCap className="w-4 h-4 text-white" />
             </div>
             <span className="font-black text-sm" style={{ color: '#06b6d4' }}>CynexAI</span>
           </button>
-
-          {/* Mobile stat pills */}
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(249,115,22,0.1)', color: '#f97316', border: '1px solid rgba(249,115,22,0.2)' }}>
-              <Flame className="w-3.5 h-3.5" />
-              {data.streak}
+            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316', border: '1px solid rgba(249,115,22,0.25)' }}>
+              <Flame className="w-3.5 h-3.5" />{data.streak}
             </span>
-            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full" style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
-              <Coins className="w-3.5 h-3.5" />
-              {data.coins}
+            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
+              <Coins className="w-3.5 h-3.5" />{data.coins}
             </span>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
 
-        {/* ── Mobile Bottom Tab Bar ── */}
-        <div
-          className="md:hidden flex-shrink-0 flex justify-around items-center px-2"
+        {/* Mobile bottom tab bar */}
+        <div className="md:hidden flex-shrink-0 flex justify-around items-center px-2"
           style={{
-            background: 'rgba(13,21,38,0.95)',
+            background: T.tabBarBg,
             backdropFilter: 'blur(20px)',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderTop: `1px solid ${T.border}`,
             height: '64px',
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           }}>
@@ -267,8 +296,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             return (
               <button key={to} onClick={() => navigate(to)}
                 className="flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
-                style={{ minWidth: '52px', color: active ? '#06b6d4' : 'rgba(255,255,255,0.3)' }}>
-                <div className="w-8 h-6 flex items-center justify-center rounded-lg transition-all"
+                style={{ minWidth: '52px', color: active ? '#06b6d4' : T.inactiveTab }}>
+                <div className="w-8 h-6 flex items-center justify-center rounded-lg"
                   style={{ background: active ? 'rgba(6,182,212,0.12)' : 'transparent' }}>
                   <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 1.8} />
                 </div>
@@ -277,10 +306,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               </button>
             );
           })}
-          <button
-            onClick={() => setMobileMenuOpen(true)}
+          <button onClick={() => setMobileMenuOpen(true)}
             className="flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl"
-            style={{ minWidth: '52px', color: 'rgba(255,255,255,0.3)' }}>
+            style={{ minWidth: '52px', color: T.inactiveTab }}>
             <div className="w-8 h-6 flex items-center justify-center">
               <Menu className="w-5 h-5" strokeWidth={1.8} />
             </div>

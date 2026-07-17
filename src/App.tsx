@@ -39,6 +39,7 @@ import ApprovalDetail from './pages/crm/manager/ApprovalDetail';
 import BatchAssignment from './pages/crm/manager/BatchAssignment';
 import UserManagement from './pages/crm/manager/UserManagement';
 import GamificationSettings from './pages/crm/manager/GamificationSettings';
+import StudentsPage from './pages/crm/manager/Students';
 
 import TimetableManager from './pages/crm/manager/TimetableManager';
 import StudentPortalSettings from './pages/crm/manager/StudentPortalSettings';
@@ -234,6 +235,7 @@ function App() {
         <Route path="/manager/timetable" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><TimetableManager /></ManagerLayout></RequireAuth>} />
         <Route path="/manager/approvals/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><ApprovalDetail /></ManagerLayout></RequireAuth>} />
         <Route path="/manager/student-settings" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><StudentPortalSettings /></ManagerLayout></RequireAuth>} />
+        <Route path="/manager/students" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><StudentsPage /></ManagerLayout></RequireAuth>} />
         
         {/* Onboarding is assigned by Manager via Tasks */}
         <Route path="/manager/assign-batch/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><BatchAssignment /></ManagerLayout></RequireAuth>} />
@@ -259,6 +261,7 @@ function App() {
         <Route path="/ceo/history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><HistoryPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/dm-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><DMDashboard /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><CRMLayout><ReportsPage /></CRMLayout></RequireAuth>} />
+        <Route path="/ceo/students" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentsPage /></CEOLayout></RequireAuth>} />
         <Route path="/manager/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><ManagerLayout><ReportsPage /></ManagerLayout></RequireAuth>} />
 
         {/* Teacher Routes */}
