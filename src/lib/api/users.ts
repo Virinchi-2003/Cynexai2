@@ -89,9 +89,20 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
 
 export async function getFilterOptions(): Promise<{courses: string[], batches: string[]}> {
   try {
-    const res = await executeWithRetry('SELECT DISTINCT course, batch_number FROM students WHERE course IS NOT NULL OR batch_number IS NOT NULL');
-    const courses = Array.from(new Set(res.rows.map((r: any) => String(r.course)).filter(c => c && c !== 'null')));
-    const batches = Array.from(new Set(res.rows.map((r: any) => String(r.batch_number)).filter(b => b && b !== 'null')));
+    const coursesRes = await executeWithRetry('SELECT DISTINCT title FROM courses WHERE title IS NOT NULL');
+    let courses = Array.from(new Set(coursesRes.rows.map((r: any) => String(r.title)).filter(c => c && c !== 'null')));
+    if (courses.length === 0) {
+      const studentCourses = await executeWithRetry('SELECT DISTINCT course FROM students WHERE course IS NOT NULL');
+      courses = Array.from(new Set(studentCourses.rows.map((r: any) => String(r.course)).filter(c => c && c !== 'null')));
+    }
+
+    const batchesRes = await executeWithRetry('SELECT DISTINCT name FROM batches WHERE name IS NOT NULL');
+    let batches = Array.from(new Set(batchesRes.rows.map((r: any) => String(r.name)).filter(b => b && b !== 'null')));
+    if (batches.length === 0) {
+      const studentBatchesRes = await executeWithRetry('SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL');
+      batches = Array.from(new Set(studentBatchesRes.rows.map((r: any) => String(r.batch_number)).filter(b => b && b !== 'null')));
+    }
+
     return { courses, batches };
   } catch (error) {
     console.error('Failed to get filter options', error);
@@ -140,6 +151,18 @@ export async function saveUser(user: any): Promise<void> {
         "INSERT INTO users (id, name, email, phone, role, salary, status, password_hash, password_encrypted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [newId, user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw]
       );
+    }
+
+    if (user.role === 'Student') {
+      const existing = await executeWithRetry(`SELECT id FROM students WHERE portal_login_email = ?`, [user.email]);
+      if (existing.rows.length === 0) {
+        const studentCode = `CNX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+        const stuId = `stu_${Date.now()}`;
+        await executeWithRetry(
+          `INSERT INTO students (id, student_code, portal_login_email, status, phone) VALUES (?, ?, ?, ?, ?)`,
+          [stuId, studentCode, user.email, status, user.phone || null]
+        );
+      }
     }
   } catch (error) {
     console.error('Failed to save user', error);
@@ -246,8 +269,8 @@ export async function updateStudentProfile(studentId: string, profile: {
   const fields = Object.keys(profile) as (keyof typeof profile)[];
   if (fields.length === 0) return;
   const setClauses = fields.map(f => `${f} = ?`).join(', ');
-  const args = [...fields.map(f => (profile[f] ?? null) as any), studentId];
-  await executeWithRetry(`UPDATE students SET ${setClauses} WHERE id = ?`, args);
+  const args = [...fields.map(f => (profile[f] ?? null) as any), studentId, studentId];
+  await executeWithRetry(`UPDATE students SET ${setClauses} WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?)`, args);
 }
 
 // ─── CSV BULK STUDENT IMPORT ────────────────────────────────────────────────
