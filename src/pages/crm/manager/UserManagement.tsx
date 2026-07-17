@@ -277,7 +277,7 @@ export default function UserManagement() {
       } else {
         const queryFilters = { ...filters };
         if (activeTab === 'students') queryFilters.role = 'Student';
-        else if (activeTab === 'staff') queryFilters.excludeRole = 'Student';
+        else if (activeTab === 'staff') queryFilters.role = { _neq: 'Student' };
         const data = await getUsers(queryFilters);
         let sorted = [...data];
         if (sortBy) {

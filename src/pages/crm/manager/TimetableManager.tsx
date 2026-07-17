@@ -134,7 +134,11 @@ export default function TimetableManager() {
   }, [filterCourse, filterTeacher, filterModule, currentWeekStart]);
 
   const handleSaveSlot = async () => {
-    if (editingSlot && editingSlot.teacher_id && editingSlot.day_of_week && editingSlot.start_time && editingSlot.end_time) {
+    if (!editingSlot?.teacher_id) {
+      alert("Please select a teacher.");
+      return;
+    }
+    if (editingSlot && editingSlot.day_of_week && editingSlot.start_time && editingSlot.end_time) {
       const slotToSave = {
         ...editingSlot,
         course_name: JSON.stringify(selectedCourses),
@@ -144,6 +148,8 @@ export default function TimetableManager() {
       setIsSlotModalOpen(false);
       setEditingSlot(null);
       fetchData();
+    } else {
+      alert("Please fill in all required fields (Day, Time, Teacher).");
     }
   };
 
@@ -528,72 +534,77 @@ export default function TimetableManager() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-2">Courses / Modules</label>
-                    <div className="flex flex-wrap gap-2">
-                      {[...courses, ...modules].map(c => {
-                        const isSelected = selectedCourses.includes(c.title);
+                    <label className="block text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-2">Course</label>
+                    <select 
+                      className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-sm font-bold text-erp-text outline-none focus:border-erp-primary transition-colors"
+                      value={selectedCourses.find(c => courses.some(co => co.title === c)) || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const mod = selectedCourses.find(c => modules.some(m => m.title === c));
+                        setSelectedCourses([val, mod].filter(Boolean) as string[]);
+                        if (!val) setSelectedBatches({});
+                      }}
+                    >
+                      <option value="">Select Course...</option>
+                      {courses.map(c => <option key={c.id} value={c.title}>{c.title}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-2">Module</label>
+                    <select 
+                      className="w-full bg-erp-background border-2 border-erp-border rounded-xl p-3 text-sm font-bold text-erp-text outline-none focus:border-erp-primary transition-colors"
+                      value={selectedCourses.find(c => modules.some(m => m.title === c)) || ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const course = selectedCourses.find(c => courses.some(co => co.title === c));
+                        setSelectedCourses([course, val].filter(Boolean) as string[]);
+                      }}
+                    >
+                      <option value="">Select Module...</option>
+                      {modules.map(m => <option key={m.id} value={m.title}>{m.title}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                {selectedCourses.some(sc => courses.find(c => c.title === sc)) && (
+                  <div className="bg-erp-primary/5 p-4 rounded-xl border border-erp-primary/10 mt-4">
+                    <label className="block text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-3">Select Batches for Course</label>
+                    <div className="space-y-4">
+                      {selectedCourses.filter(sc => courses.find(c => c.title === sc)).map(courseName => {
+                        const courseBatches = batches.filter(b => b.course_id === courseName);
+                        const currentCourseBatches = selectedBatches[courseName] || [];
+                        
                         return (
-                          <div 
-                            key={c.id}
-                            onClick={() => {
-                              const newCourses = isSelected ? selectedCourses.filter(sc => sc !== c.title) : [...selectedCourses, c.title];
-                              setSelectedCourses(newCourses);
-                              if (isSelected) {
-                                const newBatches = { ...selectedBatches };
-                                delete newBatches[c.title];
-                                setSelectedBatches(newBatches);
-                              }
-                            }}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-bold cursor-pointer transition-colors ${isSelected ? 'bg-erp-primary text-white' : 'bg-erp-background border border-erp-border text-erp-text hover:border-erp-primary/50'}`}
-                          >
-                            {c.title}
+                          <div key={courseName} className="space-y-2">
+                            {courseBatches.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {courseBatches.map(b => {
+                                  const isSelected = currentCourseBatches.includes(b.id);
+                                  return (
+                                    <div 
+                                      key={b.id}
+                                      onClick={() => {
+                                        const newCourseBatches = isSelected ? currentCourseBatches.filter(id => id !== b.id) : [...currentCourseBatches, b.id];
+                                        setSelectedBatches({ ...selectedBatches, [courseName]: newCourseBatches });
+                                      }}
+                                      className={`px-3 py-1 rounded-md text-xs font-bold cursor-pointer transition-colors ${isSelected ? 'bg-erp-secondary text-white' : 'bg-erp-background border border-erp-border text-erp-text hover:border-erp-secondary/50'}`}
+                                    >
+                                      {b.name}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-erp-text/50 italic">No batches found for this course.</p>
+                            )}
                           </div>
                         )
                       })}
                     </div>
                   </div>
-
-                  {selectedCourses.some(sc => courses.find(c => c.title === sc)) && (
-                    <div className="bg-erp-primary/5 p-4 rounded-xl border border-erp-primary/10">
-                      <label className="block text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-3">Select Batches per Course</label>
-                      <div className="space-y-4">
-                        {selectedCourses.filter(sc => courses.find(c => c.title === sc)).map(courseName => {
-                          const courseBatches = batches.filter(b => b.course_id === courseName);
-                          const currentCourseBatches = selectedBatches[courseName] || [];
-                          
-                          return (
-                            <div key={courseName} className="space-y-2">
-                              <h4 className="text-sm font-bold text-erp-text">{courseName}</h4>
-                              {courseBatches.length > 0 ? (
-                                <div className="flex flex-wrap gap-2">
-                                  {courseBatches.map(b => {
-                                    const isSelected = currentCourseBatches.includes(b.id);
-                                    return (
-                                      <div 
-                                        key={b.id}
-                                        onClick={() => {
-                                          const newCourseBatches = isSelected ? currentCourseBatches.filter(id => id !== b.id) : [...currentCourseBatches, b.id];
-                                          setSelectedBatches({ ...selectedBatches, [courseName]: newCourseBatches });
-                                        }}
-                                        className={`px-3 py-1 rounded-md text-xs font-bold cursor-pointer transition-colors ${isSelected ? 'bg-erp-secondary text-white' : 'bg-erp-background border border-erp-border text-erp-text hover:border-erp-secondary/50'}`}
-                                      >
-                                        {b.name}
-                                      </div>
-                                    )
-                                  })}
-                                </div>
-                              ) : (
-                                <p className="text-xs text-erp-text/50 italic">No batches found for this course.</p>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
