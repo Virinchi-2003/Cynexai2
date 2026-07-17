@@ -8,6 +8,9 @@ vi.mock('../../../lib/api/users', () => ({
   getUsers: vi.fn(),
   saveUser: vi.fn(),
   patchUser: vi.fn(),
+  getFilterOptions: vi.fn(() => Promise.resolve({ courses: [], batches: [] })),
+  getCourseCurriculum: vi.fn(() => Promise.resolve({})),
+  getPendingStudents: vi.fn(() => Promise.resolve([])),
 }));
 
 vi.mock('../../../lib/auth', () => ({

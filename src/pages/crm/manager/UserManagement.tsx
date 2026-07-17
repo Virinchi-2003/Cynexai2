@@ -249,6 +249,18 @@ export default function UserManagement() {
   const [approvingStudentId, setApprovingStudentId] = useState<string | null>(null);
   const [approveForm, setApproveForm] = useState({ student_id: '', password: '' });
 
+  const downloadSampleCsv = () => {
+    const csvContent = "name,email,phone,course,batch_number,joining_date,status,existing_student_y_n\nJohn Doe,john@example.com,1234567890,Frontend,July 2026,2026-07-15,Active,Y\nJane Doe,jane@example.com,0987654321,Backend,Aug 2026,2026-08-01,Active,N";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'sample_students.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+
   useEffect(() => { fetchUsersData(); }, [filters, sortBy, sortDir]);
   useEffect(() => { fetchUsersData(); }, [activeTab]);
   useEffect(() => {
@@ -494,6 +506,9 @@ export default function UserManagement() {
           <div className="flex gap-2 flex-wrap">
             {activeTab === 'students' && (
               <>
+                <Button variant="ghost" className="flex items-center gap-2 text-sm text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/10" onClick={downloadSampleCsv}>
+                  <Download className="w-4 h-4" /> Sample CSV
+                </Button>
                 <Button variant="secondary" className="flex items-center gap-2 text-sm" onClick={() => setShowCsvModal(true)}>
                   <FileSpreadsheet className="w-4 h-4" /> Import CSV
                 </Button>
@@ -862,16 +877,7 @@ export default function UserManagement() {
                   <p className="mt-2 text-indigo-400">Rows where <code className="font-bold">existing_student_y_n</code> is "N" will be auto-rejected.</p>
                   <p className="mt-1 text-indigo-400">Default password for imported students: <strong>cynex123</strong></p>
                 </div>
-                <Button variant="secondary" className="flex items-center gap-2 text-xs flex-shrink-0" onClick={() => {
-                  const csvContent = "name,email,phone,course,batch_number,joining_date,status,existing_student_y_n\nJohn Doe,john@example.com,1234567890,Frontend,July 2026,2026-07-15,Active,Y\nJane Doe,jane@example.com,0987654321,Backend,Aug 2026,2026-08-01,Active,N";
-                  const blob = new Blob([csvContent], { type: 'text/csv' });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = 'sample_students.csv';
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                }}>
+                <Button variant="secondary" className="flex items-center gap-2 text-xs flex-shrink-0" onClick={downloadSampleCsv}>
                   <Download className="w-4 h-4" /> Download Sample CSV
                 </Button>
               </div>
