@@ -1,0 +1,311 @@
+import { client, isTursoConfigured } from '../turso';
+
+// ─── Interfaces ───────────────────────────────────────────────────────────────
+
+export interface EmployeeReport {
+  user_id: string;
+  user_name: string;
+  user_role: string;
+  total_calls: number;
+  total_tasks: number;
+  tasks_completed: number;
+  tasks_in_progress: number;
+  tasks_overdue: number;
+  total_time_minutes: number;
+  conversions: number; // leads converted to admissions
+  completion_rate: number;
+}
+
+export interface TimeLog {
+  id: string;
+  task_id: string;
+  user_id: string;
+  started_at: string;
+  ended_at: string | null;
+  duration_minutes: number | null;
+  notes: string | null;
+  task_title?: string;
+  user_name?: string;
+}
+
+export interface ProjectMember {
+  id: string;
+  project_id: string;
+  user_id: string;
+  role: 'general_manager' | 'manager' | 'member';
+  assigned_by: string;
+  assigned_at: string;
+  user_name?: string;
+  user_role?: string;
+}
+
+// ─── Time Tracking ───────────────────────────────────────────────────────────
+
+export const startTimeLog = async (taskId: string, userId: string): Promise<string | null> => {
+  if (!isTursoConfigured || !client) return null;
+  const id = 'tl_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  try {
+    await client.execute({
+      sql: `INSERT INTO time_logs (id, task_id, user_id, started_at) VALUES (?, ?, ?, ?)`,
+      args: [id, taskId, userId, new Date().toISOString()]
+    });
+    return id;
+  } catch (e) {
+    console.error('Failed to start time log', e);
+    return null;
+  }
+};
+
+export const stopTimeLog = async (timeLogId: string): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  const endedAt = new Date().toISOString();
+  try {
+    // Get started_at to compute duration
+    const res = await client.execute({
+      sql: `SELECT started_at FROM time_logs WHERE id = ?`,
+      args: [timeLogId]
+    });
+    if (res.rows.length === 0) return false;
+    const startedAt = new Date(res.rows[0].started_at as string);
+    const durationMinutes = Math.round((new Date().getTime() - startedAt.getTime()) / 60000);
+    await client.execute({
+      sql: `UPDATE time_logs SET ended_at = ?, duration_minutes = ? WHERE id = ?`,
+      args: [endedAt, durationMinutes, timeLogId]
+    });
+    return true;
+  } catch (e) {
+    console.error('Failed to stop time log', e);
+    return false;
+  }
+};
+
+export const getTimeLogsByTask = async (taskId: string): Promise<TimeLog[]> => {
+  if (!isTursoConfigured || !client) return [];
+  try {
+    const res = await client.execute({
+      sql: `SELECT time_logs.*, users.name as user_name FROM time_logs 
+            LEFT JOIN users ON time_logs.user_id = users.id 
+            WHERE task_id = ? ORDER BY started_at DESC`,
+      args: [taskId]
+    });
+    return res.rows as unknown as TimeLog[];
+  } catch (e) {
+    console.error('Failed to get time logs', e);
+    return [];
+  }
+};
+
+export const getActiveTimeLog = async (userId: string): Promise<TimeLog | null> => {
+  if (!isTursoConfigured || !client) return null;
+  try {
+    const res = await client.execute({
+      sql: `SELECT time_logs.*, tasks.title as task_title FROM time_logs 
+            LEFT JOIN tasks ON time_logs.task_id = tasks.id
+            WHERE time_logs.user_id = ? AND time_logs.ended_at IS NULL 
+            ORDER BY time_logs.started_at DESC LIMIT 1`,
+      args: [userId]
+    });
+    if (res.rows.length === 0) return null;
+    return res.rows[0] as unknown as TimeLog;
+  } catch (e) {
+    console.error('Failed to get active time log', e);
+    return null;
+  }
+};
+
+// ─── Project Hierarchy ────────────────────────────────────────────────────────
+
+export const getProjectMembers = async (projectId: string): Promise<ProjectMember[]> => {
+  if (!isTursoConfigured || !client) return [];
+  try {
+    const res = await client.execute({
+      sql: `SELECT pm.*, u.name as user_name, u.role as user_role 
+            FROM project_members pm 
+            LEFT JOIN users u ON pm.user_id = u.id
+            WHERE pm.project_id = ?
+            ORDER BY CASE pm.role WHEN 'general_manager' THEN 1 WHEN 'manager' THEN 2 ELSE 3 END`,
+      args: [projectId]
+    });
+    return res.rows as unknown as ProjectMember[];
+  } catch (e) {
+    console.error('Failed to get project members', e);
+    return [];
+  }
+};
+
+export const addProjectMember = async (
+  projectId: string,
+  userId: string,
+  role: ProjectMember['role'],
+  assignedBy: string
+): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  const id = 'pm_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  try {
+    await client.execute({
+      sql: `INSERT OR REPLACE INTO project_members (id, project_id, user_id, role, assigned_by, assigned_at) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
+      args: [id, projectId, userId, role, assignedBy, new Date().toISOString()]
+    });
+    return true;
+  } catch (e) {
+    console.error('Failed to add project member', e);
+    return false;
+  }
+};
+
+export const removeProjectMember = async (projectId: string, userId: string): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  try {
+    await client.execute({
+      sql: `DELETE FROM project_members WHERE project_id = ? AND user_id = ?`,
+      args: [projectId, userId]
+    });
+    return true;
+  } catch (e) {
+    console.error('Failed to remove project member', e);
+    return false;
+  }
+};
+
+export const updateProjectMemberRole = async (
+  projectId: string,
+  userId: string,
+  newRole: ProjectMember['role']
+): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  try {
+    await client.execute({
+      sql: `UPDATE project_members SET role = ? WHERE project_id = ? AND user_id = ?`,
+      args: [newRole, projectId, userId]
+    });
+    return true;
+  } catch (e) {
+    console.error('Failed to update project member role', e);
+    return false;
+  }
+};
+
+// ─── Employee Reports ─────────────────────────────────────────────────────────
+
+export const getEmployeeReports = async (
+  dateFrom?: string,
+  dateTo?: string
+): Promise<EmployeeReport[]> => {
+  if (!isTursoConfigured || !client) return [];
+
+  try {
+    // Build date filter
+    let dateFilter = '';
+    const dateArgs: string[] = [];
+    if (dateFrom) {
+      dateFilter += ` AND t.created_at >= ?`;
+      dateArgs.push(dateFrom);
+    }
+    if (dateTo) {
+      dateFilter += ` AND t.created_at <= ?`;
+      dateArgs.push(dateTo);
+    }
+
+    // Fetch all staff users
+    const usersRes = await client.execute(
+      `SELECT id, name, role FROM users WHERE role NOT IN ('Student') ORDER BY name ASC`
+    );
+
+    const reports: EmployeeReport[] = [];
+
+    for (const userRow of usersRes.rows) {
+      const userId = userRow.id as string;
+
+      // Task stats
+      const taskRes = await client.execute({
+        sql: `SELECT 
+                COUNT(*) as total_tasks,
+                SUM(CASE WHEN status = 'Done' THEN 1 ELSE 0 END) as tasks_completed,
+                SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as tasks_in_progress,
+                SUM(CASE WHEN due_date < ? AND status != 'Done' THEN 1 ELSE 0 END) as tasks_overdue
+              FROM tasks t
+              WHERE assignee_id = ? ${dateFilter}`,
+        args: [new Date().toISOString().split('T')[0], userId, ...dateArgs]
+      });
+
+      const taskRow = taskRes.rows[0] || {};
+      const totalTasks = Number(taskRow.total_tasks) || 0;
+      const tasksCompleted = Number(taskRow.tasks_completed) || 0;
+
+      // Call stats (from CRM activities)
+      const callRes = await client.execute({
+        sql: `SELECT COUNT(*) as total_calls FROM crm_activities WHERE user_id = ? AND type = 'Call'`,
+        args: [userId]
+      });
+      const totalCalls = Number(callRes.rows[0]?.total_calls) || 0;
+
+      // Time spent
+      const timeRes = await client.execute({
+        sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total_time FROM time_logs WHERE user_id = ? AND ended_at IS NOT NULL`,
+        args: [userId]
+      });
+      const totalTimeMinutes = Number(timeRes.rows[0]?.total_time) || 0;
+
+      // Conversions (leads assigned to this user that became admissions)
+      let conversions = 0;
+      try {
+        const convRes = await client.execute({
+          sql: `SELECT COUNT(*) as cnt FROM admissions a 
+                JOIN leads l ON a.lead_id = l.id 
+                WHERE l.assigned_to = ?`,
+          args: [userId]
+        });
+        conversions = Number(convRes.rows[0]?.cnt) || 0;
+      } catch { /* table may not exist */ }
+
+      reports.push({
+        user_id: userId,
+        user_name: userRow.name as string,
+        user_role: userRow.role as string,
+        total_calls: totalCalls,
+        total_tasks: totalTasks,
+        tasks_completed: tasksCompleted,
+        tasks_in_progress: Number(taskRow.tasks_in_progress) || 0,
+        tasks_overdue: Number(taskRow.tasks_overdue) || 0,
+        total_time_minutes: totalTimeMinutes,
+        conversions,
+        completion_rate: totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0
+      });
+    }
+
+    return reports;
+  } catch (e) {
+    console.error('Failed to get employee reports', e);
+    return [];
+  }
+};
+
+export const getProjectHierarchyReport = async (): Promise<any[]> => {
+  if (!isTursoConfigured || !client) return [];
+  try {
+    const res = await client.execute(`
+      SELECT 
+        p.id as project_id,
+        p.name as project_name,
+        p.status as project_status,
+        p.color as project_color,
+        pm.role as member_role,
+        u.id as user_id,
+        u.name as user_name,
+        u.role as user_role,
+        COUNT(t.id) as task_count,
+        SUM(CASE WHEN t.status = 'Done' THEN 1 ELSE 0 END) as tasks_done
+      FROM projects p
+      LEFT JOIN project_members pm ON p.id = pm.project_id
+      LEFT JOIN users u ON pm.user_id = u.id
+      LEFT JOIN tasks t ON t.project_id = p.id AND t.assignee_id = u.id
+      GROUP BY p.id, pm.user_id
+      ORDER BY p.name, CASE pm.role WHEN 'general_manager' THEN 1 WHEN 'manager' THEN 2 ELSE 3 END
+    `);
+    return res.rows as any[];
+  } catch (e) {
+    console.error('Failed to get project hierarchy', e);
+    return [];
+  }
+};

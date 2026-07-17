@@ -26,7 +26,7 @@ import CrmLogin from './pages/crm/Login';
 import LeadPipeline from './pages/crm/LeadPipeline';
 import LeadCapture from './pages/crm/LeadCapture';
 import LeadDetail from './pages/crm/LeadDetail';
-import SalesList from './pages/crm/SalesList';
+import HistoryPage from './pages/crm/ceo/HistoryPage';
 import AsanaTaskApp from './components/crm/tasks/AsanaTaskApp';
 import ChatPortal from './pages/crm/ChatPortal';
 import Profile from './pages/crm/Profile';
@@ -68,6 +68,7 @@ import ContentPlanner from './pages/crm/dm/ContentPlanner';
 import CEODashboard from './pages/crm/ceo/CEODashboard';
 import CEOSettings from './pages/crm/ceo/CEOSettings';
 import AIVoiceSettings from './pages/crm/ceo/AIVoiceSettings';
+import ReportsPage from './pages/crm/ceo/ReportsPage';
 
 // Teacher Imports
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
@@ -88,7 +89,8 @@ const CRMLayout = ({ children }: { children: React.ReactNode }) => {
     <div className="h-screen bg-erp-background font-sans selection:bg-erp-primary/30 flex flex-col md:flex-row overflow-hidden relative">
       {/* Desktop Sidebar */}
       <div 
-        className={`hidden md:block flex-shrink-0 border-r-2 border-erp-border bg-erp-surface transition-all duration-300 relative ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden border-r-0'}`}
+        className={`hidden md:block flex-shrink-0 border-r-2 border-erp-border bg-erp-sidebar-bg transition-all duration-300 relative ${isSidebarOpen ? 'w-64' : 'w-0 overflow-hidden border-r-0'}`}
+        style={{ background: 'var(--erp-sidebar-bg)', borderColor: 'var(--erp-sidebar-border)' }}
       >
         <div className="w-64 h-full">
           <Sidebar />
@@ -104,15 +106,13 @@ const CRMLayout = ({ children }: { children: React.ReactNode }) => {
         {isSidebarOpen ? <ChevronLeft className="w-4 h-4 text-erp-text" /> : <ChevronRight className="w-4 h-4 text-erp-text" />}
       </button>
       
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
+      {/* Main Content Area — adds bottom padding on mobile for nav bar */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pb-20 md:pb-0">
         {children}
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="md:hidden flex-shrink-0">
-        <MobileNavigation />
-      </div>
+      {/* Mobile Bottom Navigation — fixed, rendered here */}
+      <MobileNavigation />
     </div>
   );
 };
@@ -205,7 +205,7 @@ function App() {
         <Route path="/sales/pipeline" element={<SalesLayout><LeadPipeline /></SalesLayout>} />
         <Route path="/sales/leads/new" element={<SalesLayout><LeadCapture /></SalesLayout>} />
         <Route path="/sales/leads/:id" element={<SalesLayout><LeadDetail /></SalesLayout>} />
-        <Route path="/sales/history" element={<SalesLayout><SalesList /></SalesLayout>} />
+        {/* /sales/history removed, now handled by /ceo/history */}
         <Route path="/crm/leads/new" element={<Navigate to="/sales/leads/new" replace />} />
         <Route path="/crm/leads" element={<Navigate to="/sales/pipeline" replace />} />
         
@@ -253,8 +253,10 @@ function App() {
         <Route path="/ceo/timetable" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><TimetableManager /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/sales-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesDashboard /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/sales-pipeline" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><LeadPipeline /></CEOLayout></RequireAuth>} />
-        <Route path="/ceo/sales-history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesList /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><HistoryPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/dm-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><DMDashboard /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><CRMLayout><ReportsPage /></CRMLayout></RequireAuth>} />
+        <Route path="/manager/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><ManagerLayout><ReportsPage /></ManagerLayout></RequireAuth>} />
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherLayout><TeacherDashboard /></TeacherLayout>} />

@@ -29,7 +29,8 @@ export const getLeads = async (): Promise<Lead[]> => {
         location: row.location as string,
         created_at: row.created_at as string,
         updated_at: row.updated_at as string,
-        last_whatsapp_msg: row.last_whatsapp_msg as string
+        last_whatsapp_msg: row.last_whatsapp_msg as string,
+        created_by: row.created_by as string
       }));
     } catch (e) {
       console.error("Failed to fetch leads", e);
@@ -63,7 +64,8 @@ export const getLeadById = async (id: string): Promise<Lead | null> => {
           preferred_mode: row.preferred_mode as string,
           location: row.location as string,
           created_at: row.created_at as string,
-          updated_at: row.updated_at as string
+          updated_at: row.updated_at as string,
+          created_by: row.created_by as string
         };
       }
     } catch (e) {
@@ -80,13 +82,13 @@ export const createLead = async (lead: Omit<Lead, 'id' | 'updated_at'> & { creat
   if (isTursoConfigured && client) {
     try {
       await client.execute({
-        sql: `INSERT INTO crm_leads (id, name, email, phone, course_interest, source, status, assigned_to, notes, grad_year, qualification, it_background, preferred_mode, location, created_at, updated_at) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO crm_leads (id, name, email, phone, course_interest, source, status, assigned_to, notes, grad_year, qualification, it_background, preferred_mode, location, created_at, updated_at, created_by) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, lead.name, lead.email || null, lead.phone, lead.course_interest, lead.source, lead.status, 
           lead.assigned_to, lead.notes || null, lead.grad_year || null, lead.qualification || null,
           lead.it_background || null, lead.preferred_mode || null, lead.location || null,
-          created_at, created_at
+          created_at, created_at, lead.created_by || null
         ]
       });
       return id;

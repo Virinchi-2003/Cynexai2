@@ -7,19 +7,19 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 
 const getStatusColor = (status: string) => {
   switch(status) {
-    case 'Admission Completed': return 'bg-green-100 text-green-700 border-green-500';
-    case 'Closed Won': return 'bg-emerald-100 text-emerald-700 border-emerald-500';
-    case 'Closed Lost': return 'bg-red-100 text-red-700 border-red-500';
-    case 'Interested': return 'bg-blue-100 text-blue-700 border-blue-500';
-    case 'Not Interested': return 'bg-rose-100 text-rose-700 border-rose-500';
-    case 'Busy': return 'bg-yellow-100 text-yellow-700 border-yellow-500';
-    case 'Not answering': return 'bg-orange-100 text-orange-700 border-orange-500';
-    case 'Invalid number': return 'bg-gray-200 text-gray-700 border-gray-500';
-    case 'New': return 'bg-purple-100 text-purple-700 border-purple-500';
-    case 'Demo Scheduled': return 'bg-indigo-100 text-indigo-700 border-indigo-500';
-    case 'Demo Completed': return 'bg-teal-100 text-teal-700 border-teal-500';
-    case 'Onboarding completed': return 'bg-cyan-100 text-cyan-700 border-cyan-500';
-    default: return 'bg-erp-surface text-erp-text border-erp-border';
+    case 'Admission Completed': return 'text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-800/30';
+    case 'Closed Won': return 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/30';
+    case 'Closed Lost': return 'text-red-600 bg-red-50 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800/30';
+    case 'Interested': return 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800/30';
+    case 'Not Interested': return 'text-rose-600 bg-rose-50 dark:bg-rose-900/20 dark:text-rose-400 border-rose-200 dark:border-rose-800/30';
+    case 'Busy': return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800/30';
+    case 'Not answering': return 'text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800/30';
+    case 'Invalid number': return 'text-gray-600 bg-gray-50 dark:bg-gray-900/20 dark:text-gray-400 border-gray-200 dark:border-gray-800/30';
+    case 'New': return 'text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800/30';
+    case 'Demo Scheduled': return 'text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/30';
+    case 'Demo Completed': return 'text-teal-600 bg-teal-50 dark:bg-teal-900/20 dark:text-teal-400 border-teal-200 dark:border-teal-800/30';
+    case 'Onboarding completed': return 'text-cyan-600 bg-cyan-50 dark:bg-cyan-900/20 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/30';
+    default: return 'text-erp-text bg-erp-surface border-erp-border';
   }
 };
 
@@ -74,7 +74,7 @@ export default function SalesDashboard() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
+      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
         
         {/* Header & Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">

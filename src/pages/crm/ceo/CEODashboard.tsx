@@ -27,7 +27,7 @@ export default function CEODashboard() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
+      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text">CEO Dashboard</h1>
@@ -39,35 +39,35 @@ export default function CEODashboard() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
-          <Card className="flex flex-col border-l-4 border-green-500">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-green-500 dark:border-l-green-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Total Revenue</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text font-mono">₹{stats.totalRevenue.toLocaleString()}</span>
             </div>
           </Card>
           
-          <Card className="flex flex-col border-l-4 border-red-500">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-red-500 dark:border-l-red-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Payroll / Staff</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text font-mono">₹{totalPayroll.toLocaleString()}</span>
             </div>
           </Card>
           
-          <Card className="flex flex-col border-l-4 border-blue-500">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-blue-500 dark:border-l-blue-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Active Students</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text">{stats.totalStudents}</span>
             </div>
           </Card>
 
-          <Card className="flex flex-col border-l-4 border-purple-500">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-purple-500 dark:border-l-purple-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Total Leads</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text">{stats.totalLeads}</span>
             </div>
           </Card>
 
-          <Card className="flex flex-col border-l-4 border-indigo-500">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-indigo-500 dark:border-l-indigo-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Conversion Rate</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text">{conversionRate}%</span>
@@ -76,19 +76,19 @@ export default function CEODashboard() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-indigo-50 transition-colors border-indigo-200" onClick={() => navigate('/ceo/courses')}>
-            <BookOpen className="w-8 h-8 text-indigo-600 mb-2" />
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-indigo-200 dark:border-indigo-800/30 card-hover" onClick={() => navigate('/ceo/courses')}>
+            <BookOpen className="w-8 h-8 text-indigo-600 dark:text-indigo-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Course Management</span>
           </Card>
           
-          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-slate-50 transition-colors border-slate-200" onClick={() => navigate('/ceo/settings')}>
-            <Settings className="w-8 h-8 text-slate-600 mb-2" />
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-slate-200 dark:border-slate-700 card-hover" onClick={() => navigate('/ceo/settings')}>
+            <Settings className="w-8 h-8 text-slate-600 dark:text-slate-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Global Settings</span>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <Card className="border-l-4 border-blue-600">
+          <Card className="border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-blue-600 dark:border-l-blue-400">
             <h2 className="text-xl font-bold font-display text-erp-text mb-4 flex items-center gap-2">
               <Gift className="w-5 h-5 text-blue-500" /> Pending Referral Payouts
             </h2>

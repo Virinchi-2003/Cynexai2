@@ -1,32 +1,32 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: 'class',
+  darkMode: ['selector', '[data-theme="dark"]'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       colors: {
         erp: {
-          primary: '#58CC02',
-          primary_shadow: '#58A700',
+          primary: 'var(--erp-primary)',
+          'primary-shadow': 'var(--erp-primary-shadow)',
           secondary: '#CE82FF',
-          secondary_shadow: '#A568CC',
+          'secondary-shadow': '#A568CC',
           danger: '#FF4B4B',
-          danger_shadow: '#EA2B2B',
+          'danger-shadow': '#EA2B2B',
           info: '#1CB0F6',
-          info_shadow: '#1899D6',
-          background: '#FFFFFF',
-          surface: '#F7F7F7',
-          text: '#4B4B4B',
-          border: '#E5E5E5',
+          'info-shadow': '#1899D6',
+          background: 'var(--erp-background)',
+          surface: 'var(--erp-surface)',
+          text: 'var(--erp-text)',
+          border: 'var(--erp-border)',
         },
         primary: {
-          DEFAULT: '#41c8df',  // gold accent
+          DEFAULT: '#41c8df',
           50: '#FEF9E7',
           100: '#FCF3CF',
           200: '#F9E7A0',
           300: '#F7DB70',
           400: '#F4CF41',
-          500: '#41c8df', // same
+          500: '#41c8df',
           600: '#A68328',
           700: '#7B5A1D',
           800: '#523112',
@@ -57,7 +57,7 @@ export default {
         'erp-btn-secondary': '0 4px 0 0 #A568CC',
         'erp-btn-danger': '0 4px 0 0 #EA2B2B',
         'erp-btn-info': '0 4px 0 0 #1899D6',
-        'erp-card': '0 2px 0 0 #E5E5E5',
+        'erp-card': '0 2px 0 0 var(--erp-border)',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
@@ -69,6 +69,7 @@ export default {
         'slide-up': 'slideUp 0.5s ease-out',
         'slide-in': 'slideIn 0.5s ease-out',
         'blob': 'blob 7s infinite',
+        'theme-in': 'themeIn 0.25s ease-out',
       },
       keyframes: {
         float: {
@@ -89,19 +90,25 @@ export default {
           '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
           '100%': { transform: 'translate(0px, 0px) scale(1)' },
         },
+        themeIn: {
+          '0%': { opacity: '0', transform: 'scale(0.9)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
       },
     },
   },
   plugins: [
-    // Add custom utilities for animation delays
     function ({ addUtilities }) {
       const newUtilities = {
-        '.animation-delay-2000': {
-          'animation-delay': '2s',
+        '.animation-delay-2000': { 'animation-delay': '2s' },
+        '.animation-delay-4000': { 'animation-delay': '4s' },
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
         },
-        '.animation-delay-4000': {
-          'animation-delay': '4s',
-        },
+        '.safe-bottom': { 'padding-bottom': 'env(safe-area-inset-bottom, 0px)' },
+        '.safe-top': { 'padding-top': 'env(safe-area-inset-top, 0px)' },
       };
       addUtilities(newUtilities);
     },

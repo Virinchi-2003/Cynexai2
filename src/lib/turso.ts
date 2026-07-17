@@ -1022,6 +1022,43 @@ export const initTursoDB = async () => {
         )
       `);
 
+      // Time tracking for tasks
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS time_logs (
+          id TEXT PRIMARY KEY,
+          task_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          started_at TEXT NOT NULL,
+          ended_at TEXT,
+          duration_minutes REAL,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Project hierarchy members (General Manager, Manager, Member)
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS project_members (
+          id TEXT PRIMARY KEY,
+          project_id TEXT NOT NULL,
+          user_id TEXT NOT NULL,
+          role TEXT NOT NULL,
+          assigned_by TEXT,
+          assigned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(project_id, user_id)
+        )
+      `);
+
+      // Add phone/status columns to users for staff
+      await addColumn('users', 'phone TEXT');
+      await addColumn('users', 'status TEXT DEFAULT \'Active\'');
+      await addColumn('users', 'password_hash TEXT');
+
+      // Add crm_activities student_id if missing
+      try {
+        await client.execute(`ALTER TABLE crm_activities ADD COLUMN student_id TEXT`);
+      } catch { /* already exists */ }
+
       // Sync user created content from LocalStorage
       await syncLocalStorageToTurso();
 
@@ -1036,6 +1073,7 @@ export const initTursoDB = async () => {
         }
       };
 
+      await addColumn('crm_leads', 'created_by TEXT');
       await addColumn('leads', 'referred_by_student_id TEXT');
       await addColumn('admissions', 'referred_by_student_id TEXT');
       await addColumn('sales', 'referred_by_student_id TEXT');

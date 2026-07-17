@@ -26,10 +26,11 @@ export default function Profile() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
-        <h1 className="text-3xl font-display font-bold text-erp-text mb-6">Profile & Settings</h1>
+      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
+        <div className="w-full max-w-4xl mx-auto">
+          <h1 className="text-3xl font-display font-bold text-erp-text mb-6">Profile & Settings</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Profile Info */}
           <Card className="flex flex-col">
             <div className="flex items-center gap-3 mb-6 border-b-2 border-erp-border pb-4">
@@ -66,20 +67,20 @@ export default function Profile() {
               </div>
               
               <div className="grid grid-cols-2 gap-4 flex-1">
-                <div className="bg-erp-primary/10 border-2 border-erp-primary/20 rounded-xl p-4 flex flex-col justify-center items-center">
+                <div className="bg-erp-surface border border-erp-border rounded-xl p-4 flex flex-col justify-center items-center card-hover">
                   <span className="text-3xl font-bold font-display text-erp-primary mb-1">12</span>
                   <span className="text-xs font-bold text-erp-text/70 uppercase">Calls Made</span>
                 </div>
-                <div className="bg-green-100 border-2 border-green-200 rounded-xl p-4 flex flex-col justify-center items-center">
-                  <span className="text-3xl font-bold font-display text-green-700 mb-1">4</span>
+                <div className="bg-erp-surface border border-erp-border rounded-xl p-4 flex flex-col justify-center items-center card-hover">
+                  <span className="text-3xl font-bold font-display text-erp-secondary mb-1">4</span>
                   <span className="text-xs font-bold text-erp-text/70 uppercase">Interested</span>
                 </div>
-                <div className="bg-purple-100 border-2 border-purple-200 rounded-xl p-4 flex flex-col justify-center items-center">
-                  <span className="text-3xl font-bold font-display text-purple-700 mb-1">1</span>
+                <div className="bg-erp-surface border border-erp-border rounded-xl p-4 flex flex-col justify-center items-center card-hover">
+                  <span className="text-3xl font-bold font-display text-emerald-500 mb-1">1</span>
                   <span className="text-xs font-bold text-erp-text/70 uppercase">Admissions</span>
                 </div>
-                <div className="bg-yellow-100 border-2 border-yellow-200 rounded-xl p-4 flex flex-col justify-center items-center">
-                  <span className="text-3xl font-bold font-display text-yellow-700 mb-1">8</span>
+                <div className="bg-erp-surface border border-erp-border rounded-xl p-4 flex flex-col justify-center items-center card-hover">
+                  <span className="text-3xl font-bold font-display text-amber-500 mb-1">8</span>
                   <span className="text-xs font-bold text-erp-text/70 uppercase">Tasks Done</span>
                 </div>
               </div>
@@ -119,6 +120,7 @@ export default function Profile() {
               </div>
             </Card>
           )}
+        </div>
         </div>
       </div>
     </div>

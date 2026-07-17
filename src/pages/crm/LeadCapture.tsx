@@ -5,9 +5,11 @@ import { Button } from '../../components/ui/erp/Button';
 import { SearchableDropdown } from '../../components/ui/erp/SearchableDropdown';
 import { createLead } from '../../lib/api/crm';
 import { getCoursesForPitch } from '../../lib/api/sales';
+import { getCurrentUser } from '../../lib/auth';
 
 export default function LeadCapture() {
   const navigate = useNavigate();
+  const user = getCurrentUser();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -17,6 +19,8 @@ export default function LeadCapture() {
   const [itBackground, setItBackground] = useState('');
   const [mode, setMode] = useState('');
   const [location, setLocation] = useState('');
+  const [notes, setNotes] = useState('');
+  const [source, setSource] = useState('Manual Entry');
   const [loading, setLoading] = useState(false);
   const [courses, setCourses] = useState<{value: string, label: string}[]>([]);
 
@@ -28,25 +32,27 @@ export default function LeadCapture() {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if(!name || !phone || !course) return alert('Fill required fields (Name, Phone, Course)');
-    
+    if (!name.trim()) return alert('Name is required.');
+    if (!phone.trim()) return alert('Phone number is required.');
     const phoneClean = phone.replace(/\D/g, '');
     if (phoneClean.length < 10) return alert('Phone number must be at least 10 digits.');
 
     setLoading(true);
     await createLead({
-      name,
-      email,
-      phone,
-      course_interest: course,
-      grad_year: gradYear,
-      qualification,
-      it_background: itBackground,
-      preferred_mode: mode,
-      location,
-      source: 'Manual Entry',
+      name: name.trim(),
+      email: email.trim() || undefined,
+      phone: phone.trim(),
+      course_interest: course || '',
+      grad_year: gradYear || undefined,
+      qualification: qualification || undefined,
+      it_background: itBackground || undefined,
+      preferred_mode: mode || undefined,
+      location: location.trim() || undefined,
+      notes: notes.trim() || undefined,
+      source: source || 'Manual Entry',
       status: 'New',
-      assigned_to: ''
+      assigned_to: '',
+      created_by: user?.id,
     });
     setLoading(false);
     navigate('/sales/pipeline');
@@ -68,105 +74,179 @@ export default function LeadCapture() {
     { value: 'Other', label: 'Other' },
   ];
 
+  const sourceOptions = [
+    { value: 'Manual Entry', label: 'Manual Entry' },
+    { value: 'Walk-in', label: 'Walk-in' },
+    { value: 'Referral', label: 'Referral' },
+    { value: 'Instagram', label: 'Instagram' },
+    { value: 'Facebook', label: 'Facebook' },
+    { value: 'WhatsApp', label: 'WhatsApp' },
+    { value: 'Website', label: 'Website' },
+    { value: 'Google Ads', label: 'Google Ads' },
+    { value: 'YouTube', label: 'YouTube' },
+    { value: 'Campus Visit', label: 'Campus Visit' },
+    { value: 'Cold Call', label: 'Cold Call' },
+    { value: 'Other', label: 'Other' },
+  ];
+
+  const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+    <div>
+      <label className="block text-xs font-bold text-erp-text/60 mb-1.5 uppercase tracking-wider">
+        {label} {required ? <span className="text-red-500">*</span> : <span className="text-erp-text/30 font-medium normal-case tracking-normal">(optional)</span>}
+      </label>
+      {children}
+    </div>
+  );
+
+  const inputClass = "w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-3.5 font-semibold text-erp-text outline-none focus:border-erp-primary transition-colors placeholder-erp-text/30 text-sm";
+
   return (
     <div className="p-4 pt-8 h-full bg-erp-background overflow-y-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-display font-bold text-erp-text">New Lead</h1>
+      <div className="flex items-center justify-between mb-6 max-w-2xl">
+        <div>
+          <h1 className="text-3xl font-display font-bold text-erp-text">New Lead</h1>
+          <p className="text-sm text-erp-text/50 mt-1">Only Name & Phone are required. Everything else is optional.</p>
+        </div>
         <Button variant="ghost" onClick={() => navigate('/sales/pipeline')} className="px-4">Cancel</Button>
       </div>
-      <Card className="flex flex-col gap-5 max-w-2xl">
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-            <div>
-              <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Full Name *</label>
-              <input 
-                required
-                className="w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-4 font-bold text-gray-900 outline-none focus:border-erp-primary"
-                value={name} onChange={e => setName(e.target.value)} placeholder="e.g. John Doe"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Phone Number *</label>
-              <input 
-                type="tel" required minLength={10} maxLength={15} pattern="[0-9\+\-\s]+" title="Valid phone number required"
-                className="w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-4 font-bold text-gray-900 outline-none focus:border-erp-primary"
-                value={phone} onChange={e => setPhone(e.target.value)} placeholder="10-digit number"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Email</label>
-              <input 
-                type="email"
-                className="w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-4 font-bold text-gray-900 outline-none focus:border-erp-primary"
-                value={email} onChange={e => setEmail(e.target.value)} placeholder="email@example.com"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Location</label>
-              <input 
-                className="w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-4 font-bold text-gray-900 outline-none focus:border-erp-primary"
-                value={location} onChange={e => setLocation(e.target.value)} placeholder="e.g. New York"
-              />
+
+      <Card className="max-w-2xl">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Required fields */}
+          <div className="bg-erp-primary/5 border-2 border-erp-primary/20 rounded-2xl p-4 space-y-4">
+            <p className="text-xs font-black text-erp-primary uppercase tracking-wider">Required</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Full Name" required>
+                <input
+                  required
+                  className={inputClass}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="e.g. Rahul Sharma"
+                />
+              </Field>
+              <Field label="Phone Number" required>
+                <input
+                  type="tel"
+                  required
+                  minLength={10}
+                  maxLength={15}
+                  pattern="[0-9\+\-\s]+"
+                  className={inputClass}
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="10-digit mobile number"
+                />
+              </Field>
             </div>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 border-t-2 border-erp-border pt-5">
-          <div>
-            <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Course Interest *</label>
-            <SearchableDropdown 
-              options={courses}
-              value={course}
-              onChange={setCourse}
-              placeholder="Select a Course"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Mode</label>
-            <SearchableDropdown 
-              options={[
-                { value: 'Online', label: 'Online' },
-                { value: 'Offline', label: 'Offline' },
-                { value: 'Hybrid', label: 'Hybrid' }
-              ]}
-              value={mode}
-              onChange={setMode}
-              placeholder="Select Mode"
-            />
-          </div>
-        </div>
+          {/* Optional fields */}
+          <div className="space-y-4">
+            <p className="text-xs font-black text-erp-text/40 uppercase tracking-wider">Optional Details</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div>
-            <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Qualification</label>
-            <SearchableDropdown 
-              options={qualOptions}
-              value={qualification}
-              onChange={setQualification}
-              placeholder="Select Qual"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">IT Background</label>
-            <SearchableDropdown 
-              options={[
-                { value: 'IT', label: 'IT' },
-                { value: 'Non-IT', label: 'Non-IT' }
-              ]}
-              value={itBackground}
-              onChange={setItBackground}
-              placeholder="Select"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-erp-text/70 mb-2 uppercase">Grad Year</label>
-            <input 
-              className="w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-4 font-bold text-erp-text outline-none focus:border-erp-primary"
-              value={gradYear} onChange={e => setGradYear(e.target.value)} placeholder="e.g. 2024"
-            />
-          </div>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Email">
+                <input
+                  type="email"
+                  className={inputClass}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="email@example.com"
+                />
+              </Field>
+              <Field label="Location">
+                <input
+                  className={inputClass}
+                  value={location}
+                  onChange={e => setLocation(e.target.value)}
+                  placeholder="e.g. Hyderabad"
+                />
+              </Field>
+            </div>
 
-        <Button type="submit" disabled={loading} className="mt-4 py-4 text-lg" fullWidth>{loading ? 'Saving...' : 'Save Lead'}</Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="Course Interest">
+                <SearchableDropdown
+                  options={[{ value: '', label: 'Select a Course (optional)' }, ...courses]}
+                  value={course}
+                  onChange={setCourse}
+                  placeholder="Select a Course (optional)"
+                />
+              </Field>
+              <Field label="Source">
+                <SearchableDropdown
+                  options={sourceOptions}
+                  value={source}
+                  onChange={setSource}
+                  placeholder="Where did this lead come from?"
+                />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Field label="Qualification">
+                <SearchableDropdown
+                  options={qualOptions}
+                  value={qualification}
+                  onChange={setQualification}
+                  placeholder="Select"
+                />
+              </Field>
+              <Field label="IT Background">
+                <SearchableDropdown
+                  options={[
+                    { value: 'IT', label: 'IT' },
+                    { value: 'Non-IT', label: 'Non-IT' },
+                  ]}
+                  value={itBackground}
+                  onChange={setItBackground}
+                  placeholder="Select"
+                />
+              </Field>
+              <Field label="Grad Year">
+                <input
+                  className={inputClass}
+                  value={gradYear}
+                  onChange={e => setGradYear(e.target.value)}
+                  placeholder="e.g. 2024"
+                />
+              </Field>
+            </div>
+
+            <Field label="Preferred Mode">
+              <SearchableDropdown
+                options={[
+                  { value: 'Online', label: 'Online' },
+                  { value: 'Offline', label: 'Offline' },
+                  { value: 'Hybrid', label: 'Hybrid' },
+                ]}
+                value={mode}
+                onChange={setMode}
+                placeholder="Online / Offline / Hybrid"
+              />
+            </Field>
+
+            <Field label="Notes">
+              <textarea
+                rows={3}
+                className={`${inputClass} resize-none`}
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Any notes about this lead..."
+              />
+            </Field>
+          </div>
+
+          {/* Added by */}
+          <div className="flex items-center gap-2 text-xs text-erp-text/40 font-medium bg-erp-surface rounded-xl px-3 py-2 border border-erp-border">
+            <span>Added by:</span>
+            <span className="font-bold text-erp-text/60">{user?.name || 'Unknown'} ({user?.role})</span>
+          </div>
+
+          <Button type="submit" disabled={loading} className="py-3.5 text-base" fullWidth>
+            {loading ? 'Saving...' : 'Save Lead'}
+          </Button>
         </form>
       </Card>
     </div>

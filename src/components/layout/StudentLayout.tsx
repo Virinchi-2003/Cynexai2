@@ -7,6 +7,7 @@ import {
   Gift, Briefcase, Bell, ChevronRight, Zap, Star,
   Flame, Coins, LogOut, X, Moon, Sun
 } from 'lucide-react';
+import { useTheme } from '../../lib/ThemeContext';
 
 interface GamificationData {
   streak: number;
@@ -38,26 +39,13 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     level: 1, xpPct: 0, badgeCount: 0, notifications: 0,
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => document.documentElement.classList.contains('dark')
-  );
+  const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!user) return;
     fetchGamification();
   }, [user?.id]);
 
-  const toggleTheme = () => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.remove('dark');
-      setIsDarkMode(false);
-    } else {
-      root.classList.add('dark');
-      setIsDarkMode(true);
-    }
-  };
 
   const fetchGamification = async () => {
     if (!client) return;
@@ -187,8 +175,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           onClick={toggleTheme}
           className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-muted-foreground hover:bg-foreground/5 hover:text-foreground text-sm font-medium transition-colors"
         >
-          {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {isDark ? 'Light Mode' : 'Dark Mode'}
         </button>
         <button
           onClick={() => navigate('/student')}
@@ -253,27 +241,39 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           </div>
         </div>
 
-        {/* Mobile Bottom Nav */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border flex justify-around px-2 py-1.5 transition-colors duration-500">
-          {NAV_ITEMS.slice(0, 5).map(({ to, icon: Icon, label }) => {
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.08)] flex justify-around px-1 transition-colors duration-200"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: '64px' }}>
+          {NAV_ITEMS.slice(0, 4).map(({ to, icon: Icon, label }) => {
             const active = location.pathname === to;
             return (
               <button
                 key={to}
                 onClick={() => navigate(to)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-xl text-[10px] font-bold transition-colors ${
-                  active ? 'text-primary' : 'text-muted-foreground'
+                className={`flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl text-[10px] font-bold transition-colors min-w-[48px] ${
+                  active ? 'text-erp-primary' : 'text-muted-foreground'
                 }`}
               >
-                <Icon className="w-5 h-5" />
-                <span>{label.split(' ')[0]}</span>
+                <div className={`w-9 h-6 flex items-center justify-center rounded-lg transition-all ${active ? 'bg-erp-primary/12' : ''}`}>
+                  <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span className="leading-none">{label.split(' ')[0]}</span>
               </button>
             );
           })}
+          
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 px-2 py-2 rounded-xl text-[10px] font-bold transition-colors min-w-[48px] text-muted-foreground"
+          >
+            <div className="w-9 h-6 flex items-center justify-center rounded-lg transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </div>
+            <span className="leading-none">Menu</span>
+          </button>
         </div>
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-y-auto relative pb-16 md:pb-0">
+        {/* Page Content — extra bottom padding for fixed nav */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pb-20 md:pb-0">
           {children}
         </div>
       </div>

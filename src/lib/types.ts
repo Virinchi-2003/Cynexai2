@@ -19,6 +19,7 @@ export interface Lead {
   created_at: string;
   updated_at?: string;
   last_whatsapp_msg?: string;
+  created_by?: string;
 }
 
 export interface CrmActivity {

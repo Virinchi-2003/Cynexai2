@@ -2,255 +2,313 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   PREMIUM DESIGN SYSTEM — Light (Warm White) + Dark (Rich Black)
+   Using CSS custom properties so Tailwind's ERP color tokens update instantly
+───────────────────────────────────────────────────────────────────────────── */
+
+/* Base font sizing */
 html {
   scroll-behavior: smooth;
   font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+  html { font-size: 16px; }
 }
 
-:root {
-  --background: 248 250 252;
-  --foreground: 15 23 42;
+/* ── Light Mode (Warm White) ─────────────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  /* Public site theme */
+  --background: 250 249 247;
+  --foreground: 18 17 14;
   --surface: 255 255 255;
-  --surface-foreground: 15 23 42;
-  --primary: 59 130 246;
+  --surface-foreground: 18 17 14;
+  --primary: 88 204 2;
   --primary-foreground: 255 255 255;
-  --secondary: 241 245 249;
-  --secondary-foreground: 15 23 42;
+  --secondary: 244 243 240;
+  --secondary-foreground: 18 17 14;
   --accent: 217 119 6;
   --accent-foreground: 255 255 255;
-  --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
-  --border: 226 232 240;
-  --ring: 59 130 246;
+  --muted: 244 243 240;
+  --muted-foreground: 110 104 94;
+  --border: 226 221 213;
+  --ring: 88 204 2;
+
+  /* ERP Portal colors — Premium Warm White */
+  --erp-primary: #58CC02;
+  --erp-primary-shadow: #58A700;
+  --erp-background: #FAFAF8;
+  --erp-surface: #F5F3EF;
+  --erp-text: #1A1814;
+  --erp-text-muted: #7A7168;
+  --erp-border: #E2DDD6;
+  --erp-card-shadow: 0 1px 3px rgba(26, 24, 20, 0.06), 0 1px 2px rgba(26, 24, 20, 0.04);
+  --erp-sidebar-bg: #FFFFFF;
+  --erp-sidebar-border: #E8E4DD;
+  --erp-input-bg: #FFFFFF;
+  --erp-hover: rgba(88, 204, 2, 0.06);
 }
 
-.dark {
-  --background: 0 0 0;
-  --foreground: 248 250 252;
-  --surface: 0 0 0;
-  --surface-foreground: 248 250 252;
-  --primary: 59 130 246;
-  --primary-foreground: 255 255 255;
-  --secondary: 30 41 59;
-  --secondary-foreground: 248 250 252;
+/* ── Dark Mode (Rich Warm Black) ─────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* Public site theme */
+  --background: 14 13 11;
+  --foreground: 240 237 232;
+  --surface: 20 19 17;
+  --surface-foreground: 240 237 232;
+  --primary: 88 204 2;
+  --primary-foreground: 12 12 10;
+  --secondary: 30 28 25;
+  --secondary-foreground: 240 237 232;
   --accent: 245 158 11;
-  --accent-foreground: 2 6 23;
-  --muted: 30 41 59;
-  --muted-foreground: 148 163 184;
-  --border: 30 41 59;
-  --ring: 59 130 246;
+  --accent-foreground: 12 12 10;
+  --muted: 26 25 22;
+  --muted-foreground: 142 136 124;
+  --border: 42 40 36;
+  --ring: 88 204 2;
+
+  /* ERP Portal colors — Rich Warm Black */
+  --erp-primary: #58CC02;
+  --erp-primary-shadow: #58A700;
+  --erp-background: #0F0E0C;
+  --erp-surface: #1A1916;
+  --erp-text: #F0EDE8;
+  --erp-text-muted: #8C8880;
+  --erp-border: #2E2C28;
+  --erp-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --erp-sidebar-bg: #141310;
+  --erp-sidebar-border: #262420;
+  --erp-input-bg: #1E1D1A;
+  --erp-hover: rgba(88, 204, 2, 0.08);
 }
 
+/* ── Base Body ───────────────────────────────────────────────────────────── */
 body {
-  @apply bg-background text-foreground transition-colors duration-500;
+  @apply bg-background text-foreground;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ─── Animation Delays ────────────────────────────────────────────────────── */
+/* ── ERP Dark Mode Overrides ─────────────────────────────────────────────── */
+/* Override white/gray in components that use literal colors */
+[data-theme="dark"] .bg-white { background-color: var(--erp-surface) !important; }
+[data-theme="dark"] .border-white { border-color: var(--erp-border) !important; }
+
+/* Input & form overrides for dark mode */
+[data-theme="dark"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background-color: var(--erp-input-bg) !important;
+  color: var(--erp-text) !important;
+  border-color: var(--erp-border) !important;
+}
+
+/* Placeholder color in dark mode */
+[data-theme="dark"] ::placeholder { color: color-mix(in srgb, var(--erp-text) 40%, transparent) !important; }
+
+/* Dark mode table rows */
+[data-theme="dark"] tr:hover { background-color: var(--erp-hover) !important; }
+
+/* Smooth transitions for theme switching */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* ── Animation Delays ────────────────────────────────────────────────────── */
 @layer utilities {
-  .animation-delay-1000 {
-    animation-delay: 1s;
-  }
+  .animation-delay-1000 { animation-delay: 1s; }
+  .animation-delay-2000 { animation-delay: 2s; }
+  .animation-delay-3000 { animation-delay: 3s; }
+  .animation-delay-4000 { animation-delay: 4s; }
+  .animation-delay-5000 { animation-delay: 5s; }
 
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
+  /* Safe areas */
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
 
-  .animation-delay-3000 {
-    animation-delay: 3s;
-  }
+  /* Scrollbar hide */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
+  /* Mobile bottom nav clearance */
+  .mobile-nav-pad { @apply pb-20 md:pb-0; }
 
-  .animation-delay-5000 {
-    animation-delay: 5s;
-  }
+  /* 3D Transform Utilities */
+  .perspective-600  { perspective: 600px; }
+  .perspective-800  { perspective: 800px; }
+  .perspective-1000 { perspective: 1000px; }
+  .perspective-1200 { perspective: 1200px; }
+  .transform-style-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
 
-  /* ─── 3D Transform Utilities ─────────────────────────────────────────────── */
-  .perspective-600 {
-    perspective: 600px;
-  }
-
-  .perspective-800 {
-    perspective: 800px;
-  }
-
-  .perspective-1000 {
-    perspective: 1000px;
-  }
-
-  .perspective-1200 {
-    perspective: 1200px;
-  }
-
-  .transform-style-3d {
-    transform-style: preserve-3d;
-  }
-
-  .backface-hidden {
-    backface-visibility: hidden;
-  }
-
-  /* Custom Translate Z Utilities for deep 3D interactions */
-  .translate-z-\[20px\] {
-    transform: translateZ(20px);
-  }
-
-  .translate-z-\[30px\] {
-    transform: translateZ(30px);
-  }
-
-  .translate-z-\[40px\] {
-    transform: translateZ(40px);
-  }
-
-  .translate-z-\[50px\] {
-    transform: translateZ(50px);
-  }
-
-  .translate-z-\[60px\] {
-    transform: translateZ(60px);
-  }
-
-  .translate-z-\[80px\] {
-    transform: translateZ(80px);
-  }
-
-  .-translate-z-\[20px\] {
-    transform: translateZ(-20px);
-  }
-
-  .-translate-z-\[30px\] {
-    transform: translateZ(-30px);
-  }
-
-  .-translate-z-\[40px\] {
-    transform: translateZ(-40px);
-  }
+  .translate-z-\[20px\]  { transform: translateZ(20px);  }
+  .translate-z-\[30px\]  { transform: translateZ(30px);  }
+  .translate-z-\[40px\]  { transform: translateZ(40px);  }
+  .translate-z-\[50px\]  { transform: translateZ(50px);  }
+  .translate-z-\[60px\]  { transform: translateZ(60px);  }
+  .translate-z-\[80px\]  { transform: translateZ(80px);  }
+  .-translate-z-\[20px\] { transform: translateZ(-20px); }
+  .-translate-z-\[30px\] { transform: translateZ(-30px); }
+  .-translate-z-\[40px\] { transform: translateZ(-40px); }
 }
 
-/* ─── Keyframe Animations ────────────────────────────────────────────────── */
-
-/* Float animation with gentle 3D tilt */
+/* ── Keyframe Animations ─────────────────────────────────────────────────── */
 @keyframes float {
-
-  0%,
-  100% {
-    transform: translateY(0px) rotateX(0deg);
-  }
-
-  50% {
-    transform: translateY(-15px) rotateX(3deg);
-  }
+  0%, 100% { transform: translateY(0px) rotateX(0deg); }
+  50%       { transform: translateY(-15px) rotateX(3deg); }
 }
 
-/* Dedicated 3D float for contact orbs */
 @keyframes float3d {
-  0% {
-    transform: translateY(0px) translateZ(0px) rotateX(0deg) scale(1);
-  }
-
-  25% {
-    transform: translateY(-12px) translateZ(8px) rotateX(5deg) scale(1.03);
-  }
-
-  50% {
-    transform: translateY(-20px) translateZ(15px) rotateX(10deg) scale(1.05);
-  }
-
-  75% {
-    transform: translateY(-10px) translateZ(8px) rotateX(5deg) scale(1.02);
-  }
-
-  100% {
-    transform: translateY(0px) translateZ(0px) rotateX(0deg) scale(1);
-  }
+  0%   { transform: translateY(0px)   translateZ(0px)  rotateX(0deg)  scale(1);    }
+  25%  { transform: translateY(-12px) translateZ(8px)  rotateX(5deg)  scale(1.03); }
+  50%  { transform: translateY(-20px) translateZ(15px) rotateX(10deg) scale(1.05); }
+  75%  { transform: translateY(-10px) translateZ(8px)  rotateX(5deg)  scale(1.02); }
+  100% { transform: translateY(0px)   translateZ(0px)  rotateX(0deg)  scale(1);    }
 }
 
-/* 3D orbital spin */
 @keyframes spin3d {
-  from {
-    transform: translate(-50%, -50%) rotateX(var(--tilt, 60deg)) rotateZ(0deg);
-  }
-
-  to {
-    transform: translate(-50%, -50%) rotateX(var(--tilt, 60deg)) rotateZ(360deg);
-  }
+  from { transform: translate(-50%, -50%) rotateX(var(--tilt, 60deg)) rotateZ(0deg);   }
+  to   { transform: translate(-50%, -50%) rotateX(var(--tilt, 60deg)) rotateZ(360deg); }
 }
 
-/* Slow indefinite spin for galaxy */
 @keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg);   }
+  to   { transform: rotate(360deg); }
 }
 
-/* Glow pulse */
 @keyframes glow-pulse {
-
-  0%,
-  100% {
-    box-shadow: 0 0 8px rgba(65, 200, 223, 0.3), 0 0 20px rgba(65, 200, 223, 0.1);
-  }
-
-  50% {
-    box-shadow: 0 0 20px rgba(65, 200, 223, 0.6), 0 0 40px rgba(65, 200, 223, 0.3);
-  }
+  0%, 100% { box-shadow: 0 0 8px rgba(65, 200, 223, 0.3), 0 0 20px rgba(65, 200, 223, 0.1); }
+  50%       { box-shadow: 0 0 20px rgba(65, 200, 223, 0.6), 0 0 40px rgba(65, 200, 223, 0.3); }
 }
 
-/* Shimmer for holographic effect */
 @keyframes shimmer {
-  0% {
-    background-position: -200% center;
-  }
-
-  100% {
-    background-position: 200% center;
-  }
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
 }
 
-/* Marquee animation */
 @keyframes marquee {
-  0% { transform: translateX(100%); }
+  0%   { transform: translateX(100%);  }
   100% { transform: translateX(-100%); }
 }
 
-/* ─── Utility Classes ─────────────────────────────────────────────────────── */
-.animate-float {
-  animation: float 4s ease-in-out infinite;
+@keyframes themeToggleSpin {
+  from { transform: rotate(0deg) scale(0.7); opacity: 0; }
+  to   { transform: rotate(0deg) scale(1);   opacity: 1; }
 }
 
-.animate-float-3d {
-  animation: float3d 6s ease-in-out infinite;
+@keyframes slideUpFade {
+  from { transform: translateY(8px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
 }
 
-.animate-spin-slow {
-  animation: spin-slow 20s linear infinite;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
+/* ── Utility Animation Classes ───────────────────────────────────────────── */
+.animate-float         { animation: float 4s ease-in-out infinite; }
+.animate-float-3d      { animation: float3d 6s ease-in-out infinite; }
+.animate-spin-slow     { animation: spin-slow 20s linear infinite; }
+.animate-glow-pulse    { animation: glow-pulse 3s ease-in-out infinite; }
+.animate-theme-in      { animation: themeToggleSpin 0.3s ease-out; }
+.animate-slide-up-fade { animation: slideUpFade 0.2s ease-out; }
 
 /* Holographic border shimmer */
 .holographic-border {
   background: linear-gradient(90deg,
-      rgba(65, 200, 223, 0.4) 0%,
-      rgba(139, 92, 246, 0.4) 25%,
-      rgba(65, 200, 223, 0.6) 50%,
-      rgba(139, 92, 246, 0.4) 75%,
-      rgba(65, 200, 223, 0.4) 100%);
+    rgba(65, 200, 223, 0.4)  0%,
+    rgba(139, 92, 246, 0.4)  25%,
+    rgba(65, 200, 223, 0.6)  50%,
+    rgba(139, 92, 246, 0.4)  75%,
+    rgba(65, 200, 223, 0.4)  100%);
   background-size: 200% auto;
   animation: shimmer 3s linear infinite;
+}
+
+/* ── ERP Card Premium Shadow ─────────────────────────────────────────────── */
+.erp-card-shadow { box-shadow: var(--erp-card-shadow); }
+
+/* ── Prevent layout shift on mobile nav ──────────────────────────────────── */
+.erp-main-content {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 80px);
+}
+
+@media (min-width: 768px) {
+  .erp-main-content { padding-bottom: 0; }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Premium Custom Scrollbars ───────────────────────────────────────────── */
+/* Thin, sleek scrollbars that match the UI */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--erp-border);
+  border-radius: 100px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--erp-text) 30%, transparent);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--erp-border) transparent;
+}
+
+/* ── Mobile-first Global Patterns ───────────────────────────────────────── */
+/* Prevent text selection on interactive elements */
+button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Consistent focus ring for all interactive elements */
+:focus-visible {
+  outline: 2px solid var(--erp-primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Mobile page container — never overflows horizontally */
+.page-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile header — compact, full-width */
+.mobile-header {
+  @apply flex items-center gap-3 px-4 py-3 border-b border-erp-border bg-erp-surface flex-shrink-0;
+}
+
+/* Card hover lift — subtle but premium */
+.card-hover {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+[data-theme="dark"] .card-hover:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }

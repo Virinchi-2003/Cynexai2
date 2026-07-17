@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2 } from 'lucide-react';
+import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History } from 'lucide-react';
 import { getCurrentUser, logout } from '../../lib/auth';
 import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
+import { ThemeToggle } from '../ui/ThemeToggle';
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) => {
   const user = getCurrentUser();
   const navigate = useNavigate();
   const [accessLevels, setAccessLevels] = useState<string[]>([]);
@@ -39,6 +40,7 @@ export const Sidebar: React.FC = () => {
       { to: '/manager/timetable', icon: Calendar, label: 'Timetable', section: 'Manager' },
       { to: '/manager/users', icon: Users, label: 'Staff Mgmt', section: 'Manager' },
       { to: '/manager/gamification', icon: Zap, label: 'Game Config', section: 'Manager' },
+      { to: '/manager/reports', icon: BarChart2, label: 'Reports', section: 'Manager' },
       { to: '/manager/tasks', icon: CheckSquare, label: 'Assign Tasks', section: 'Manager' }
     );
   }
@@ -81,12 +83,13 @@ export const Sidebar: React.FC = () => {
       { to: '/ceo/timetable', icon: Calendar, label: 'Timetable', section: 'CEO' },
       { to: '/ceo/sales-dashboard', icon: DollarSign, label: 'Sales Hub', section: 'CEO' },
       { to: '/ceo/sales-pipeline', icon: Users, label: 'CRM Pipeline', section: 'CEO' },
-      { to: '/ceo/sales-history', icon: DollarSign, label: 'Sales History', section: 'CEO' },
+      { to: '/ceo/history', icon: History, label: 'Master History', section: 'CEO' },
       { to: '/sales/pitch', icon: BookOpen, label: 'Sales Pitch', section: 'CEO' },
       { to: '/ceo/dm-dashboard', icon: LayoutDashboard, label: 'Marketing Hub', section: 'CEO' },
       { to: '/ceo/ai-voice', icon: Bot, label: 'AI Voice Gen', section: 'CEO' },
       { to: '/teacher/settings', icon: Settings, label: 'AI Settings', section: 'CEO' },
       { to: '/manager/gamification', icon: Zap, label: 'Game Config', section: 'CEO' },
+      { to: '/ceo/reports', icon: BarChart2, label: 'Reports', section: 'CEO' },
       { to: '/ceo/settings', icon: Settings, label: 'ERP Config', section: 'CEO' }
     );
   }
@@ -129,6 +132,7 @@ export const Sidebar: React.FC = () => {
                 <NavLink
                   key={item.to}
                   to={item.to}
+                  onClick={onNavClick}
                   className={({ isActive }) => 
                     `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold ${
                       isActive 
@@ -146,9 +150,13 @@ export const Sidebar: React.FC = () => {
         )}
       </div>
 
-      <div className="p-4 border-t-2 border-erp-border space-y-2">
+      <div className="p-4 border-t-2 border-erp-border space-y-1">
+        {/* Theme Toggle */}
+        <ThemeToggle variant="sidebar" />
+
         <NavLink
           to="/profile"
+          onClick={onNavClick}
           className={({ isActive }) => 
             `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold ${
               isActive 
@@ -161,8 +169,8 @@ export const Sidebar: React.FC = () => {
           Profile
         </NavLink>
         <button
-          onClick={() => logout()}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-red-500 hover:bg-red-50"
+          onClick={() => { logout(); onNavClick?.(); }}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
         >
           <LogOut className="w-5 h-5" strokeWidth={2.5} />
           Log Out

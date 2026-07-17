@@ -5,6 +5,8 @@ import { Button } from '../../ui/erp/Button';
 import { X, Calendar, Flag, User, Trash2, CheckCircle, AlignLeft, MessageSquare, CheckSquare, Send, Circle, FolderOpen } from 'lucide-react';
 import { getErpUsers } from '../../../lib/api/manager';
 import { getCurrentUser } from '../../../lib/auth';
+import { TimeTracker } from './TimeTracker';
+import { ProjectHierarchyPanel } from './ProjectHierarchyPanel';
 
 interface Props {
   task: Task;
@@ -325,6 +327,14 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
             </div>
           )}
         </div>
+
+        {/* Time Tracking */}
+        <TimeTracker taskId={task.id} />
+
+        {/* Project Hierarchy (if task is in a project, CEO only) */}
+        {editedTask.project_id && projects.find(p => p.id === editedTask.project_id) && currentUser?.role === 'CEO' && (
+          <ProjectHierarchyPanel project={projects.find(p => p.id === editedTask.project_id)!} />
+        )}
 
         {/* Activity & Comments Feed */}
         <div className="pt-4 border-t border-erp-border">

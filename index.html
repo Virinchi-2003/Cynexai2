@@ -1,7 +1,18 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Anti-flash theme script: must run before any CSS -->
+    <script>
+      (function(){
+        try{
+          var s=localStorage.getItem('cynexai-theme');
+          var t=(s==='dark'||s==='light')?s:(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+          document.documentElement.setAttribute('data-theme',t);
+          if(t==='dark')document.documentElement.classList.add('dark');
+        }catch(e){}
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/public/CynexAI.in.ai.svg" />
     <title>CynexAI | Premium IT & Corporate Training Institute</title>
 
