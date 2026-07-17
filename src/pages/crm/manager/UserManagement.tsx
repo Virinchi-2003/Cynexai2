@@ -333,16 +333,26 @@ export default function UserManagement() {
       setPassword(decryptPassword(user.password_encrypted));
       setRole(user.role || 'Sales/HR'); setSalary(user.salary || 0);
       setStatus(user.status || 'Active');
-      setStuPhone(user.phone || ''); setStuDob(user.dob || '');
-      setStuAddress(user.address || ''); setStuFather(user.father_name || '');
-      setStuMother(user.mother_name || ''); setStuEmergency(user.emergency_contact || '');
-      setStuBlood(user.blood_group || ''); setStuCourse(user.course || '');
-      setStuBatch(user.batch_number || ''); setStuJoining(user.joining_date || '');
+      // Populate all student personal detail fields from the fully joined row
+      setStuPhone((user as any).phone || '');
+      setStuDob((user as any).dob || '');
+      setStuAddress((user as any).address || '');
+      setStuFather((user as any).father_name || '');
+      setStuMother((user as any).mother_name || '');
+      setStuEmergency((user as any).emergency_contact || '');
+      setStuBlood((user as any).blood_group || '');
+      setStuGender((user as any).gender || 'Male');
+      setStuCourse((user as any).course || '');
+      setStuBatch((user as any).batch_number || '');
+      setStuJoining((user as any).joining_date || '');
+      setStuTrainingStart((user as any).training_start_date || '');
+      setStuFeesTotal(Number((user as any).fees_total) || 0);
+      setStuFeesPaid(Number((user as any).fees_paid) || 0);
+      setStuDocsSubmitted(Number((user as any).documents_submitted) || 0);
       if (user.permissions_json) {
         try { setPermissions(JSON.parse(user.permissions_json)); }
         catch { setPermissions({ crm: false, timetable: false, leaves: false, settings: false }); }
       }
-      
       if (user.role === 'Student') {
         setIsStudentModalOpen(true);
       } else {
@@ -367,21 +377,17 @@ export default function UserManagement() {
       const userRole = isStudentForm ? 'Student' : role;
       await saveUser({ id: editUser?.id || '', name, email, password, role: userRole, status, salary: Number(salary) || 0, permissions_json: JSON.stringify(permissions) });
 
-      // If student, also update student profile
+      // If student — update student profile directly by email (most reliable)
       if (userRole === 'Student' || editUser?.role === 'Student') {
-        // Find student id by email
-        const allUsers = await getUsers({ role: 'Student' });
-        const stu = allUsers.find((u: any) => u.email === email);
-        if (stu) {
-          await updateStudentProfile(stu.id, {
-            phone: stuPhone, dob: stuDob, address: stuAddress,
-            father_name: stuFather, mother_name: stuMother,
-            emergency_contact: stuEmergency, blood_group: stuBlood,
-            course: stuCourse, batch_number: stuBatch, joining_date: stuJoining, status,
-            fees_total: stuFeesTotal, fees_paid: stuFeesPaid, fees_pending: stuFeesTotal - stuFeesPaid,
-            training_start_date: stuTrainingStart, gender: stuGender, documents_submitted: stuDocsSubmitted
-          });
-        }
+        await updateStudentProfile(email, {
+          phone: stuPhone, dob: stuDob, address: stuAddress,
+          father_name: stuFather, mother_name: stuMother,
+          emergency_contact: stuEmergency, blood_group: stuBlood,
+          gender: stuGender,
+          course: stuCourse, batch_number: stuBatch, joining_date: stuJoining, status,
+          fees_total: stuFeesTotal, fees_paid: stuFeesPaid, fees_pending: stuFeesTotal - stuFeesPaid,
+          training_start_date: stuTrainingStart, documents_submitted: stuDocsSubmitted
+        });
       }
       await fetchUsersData();
       setIsStaffModalOpen(false);

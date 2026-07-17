@@ -19,7 +19,16 @@ async function executeWithRetry(query: string, args: any[] = [], retries = MAX_R
 
 export async function getUsers(filters?: Record<string, any>, sortBy?: string, sortDir?: string): Promise<any[]> {
   try {
-    let query = 'SELECT u.*, s.classes_attended_json, s.preferred_mode, s.batch_number, s.course, s.topic_completed, s.joining_date FROM users u LEFT JOIN students s ON u.email = s.portal_login_email';
+    let query = `SELECT u.*, 
+      s.id as student_db_id,
+      s.classes_attended_json, s.preferred_mode, s.batch_number, s.course,
+      s.topic_completed, s.joining_date, s.training_start_date,
+      s.phone as stu_phone, s.dob, s.address, s.blood_group, s.gender,
+      s.emergency_contact, s.father_name, s.mother_name,
+      s.fees_total, s.fees_paid, s.fees_pending,
+      s.documents_submitted, s.approval_status,
+      s.streak, s.coins, s.student_code
+      FROM users u LEFT JOIN students s ON u.email = s.portal_login_email`;
     const args: any[] = [];
     
     if (filters && Object.keys(filters).length > 0) {
@@ -79,7 +88,13 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
     const res = await executeWithRetry(query, args);
     return res.rows.map((row: any) => ({
       ...row,
-      salary: Number(row.salary) || 0
+      salary: Number(row.salary) || 0,
+      // Prefer student-table phone/dob if set, fall back to user-level fields
+      phone: row.stu_phone || row.phone || '',
+      dob: row.dob || '',
+      fees_total: Number(row.fees_total) || 0,
+      fees_paid: Number(row.fees_paid) || 0,
+      fees_pending: Number(row.fees_pending) || 0,
     }));
   } catch (error) {
     console.error('Failed to fetch users', error);
@@ -260,17 +275,23 @@ export async function deleteStudentDocument(docId: string): Promise<void> {
   await executeWithRetry(`DELETE FROM student_documents WHERE id = ?`, [docId]);
 }
 
-export async function updateStudentProfile(studentId: string, profile: {
+export async function updateStudentProfile(emailOrId: string, profile: {
   phone?: string; dob?: string; address?: string;
   father_name?: string; mother_name?: string;
   emergency_contact?: string; blood_group?: string;
   batch_number?: string; course?: string; joining_date?: string; status?: string;
+  gender?: string; fees_total?: number; fees_paid?: number; fees_pending?: number;
+  training_start_date?: string; documents_submitted?: number;
 }): Promise<void> {
   const fields = Object.keys(profile) as (keyof typeof profile)[];
   if (fields.length === 0) return;
   const setClauses = fields.map(f => `${f} = ?`).join(', ');
-  const args = [...fields.map(f => (profile[f] ?? null) as any), studentId, studentId];
-  await executeWithRetry(`UPDATE students SET ${setClauses} WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?)`, args);
+  const args = [...fields.map(f => (profile[f] ?? null) as any), emailOrId, emailOrId];
+  // Match by portal_login_email (primary) OR by students.id (secondary)
+  await executeWithRetry(
+    `UPDATE students SET ${setClauses} WHERE portal_login_email = ? OR id = ?`,
+    args
+  );
 }
 
 // ─── CSV BULK STUDENT IMPORT ────────────────────────────────────────────────
