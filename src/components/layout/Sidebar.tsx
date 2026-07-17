@@ -39,6 +39,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
       { to: '/sales/history', icon: DollarSign, label: 'Sales History', section: 'Manager' },
       { to: '/manager/timetable', icon: Calendar, label: 'Timetable', section: 'Manager' },
       { to: '/manager/users', icon: Users, label: 'Staff Mgmt', section: 'Manager' },
+      { to: '/manager/student-settings', icon: Settings, label: 'Student Portal', section: 'Manager' },
       { to: '/manager/gamification', icon: Zap, label: 'Game Config', section: 'Manager' },
       { to: '/manager/reports', icon: BarChart2, label: 'Reports', section: 'Manager' },
       { to: '/manager/tasks', icon: CheckSquare, label: 'Assign Tasks', section: 'Manager' }
@@ -89,6 +90,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
       { to: '/ceo/ai-voice', icon: Bot, label: 'AI Voice Gen', section: 'CEO' },
       { to: '/teacher/settings', icon: Settings, label: 'AI Settings', section: 'CEO' },
       { to: '/manager/gamification', icon: Zap, label: 'Game Config', section: 'CEO' },
+      { to: '/ceo/student-settings', icon: Settings, label: 'Student Portal', section: 'CEO' },
       { to: '/ceo/reports', icon: BarChart2, label: 'Reports', section: 'CEO' },
       { to: '/ceo/settings', icon: Settings, label: 'ERP Config', section: 'CEO' }
     );

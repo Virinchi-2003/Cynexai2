@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { getCurrentUser } from '../../lib/auth';
-import { getStudentReferralCode, getStudentReferrals, Referral } from '../../lib/api/student';
-import { Gift, Share2, Copy, Users, Check, ChevronRight, Trophy } from 'lucide-react';
+import { getStudentReferrals, Referral } from '../../lib/api/student';
+import { getCourseMaterials } from '../../lib/api/portalSettings';
+import {
+  Gift, Trophy, Users, Share2, Download, FileText,
+  CheckCircle2, Clock, Star, ChevronRight
+} from 'lucide-react';
 
+// Reward tiers — in future these can be loaded from DB via portal_settings
 const REWARD_TIERS = [
-  { count: 3,  label: '₹500 Cash',  emoji: '💵' },
-  { count: 5,  label: 'Earbuds',    emoji: '🎧' },
-  { count: 10, label: '₹4000 Cash', emoji: '💰' },
+  { count: 1,  label: '₹100 Bonus',   emoji: '🎁', color: '#6366f1', bg: '#6366f115' },
+  { count: 3,  label: '₹500 Cash',    emoji: '💵', color: '#10b981', bg: '#10b98115' },
+  { count: 5,  label: 'Earbuds',      emoji: '🎧', color: '#f59e0b', bg: '#f59e0b15' },
+  { count: 10, label: '₹4000 Cash',   emoji: '💰', color: '#ef4444', bg: '#ef444415' },
 ];
 
-function getNextTier(completed: number): { tier: (typeof REWARD_TIERS)[0]; progress: number } | null {
+function getNextTier(completed: number) {
   const next = REWARD_TIERS.find(t => completed < t.count);
   if (!next) return null;
   const prev = REWARD_TIERS[REWARD_TIERS.indexOf(next) - 1];
@@ -18,246 +24,315 @@ function getNextTier(completed: number): { tier: (typeof REWARD_TIERS)[0]; progr
   return { tier: next, progress: Math.max(0, Math.min(100, progress)) };
 }
 
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const s = status?.toLowerCase();
+  if (s === 'completed') {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <CheckCircle2 className="w-3 h-3" /> Enrolled
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+      <Clock className="w-3 h-3" /> Pending
+    </span>
+  );
+}
+
+// ─── Material Card ────────────────────────────────────────────────────────────
+function MaterialCard({ mat }: { mat: any }) {
+  const handleShare = () => {
+    const text = encodeURIComponent(`Check out this course material from CynexAI: "${mat.title}" ${mat.file_url || 'https://cynexai.in'}`);
+    window.open(`https://wa.me/?text=${text}`, '_blank');
+  };
+
+  return (
+    <div
+      className="rounded-2xl p-4 flex items-start gap-3 transition-all hover:scale-[1.01]"
+      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+    >
+      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#6366f115', border: '1px solid #6366f130' }}>
+        <FileText className="w-5 h-5 text-indigo-400" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-white font-semibold text-sm truncate">{mat.title}</p>
+        {mat.description && <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{mat.description}</p>}
+        <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider text-indigo-400/60">{mat.material_type || 'Document'}</span>
+      </div>
+      <div className="flex gap-2 flex-shrink-0">
+        {mat.file_url && (
+          <a href={mat.file_url} target="_blank" rel="noopener noreferrer"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: 'rgba(255,255,255,0.05)' }}
+          >
+            <Download className="w-4 h-4 text-white/50" />
+          </a>
+        )}
+        <button
+          onClick={handleShare}
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          style={{ background: '#25D36615', border: '1px solid #25D36630' }}
+        >
+          <Share2 className="w-4 h-4 text-emerald-400" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
 export default function ReferralCenter() {
   const user = getCurrentUser();
-  const [referralCode, setReferralCode] = useState<string>('');
   const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [tab, setTab] = useState<'rewards' | 'materials'>('rewards');
 
   useEffect(() => {
     if (!user) return;
     Promise.all([
-      getStudentReferralCode(user.id),
       getStudentReferrals(user.id),
-    ]).then(([code, refs]) => {
-      setReferralCode(code);
+      getCourseMaterials(),
+    ]).then(([refs, mats]) => {
       setReferrals(refs);
+      setMaterials(mats);
     }).catch(console.error).finally(() => setLoading(false));
   }, [user?.id]);
 
   const completedCount = referrals.filter(r => r.status === 'Completed').length;
   const nextTier = getNextTier(completedCount);
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(referralCode).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
-  const handleWhatsApp = () => {
-    const msg = encodeURIComponent(
-      `Hi! I am studying at CynexAI. Join using my referral code ${referralCode} and we both get rewards! Contact: https://cynexai.in`
-    );
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
-  };
+  const allEarned = completedCount >= REWARD_TIERS[REWARD_TIERS.length - 1].count;
 
   const formatDate = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleDateString('en-IN', {
-        day: '2-digit', month: 'short', year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
+    try { return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }); }
+    catch { return dateStr; }
   };
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-background">
+      <div className="flex h-full items-center justify-center" style={{ background: '#0d0d1a' }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm font-medium">Loading referrals…</p>
+          <div className="w-10 h-10 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin" />
+          <p className="text-white/40 text-sm font-medium">Loading…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-background text-foreground">
-      <div className="max-w-3xl mx-auto px-4 py-8 pb-24 md:pb-8 space-y-6">
+    <div className="min-h-full text-white" style={{ background: 'linear-gradient(180deg, #0d0d1a 0%, #111128 100%)' }}>
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
 
-        {/* Page Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
-            <Gift className="w-5 h-5 text-white" />
+        {/* ── Header ── */}
+        <div className="flex items-center gap-4">
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
+          >
+            <Gift className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Refer &amp; Earn</h1>
-            <p className="text-muted-foreground text-sm">Share your code, earn amazing rewards!</p>
+            <h1 className="text-xl font-black text-white">Rewards & Materials</h1>
+            <p className="text-white/40 text-sm">Earn rewards when friends you refer join CynexAI</p>
           </div>
         </div>
 
-        {/* Referral Code Card */}
-        <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-px shadow-xl shadow-emerald-500/20">
-          <div className="rounded-[15px] bg-surface p-6 space-y-5">
-            <div className="flex items-center gap-2">
-              <Gift className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-bold text-emerald-500 uppercase tracking-widest">Your Referral Code</span>
-            </div>
-
-            {/* Code display */}
-            <div className="flex items-center justify-between bg-background rounded-xl border border-border px-5 py-4">
-              <span className="text-2xl font-mono font-extrabold tracking-widest text-foreground select-all">
-                {referralCode || '—'}
-              </span>
-              <button
-                onClick={handleCopy}
-                disabled={!referralCode}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 ${
-                  copied
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/30'
-                }`}
-              >
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Copied!' : 'Copy Code'}
-              </button>
-            </div>
-
-            {/* Action buttons */}
+        {/* ── Tabs ── */}
+        <div className="flex gap-2 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {[
+            { key: 'rewards', label: '🏆 Rewards', icon: Trophy },
+            { key: 'materials', label: '📁 Share Materials', icon: FileText },
+          ].map(t => (
             <button
-              onClick={handleWhatsApp}
-              disabled={!referralCode}
-              className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold text-sm shadow-lg shadow-green-500/30 transition-all duration-200 disabled:opacity-50"
+              key={t.key}
+              onClick={() => setTab(t.key as 'rewards' | 'materials')}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+              style={{
+                background: tab === t.key ? 'rgba(99,102,241,0.2)' : 'transparent',
+                color: tab === t.key ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                border: tab === t.key ? '1px solid rgba(99,102,241,0.3)' : '1px solid transparent',
+              }}
             >
-              <Share2 className="w-4 h-4" />
-              Share via WhatsApp
+              {t.label}
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* Progress Card */}
-        <div className="rounded-2xl bg-surface border border-border p-6 shadow-sm space-y-5">
-          <div className="flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-yellow-500" />
-            <span className="text-sm font-bold text-foreground">Referral Progress</span>
-          </div>
-
-          {/* Completed count */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-yellow-500/10 border border-yellow-500/20 flex flex-col items-center justify-center">
-              <span className="text-2xl font-extrabold text-yellow-500 leading-none">{completedCount}</span>
-              <span className="text-[10px] text-yellow-500/70 font-bold uppercase tracking-wide">Done</span>
-            </div>
-            <div className="flex-1 space-y-1">
-              <p className="text-foreground font-semibold text-sm">
-                {nextTier
-                  ? `${nextTier.tier.count - completedCount} more to earn ${nextTier.tier.emoji} ${nextTier.tier.label}`
-                  : '🎉 All tiers unlocked! You\'re a referral champion!'}
-              </p>
-              {nextTier && (
-                <>
-                  <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-700"
-                      style={{ width: `${nextTier.progress}%` }}
-                    />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground font-medium">
-                    {Math.round(nextTier.progress)}% toward {nextTier.tier.emoji} {nextTier.tier.label}
-                  </p>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Tier list */}
-          <div className="grid grid-cols-3 gap-3">
-            {REWARD_TIERS.map(tier => {
-              const achieved = completedCount >= tier.count;
-              return (
+        {/* ── REWARDS TAB ── */}
+        {tab === 'rewards' && (
+          <>
+            {/* Progress Summary */}
+            <div className="rounded-3xl p-5 space-y-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+              <div className="flex items-center gap-4">
                 <div
-                  key={tier.count}
-                  className={`rounded-xl p-3 border text-center transition-all ${
-                    achieved
-                      ? 'bg-emerald-500/10 border-emerald-500/30'
-                      : 'bg-foreground/5 border-border'
-                  }`}
+                  className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center"
+                  style={{ background: '#10b98115', border: '1px solid #10b98130' }}
                 >
-                  <div className="text-xl mb-1">{tier.emoji}</div>
-                  <div className={`text-xs font-bold ${achieved ? 'text-emerald-500' : 'text-foreground'}`}>
-                    {tier.label}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
-                    {tier.count} referrals
-                  </div>
-                  {achieved && (
-                    <div className="mt-1.5 flex items-center justify-center gap-1">
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span className="text-[10px] text-emerald-500 font-bold">Earned</span>
-                    </div>
-                  )}
+                  <span className="text-2xl font-black text-emerald-400 leading-none">{completedCount}</span>
+                  <span className="text-[10px] text-emerald-500/60 font-bold uppercase tracking-wide">Enrolled</span>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Referrals Table / List */}
-        <div className="rounded-2xl bg-surface border border-border shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
-            <Users className="w-4 h-4 text-foreground/60" />
-            <span className="text-sm font-bold text-foreground">My Referrals</span>
-            <span className="ml-auto text-xs text-muted-foreground font-medium bg-foreground/5 px-2 py-0.5 rounded-full">
-              {referrals.length} total
-            </span>
-          </div>
-
-          {referrals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-foreground/5 flex items-center justify-center">
-                <Gift className="w-8 h-8 text-muted-foreground" />
+                <div className="flex-1 space-y-1">
+                  {allEarned ? (
+                    <p className="text-emerald-400 font-black text-base">🎉 Champion! All tiers unlocked!</p>
+                  ) : nextTier ? (
+                    <>
+                      <p className="text-white font-semibold text-sm">
+                        {nextTier.tier.count - completedCount} more for {nextTier.tier.emoji} {nextTier.tier.label}
+                      </p>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div
+                          className="h-full rounded-full transition-all duration-1000"
+                          style={{ width: `${nextTier.progress}%`, background: 'linear-gradient(90deg, #10b981, #34d399)' }}
+                        />
+                      </div>
+                      <p className="text-white/30 text-xs">{Math.round(nextTier.progress)}% to next reward</p>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <p className="text-foreground font-semibold">No referrals yet</p>
-              <p className="text-muted-foreground text-sm max-w-xs">
-                Share your code to earn rewards!
-              </p>
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {/* Table header — desktop */}
-              <div className="hidden md:grid grid-cols-3 px-6 py-3 bg-foreground/5">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Name</span>
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</span>
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Date</span>
-              </div>
 
-              {referrals.map(ref => (
-                <div key={ref.id} className="grid grid-cols-1 md:grid-cols-3 items-center px-6 py-4 gap-1 md:gap-0 hover:bg-foreground/5 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {(ref.lead_name || 'U').charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-sm font-semibold text-foreground">{ref.lead_name || 'Unknown'}</span>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 md:justify-start pl-11 md:pl-0">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        ref.status === 'Completed'
-                          ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
-                          : 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20'
-                      }`}
+            {/* Reward Tiers Grid */}
+            <div>
+              <p className="text-white/40 text-xs font-black uppercase tracking-widest mb-3">Reward Milestones</p>
+              <div className="grid grid-cols-2 gap-3">
+                {REWARD_TIERS.map(tier => {
+                  const achieved = completedCount >= tier.count;
+                  return (
+                    <div
+                      key={tier.count}
+                      className="rounded-2xl p-4 text-center relative overflow-hidden transition-all"
+                      style={{
+                        background: achieved ? tier.bg : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${achieved ? tier.color + '40' : 'rgba(255,255,255,0.05)'}`,
+                      }}
                     >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full mr-1.5 ${
-                          ref.status === 'Completed' ? 'bg-emerald-500' : 'bg-yellow-500'
-                        }`}
-                      />
-                      {ref.status || 'Pending'}
-                    </span>
-                  </div>
+                      {achieved && (
+                        <div className="absolute top-2 right-2">
+                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        </div>
+                      )}
+                      <div className="text-3xl mb-2">{tier.emoji}</div>
+                      <div className="font-black text-sm mb-0.5" style={{ color: achieved ? tier.color : 'rgba(255,255,255,0.3)' }}>
+                        {tier.label}
+                      </div>
+                      <div className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                        {tier.count} {tier.count === 1 ? 'referral' : 'referrals'}
+                      </div>
+                      {achieved && (
+                        <div className="mt-2 flex items-center justify-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" style={{ color: tier.color }} />
+                          <span className="text-[10px] font-black" style={{ color: tier.color }}>EARNED</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
-                  <div className="pl-11 md:pl-0">
-                    <span className="text-xs text-muted-foreground font-medium">{formatDate(ref.created_at)}</span>
-                  </div>
+            {/* How it works */}
+            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <p className="text-white/40 text-xs font-black uppercase tracking-widest">How Rewards Work</p>
+              {[
+                'A staff member refers someone you know to CynexAI',
+                'When they mention your name, it gets linked to you',
+                'Once they enroll, your referral count goes up',
+                'You automatically earn the reward for your tier!',
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5" style={{ background: '#6366f120', color: '#818cf8', border: '1px solid #6366f140' }}>
+                    {i + 1}
+                  </span>
+                  <p className="text-white/50 text-sm">{step}</p>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+
+            {/* Referrals List */}
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="flex items-center gap-2 px-5 py-4" style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                <Users className="w-4 h-4 text-white/40" />
+                <span className="text-sm font-bold text-white">My Referrals</span>
+                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
+                  {referrals.length} total
+                </span>
+              </div>
+
+              {referrals.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-3">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                    <Gift className="w-7 h-7 text-white/20" />
+                  </div>
+                  <p className="text-white/60 font-semibold">No referrals yet</p>
+                  <p className="text-white/30 text-sm max-w-xs">Ask your sales coordinator to link referrals to you when someone you know enrolls.</p>
+                </div>
+              ) : (
+                <div className="divide-y" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(255,255,255,0.04)' } as any}>
+                  {referrals.map(ref => (
+                    <div key={ref.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+                      >
+                        {(ref.lead_name || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-white truncate">{ref.lead_name || 'Unknown'}</p>
+                        <p className="text-xs text-white/30">{formatDate(ref.created_at)}</p>
+                      </div>
+                      <StatusBadge status={ref.status} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ── MATERIALS TAB ── */}
+        {tab === 'materials' && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-1">
+              <p className="text-white/40 text-xs font-black uppercase tracking-widest flex-1">Course Materials to Share</p>
+              <span className="text-[10px] text-white/30">{materials.length} items</span>
+            </div>
+
+            {materials.length === 0 ? (
+              <div className="rounded-2xl flex flex-col items-center justify-center py-16 px-6 text-center gap-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.06)' }}>
+                <FileText className="w-10 h-10 text-white/15" />
+                <p className="text-white/40 font-semibold">No materials yet</p>
+                <p className="text-white/25 text-sm">Your coordinator will upload shareable materials here</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {materials.map(mat => (
+                  <MaterialCard key={mat.id} mat={mat} />
+                ))}
+              </div>
+            )}
+
+            {/* Share CynexAI */}
+            <div className="rounded-2xl p-5 text-center space-y-3" style={{ background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.15)' }}>
+              <p className="text-emerald-400 font-bold text-sm">Share CynexAI with your network</p>
+              <p className="text-white/30 text-xs">Help others discover great learning opportunities</p>
+              <button
+                onClick={() => {
+                  const msg = encodeURIComponent(`I'm learning at CynexAI - amazing tech courses! Check it out: https://cynexai.in`);
+                  window.open(`https://wa.me/?text=${msg}`, '_blank');
+                }}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white text-sm shadow-lg transition-all hover:scale-105"
+                style={{ background: '#25D366' }}
+              >
+                <Share2 className="w-4 h-4" />
+                Share via WhatsApp
+              </button>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

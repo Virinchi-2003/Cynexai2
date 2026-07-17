@@ -1295,6 +1295,44 @@ export const initTursoDB = async () => {
         )
       `);
 
+      // portal_settings table (key-value store for student portal feature flags)
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS portal_settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL DEFAULT '1',
+          updated_at TEXT
+        )
+      `);
+
+      // Seed default portal feature flags (idempotent)
+      const defaultPortalSettings = [
+        ['show_referrals', '1'],
+        ['show_career', '1'],
+        ['show_leaderboard', '1'],
+        ['show_mock_interview', '1'],
+        ['show_attendance', '1'],
+        ['show_gamification', '1'],
+      ];
+      for (const [key, value] of defaultPortalSettings) {
+        await client.execute({
+          sql: `INSERT OR IGNORE INTO portal_settings (key, value) VALUES (?, ?)`,
+          args: [key, value],
+        });
+      }
+
+      // course_shared_materials table (materials uploaded by manager/CEO for students to access)
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS course_shared_materials (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT,
+          file_url TEXT,
+          material_type TEXT DEFAULT 'pdf',
+          course_id TEXT,
+          created_at TEXT DEFAULT (datetime('now'))
+        )
+      `);
+
       // Sync sample posts securely and robustly
       await syncSamplePosts();
 

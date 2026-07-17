@@ -81,31 +81,52 @@ export interface MockInterview {
 
 export async function getStudentDashboardData(studentId: string): Promise<StudentDashboardData> {
   try {
-    let courseRes = await executeWithRetry(
-      `SELECT c.* 
-       FROM courses c
-       JOIN sales s ON c.id = s.course_id
-       JOIN onboardings o ON s.id = o.sale_id
-       JOIN students st ON o.id = st.onboarding_id
+    // First try to find student record by ID or email to get their course
+    const studentRow = await executeWithRetry(
+      `SELECT st.*, u.email FROM students st
+       LEFT JOIN users u ON st.portal_login_email = u.email
        WHERE st.id = ? OR st.portal_login_email = (SELECT email FROM users WHERE id = ?)
        LIMIT 1`,
       [studentId, studentId]
     );
+    const stu = studentRow.rows.length > 0 ? studentRow.rows[0] : null;
 
-    if (courseRes.rows.length === 0) {
-      courseRes = await executeWithRetry("SELECT * FROM courses ORDER BY created_at ASC LIMIT 1");
-      if (courseRes.rows.length === 0) {
+    // Try onboarding chain first, then fall back to students.course column
+    let activeCourse: any = null;
+
+    try {
+      const chainRes = await executeWithRetry(
+        `SELECT c.* FROM courses c
+         JOIN sales s ON c.id = s.course_id
+         JOIN onboardings o ON s.id = o.sale_id
+         JOIN students st ON o.id = st.onboarding_id
+         WHERE st.id = ? OR st.portal_login_email = (SELECT email FROM users WHERE id = ?)
+         LIMIT 1`,
+        [studentId, studentId]
+      );
+      if (chainRes.rows.length > 0) activeCourse = chainRes.rows[0];
+    } catch { /* chain may not exist */ }
+
+    // Fallback: look up course by name from students.course column
+    if (!activeCourse && stu?.course) {
+      const directRes = await executeWithRetry(
+        `SELECT * FROM courses WHERE name = ? OR title = ? LIMIT 1`,
+        [stu.course, stu.course]
+      );
+      if (directRes.rows.length > 0) activeCourse = directRes.rows[0];
+    }
+
+    // Fallback 2: just get first course
+    if (!activeCourse) {
+      const fallback = await executeWithRetry(`SELECT * FROM courses ORDER BY created_at ASC LIMIT 1`);
+      if (fallback.rows.length === 0) {
         return { course: null, gamification: { streak: 0, coins: 0 }, modules: [], upcomingClass: null };
       }
+      activeCourse = fallback.rows[0];
     }
-    const activeCourse = courseRes.rows[0];
 
-    const studentRes = await executeWithRetry(
-      "SELECT streak, coins FROM students WHERE id = ?",
-      [studentId]
-    );
-    const gamification = studentRes.rows.length > 0
-      ? { streak: Number(studentRes.rows[0].streak) || 0, coins: Number(studentRes.rows[0].coins) || 0 }
+    const gamification = stu
+      ? { streak: Number(stu.streak) || 0, coins: Number(stu.coins) || 0 }
       : { streak: 0, coins: 0 };
 
     const modRes = await executeWithRetry(
@@ -118,7 +139,9 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
     );
 
     const clsRes = await executeWithRetry(
-      `SELECT id, module_id, status FROM classes WHERE module_id IN (SELECT module_id FROM course_module_mapping WHERE course_id = ?)`,
+      `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
+         SELECT module_id FROM course_module_mapping WHERE course_id = ?
+       )`,
       [activeCourse.id]
     );
 
@@ -128,32 +151,53 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
     );
     const completedSet = new Set(progRes.rows.map((r: any) => r.lesson_id));
 
+    // Q&A responses per class
+    let qaByClass: Record<string, number> = {};
+    try {
+      const qaRes = await executeWithRetry(
+        `SELECT class_id, COUNT(*) as cnt FROM qa_responses WHERE student_id = ? GROUP BY class_id`,
+        [studentId]
+      );
+      qaRes.rows.forEach((r: any) => { qaByClass[r.class_id] = Number(r.cnt); });
+    } catch { /* no qa_responses */ }
+
     const modulesData = modRes.rows.map((m: any) => {
       const mClasses = clsRes.rows.filter((c: any) => c.module_id === m.id);
       const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed').length;
+      const qaTotal = mClasses.reduce((s: number, c: any) => s + (qaByClass[c.id] || 0), 0);
+      const quizClasses = mClasses.filter((c: any) => ['quiz','qa','q&a'].includes((c.type||'').toLowerCase())).length;
+      const codeClasses = mClasses.filter((c: any) => ['code','exercise','coding'].includes((c.type||'').toLowerCase())).length;
       return {
         ...m,
         totalClasses: mClasses.length,
         completedClasses: completed,
-        progressPct: mClasses.length > 0 ? Math.round((completed / mClasses.length) * 100) : 0
+        progressPct: mClasses.length > 0 ? Math.round((completed / mClasses.length) * 100) : 0,
+        questionsAnswered: qaTotal,
+        quizCount: quizClasses,
+        codeExerciseCount: codeClasses,
       };
     });
 
-    // Get upcoming live class
+    // Upcoming class from timetable_slots first, then CMS classes
     let upcomingClass = null;
     try {
-      const upcomingRes = await executeWithRetry(
-        `SELECT id, title, date, start_time, meet_link, type FROM classes WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+      const tsRes = await executeWithRetry(
+        `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
+         WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
       );
-      upcomingClass = upcomingRes.rows.length > 0 ? upcomingRes.rows[0] : null;
-    } catch (e) { /* ignore */ }
+      if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
+    } catch { /* no timetable */ }
+    if (!upcomingClass) {
+      try {
+        const clsUp = await executeWithRetry(
+          `SELECT id, title, date, start_time, meet_link, type FROM classes
+           WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+        );
+        if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
+      } catch { /* ignore */ }
+    }
 
-    return {
-      course: activeCourse,
-      gamification,
-      modules: modulesData,
-      upcomingClass
-    };
+    return { course: activeCourse, gamification, modules: modulesData, upcomingClass };
   } catch (error) {
     console.error('Failed to load student dashboard data', error);
     throw error;
@@ -390,13 +434,15 @@ export async function getStudentReferrals(studentId: string): Promise<Referral[]
 }
 
 export async function getStudentReferralCode(studentId: string): Promise<string> {
-  // Referral code = student code or derived from ID
   try {
+    // Try by student id first, then by email match
     const res = await executeWithRetry(
-      "SELECT student_code FROM students WHERE id = ?",
-      [studentId]
+      `SELECT student_code FROM students 
+       WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?)
+       LIMIT 1`,
+      [studentId, studentId]
     );
-    return res.rows.length > 0 ? (res.rows[0].student_code as string) : studentId;
+    return res.rows.length > 0 ? ((res.rows[0].student_code as string) || studentId) : studentId;
   } catch (e) {
     return studentId;
   }

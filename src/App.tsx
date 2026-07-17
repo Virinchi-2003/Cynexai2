@@ -41,6 +41,7 @@ import UserManagement from './pages/crm/manager/UserManagement';
 import GamificationSettings from './pages/crm/manager/GamificationSettings';
 
 import TimetableManager from './pages/crm/manager/TimetableManager';
+import StudentPortalSettings from './pages/crm/manager/StudentPortalSettings';
 
 // Admin & Student Imports
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -232,6 +233,7 @@ function App() {
         <Route path="/manager/tasks" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><AsanaTaskApp /></ManagerLayout></RequireAuth>} />
         <Route path="/manager/timetable" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><TimetableManager /></ManagerLayout></RequireAuth>} />
         <Route path="/manager/approvals/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><ApprovalDetail /></ManagerLayout></RequireAuth>} />
+        <Route path="/manager/student-settings" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><StudentPortalSettings /></ManagerLayout></RequireAuth>} />
         
         {/* Onboarding is assigned by Manager via Tasks */}
         <Route path="/manager/assign-batch/:id" element={<RequireAuth allowedRoles={['Manager', 'CEO']}><ManagerLayout><BatchAssignment /></ManagerLayout></RequireAuth>} />
@@ -251,6 +253,7 @@ function App() {
         <Route path="/ceo/courses/:courseId/modules/:moduleId" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><ModuleEditor /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/courses/:courseId/modules/:moduleId/classes/:classId" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><ClassEditor /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/timetable" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><TimetableManager /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/student-settings" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentPortalSettings /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/sales-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesDashboard /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/sales-pipeline" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><LeadPipeline /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><HistoryPage /></CEOLayout></RequireAuth>} />
