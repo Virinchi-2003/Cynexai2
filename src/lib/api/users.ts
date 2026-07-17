@@ -287,6 +287,61 @@ export async function bulkImportStudents(rows: {
       errors.push(`Failed for ${row.email}: ${err.message}`);
     }
   }
-
   return { imported, errors };
+}
+
+// ─── ONBOARDING APPROVAL WORKFLOW ──────────────────────────────────────────
+
+export async function createPendingStudent(data: {
+  name: string; email: string; phone: string; fees_total: number;
+  fees_paid: number; fees_pending: number; joining_date: string;
+  training_start_date: string; course: string; documents_submitted: number;
+  gender: string; dob: string;
+}): Promise<string> {
+  const studentId = `stu_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  await executeWithRetry(
+    `INSERT INTO students (
+      id, name, portal_login_email, phone, fees_total, fees_paid, fees_pending, 
+      joining_date, training_start_date, course, documents_submitted, 
+      gender, dob, approval_status, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending', 'Active')`,
+    [
+      studentId, data.name, data.email, data.phone, data.fees_total, data.fees_paid,
+      data.fees_pending, data.joining_date, data.training_start_date,
+      data.course, data.documents_submitted, data.gender, data.dob
+    ]
+  );
+  // Do NOT insert into users table until approved
+  return studentId;
+}
+
+export async function getPendingStudents(): Promise<any[]> {
+  const res = await executeWithRetry(`SELECT * FROM students WHERE approval_status = ?`, ['Pending']);
+  return res.rows;
+}
+
+export async function approveStudent(studentId: string, portalId: string, passwordPlain: string, email: string, name: string): Promise<void> {
+  const { encryptPassword } = await import('../crypto');
+  const encPw = encryptPassword(passwordPlain);
+  const userId = `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+  // 1. Mark student as Approved and set their final portal ID (student_code)
+  await executeWithRetry(
+    `UPDATE students SET approval_status = ?, student_code = ? WHERE id = ?`,
+    ['Approved', portalId, studentId]
+  );
+
+  // 2. Create actual User for login
+  await executeWithRetry(
+    `INSERT INTO users (id, name, email, role, status, password_hash, password_encrypted)
+     VALUES (?, ?, ?, 'Student', 'Active', ?, ?)`,
+    [userId, name, email, encPw, encPw]
+  );
+}
+
+export async function rejectStudent(studentId: string): Promise<void> {
+  await executeWithRetry(
+    `UPDATE students SET approval_status = ? WHERE id = ?`,
+    ['Rejected', studentId]
+  );
 }

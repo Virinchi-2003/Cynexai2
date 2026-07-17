@@ -708,7 +708,17 @@ export const initTursoDB = async () => {
           mother_name TEXT,
           emergency_contact TEXT,
           blood_group TEXT,
+          name TEXT,
+          gender TEXT,
+          fees_total REAL DEFAULT 0,
+          fees_paid REAL DEFAULT 0,
+
+          fees_pending REAL DEFAULT 0,
+          training_start_date TEXT,
+          documents_submitted INTEGER DEFAULT 0,
+          approval_status TEXT DEFAULT 'Approved',
           streak INTEGER DEFAULT 0,
+
           coins INTEGER DEFAULT 0,
           last_streak_date TEXT
         )
@@ -1198,6 +1208,14 @@ export const initTursoDB = async () => {
       await addColumn('students', 'mother_name TEXT');
       await addColumn('students', 'emergency_contact TEXT');
       await addColumn('students', 'blood_group TEXT');
+      await addColumn('students', 'name TEXT');
+      await addColumn('students', 'documents_submitted INTEGER DEFAULT 0');
+      await addColumn('students', 'fees_total REAL DEFAULT 0');
+      await addColumn('students', 'fees_paid REAL DEFAULT 0');
+      await addColumn('students', 'fees_pending REAL DEFAULT 0');
+      await addColumn('students', 'training_start_date TEXT');
+      await addColumn('students', 'gender TEXT');
+      await addColumn('students', 'approval_status TEXT DEFAULT "Approved"');
 
       // Class full columns
       await addColumn('classes', 'batch_id TEXT');

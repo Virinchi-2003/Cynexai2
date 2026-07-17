@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { getLeads, updateLeadStatus, addActivity, createLead, claimLead } from '../../lib/api/crm';
+import { createPendingStudent } from '../../lib/api/users';
 import { Lead, LeadStatus } from '../../lib/types';
 import { getCurrentUser } from '../../lib/auth';
 import { Button } from '../../components/ui/erp/Button';
@@ -94,7 +95,11 @@ export default function LeadPipeline() {
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [onboardingLead, setOnboardingLead] = useState<Lead | null>(null);
-  const [onboardForm, setOnboardForm] = useState({ fee: '', mode: 'Online', batchPrefs: '' });
+  const [onboardForm, setOnboardForm] = useState({
+    name: '', email: '', phone: '', fees_total: '', fees_paid: '', fees_pending: '',
+    joining_date: new Date().toISOString().split('T')[0], training_start_date: '',
+    course: '', documents_submitted: 0, gender: 'Male', dob: ''
+  });
 
   // Mobile: currently selected stage tab
   const [mobileStageIdx, setMobileStageIdx] = useState(0);
@@ -139,7 +144,16 @@ export default function LeadPipeline() {
       if (amount === null) { setLeads([...leads]); return; }
       partialAmount = amount;
     }
-    if (newStatus === 'Onboarded') { setOnboardingLead(lead); return; }
+    if (newStatus === 'Onboarded') {
+      setOnboardingLead(lead);
+      setOnboardForm({
+        name: lead.name || '', email: lead.email || '', phone: lead.phone || '',
+        fees_total: '', fees_paid: '', fees_pending: '',
+        joining_date: new Date().toISOString().split('T')[0], training_start_date: '',
+        course: lead.course_interest || '', documents_submitted: 0, gender: 'Male', dob: ''
+      });
+      return;
+    }
     executeMove(leadId, newStatus, partialAmount);
   };
 
@@ -154,7 +168,7 @@ export default function LeadPipeline() {
     } else if (user) {
       let note = `Status changed to: ${newStatus}`;
       if (partialAmount) note += ` (Amount: ${partialAmount})`;
-      if (onboardData) note += ` (Fee: ${onboardData.fee}, Mode: ${onboardData.mode}, Prefs: ${onboardData.batchPrefs})`;
+      if (onboardData) note += ` (Fee: ${onboardData.fees_total})`;
       await addActivity(leadId, user.id, 'Note', note);
     }
   };
@@ -171,10 +185,25 @@ export default function LeadPipeline() {
   const handleOnboardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onboardingLead) return;
+
+    await createPendingStudent({
+      name: onboardForm.name,
+      email: onboardForm.email,
+      phone: onboardForm.phone,
+      fees_total: Number(onboardForm.fees_total) || 0,
+      fees_paid: Number(onboardForm.fees_paid) || 0,
+      fees_pending: Number(onboardForm.fees_pending) || 0,
+      joining_date: onboardForm.joining_date,
+      training_start_date: onboardForm.training_start_date,
+      course: onboardForm.course,
+      documents_submitted: onboardForm.documents_submitted,
+      gender: onboardForm.gender,
+      dob: onboardForm.dob
+    });
+
     executeMove(onboardingLead.id, 'Onboarded', '', onboardForm);
-    alert(`Notification sent to Manager: New Student Onboarded - ${onboardingLead.name}.`);
+    alert(`Student sent to Manager for Approval: ${onboardingLead.name}.`);
     setOnboardingLead(null);
-    setOnboardForm({ fee: '', mode: 'Online', batchPrefs: '' });
   };
 
   const handleCsvUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -509,28 +538,71 @@ export default function LeadPipeline() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleOnboardSubmit} className="p-5 space-y-4">
-              <p className="text-sm text-erp-text/70">Moving <strong className="text-erp-text">{onboardingLead.name}</strong> to Onboarded.</p>
-              <div>
-                <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Total Fee Paid</label>
-                <input type="number" required value={onboardForm.fee} onChange={e => setOnboardForm({...onboardForm, fee: e.target.value})}
-                  className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-erp-primary text-sm" placeholder="e.g. 50000" />
+            <form onSubmit={handleOnboardSubmit} className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+              <p className="text-sm text-erp-text/70 mb-4">Complete details for <strong className="text-erp-text">{onboardingLead.name}</strong> to send for Manager approval.</p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Name</label>
+                  <input type="text" required value={onboardForm.name} onChange={e => setOnboardForm({...onboardForm, name: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Email</label>
+                  <input type="email" required value={onboardForm.email} onChange={e => setOnboardForm({...onboardForm, email: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Mobile No.</label>
+                  <input type="tel" required value={onboardForm.phone} onChange={e => setOnboardForm({...onboardForm, phone: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Course</label>
+                  <input type="text" required value={onboardForm.course} onChange={e => setOnboardForm({...onboardForm, course: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Total Fees</label>
+                  <input type="number" required value={onboardForm.fees_total} onChange={e => setOnboardForm({...onboardForm, fees_total: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Paid Fee</label>
+                  <input type="number" required value={onboardForm.fees_paid} onChange={e => {
+                    const paid = Number(e.target.value);
+                    const total = Number(onboardForm.fees_total);
+                    setOnboardForm({...onboardForm, fees_paid: e.target.value, fees_pending: String(total - paid)});
+                  }} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Pending Fee</label>
+                  <input type="number" value={onboardForm.fees_pending} readOnly className="w-full bg-erp-surface border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text/50 text-sm cursor-not-allowed" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Date of Joining</label>
+                  <input type="date" required value={onboardForm.joining_date} onChange={e => setOnboardForm({...onboardForm, joining_date: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Training Start Date</label>
+                  <input type="date" required value={onboardForm.training_start_date} onChange={e => setOnboardForm({...onboardForm, training_start_date: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Date of Birth</label>
+                  <input type="date" required value={onboardForm.dob} onChange={e => setOnboardForm({...onboardForm, dob: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Gender</label>
+                  <select value={onboardForm.gender} onChange={e => setOnboardForm({...onboardForm, gender: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm">
+                    <option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Documents Submitted?</label>
+                  <select value={onboardForm.documents_submitted} onChange={e => setOnboardForm({...onboardForm, documents_submitted: Number(e.target.value)})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm">
+                    <option value={1}>Yes (Y)</option><option value={0}>No (N)</option>
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Preferred Mode</label>
-                <select value={onboardForm.mode} onChange={e => setOnboardForm({...onboardForm, mode: e.target.value})}
-                  className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-erp-primary text-sm">
-                  <option>Online</option><option>Offline</option><option>Hybrid</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Batch Preferences</label>
-                <textarea required value={onboardForm.batchPrefs} onChange={e => setOnboardForm({...onboardForm, batchPrefs: e.target.value})}
-                  className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-erp-primary min-h-[80px] text-sm" placeholder="e.g. Weekend morning batch" />
-              </div>
-              <div className="flex justify-end gap-3 pt-1">
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-erp-border mt-4">
                 <button type="button" onClick={() => setOnboardingLead(null)} className="px-4 py-2 rounded-xl border-2 border-erp-border text-erp-text/70 font-bold text-sm hover:bg-erp-border/40 transition-colors">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-teal-600 text-white font-bold text-sm hover:bg-teal-500 transition-colors">Complete Onboarding</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-teal-600 text-white font-bold text-sm hover:bg-teal-500 transition-colors">Submit to Manager</button>
               </div>
             </form>
           </div>

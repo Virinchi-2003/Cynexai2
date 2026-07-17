@@ -8,11 +8,11 @@ import {
 } from 'lucide-react';
 import { decryptPassword } from '../../../lib/crypto';
 import { getCurrentUser } from '../../../lib/auth';
-import {
   getUsers, saveUser, patchUser, updateStudentAttended,
   getFilterOptions, getCourseCurriculum, deleteUser,
   uploadStudentDocument, getStudentDocuments, deleteStudentDocument,
-  updateStudentProfile, bulkImportStudents
+  updateStudentProfile, bulkImportStudents,
+  getPendingStudents, approveStudent, rejectStudent
 } from '../../../lib/api/users';
 import { DataTable } from '../../../components/ui/erp/DataTable';
 
@@ -192,8 +192,9 @@ const StudentDocumentPanel = ({ studentId, uploadedBy }: { studentId: string; up
 export default function UserManagement() {
   const currentUser = getCurrentUser();
   const [users, setUsers] = useState<ERPUser[]>([]);
+  const [pendingStudents, setPendingStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'staff' | 'students'>('staff');
+  const [activeTab, setActiveTab] = useState<'staff' | 'students' | 'pending'>('staff');
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState<string>('');
@@ -228,6 +229,12 @@ export default function UserManagement() {
   const [stuCourse, setStuCourse] = useState('');
   const [stuBatch, setStuBatch] = useState('');
   const [stuJoining, setStuJoining] = useState('');
+  const [stuFeesTotal, setStuFeesTotal] = useState(0);
+  const [stuFeesPaid, setStuFeesPaid] = useState(0);
+  const [stuTrainingStart, setStuTrainingStart] = useState('');
+  const [stuGender, setStuGender] = useState('Male');
+  const [stuDocsSubmitted, setStuDocsSubmitted] = useState(0);
+  const [isExistingStudent, setIsExistingStudent] = useState(true);
 
   // CSV Import
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -235,6 +242,11 @@ export default function UserManagement() {
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvResult, setCsvResult] = useState<{ imported: number; errors: string[] } | null>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
+
+  // Pending Approval Modal
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [approvingStudentId, setApprovingStudentId] = useState<string | null>(null);
+  const [approveForm, setApproveForm] = useState({ student_id: '', password: '' });
 
   useEffect(() => { fetchUsersData(); }, [filters, sortBy, sortDir]);
   useEffect(() => { fetchUsersData(); }, [activeTab]);
@@ -246,13 +258,31 @@ export default function UserManagement() {
   const fetchUsersData = async () => {
     try {
       setLoading(true);
-      const queryFilters = { ...filters };
-      if (activeTab === 'students') queryFilters.role = 'Student';
-      else queryFilters.role = { _neq: 'Student' } as any;
-      const fetchedUsers = await getUsers(queryFilters, sortBy, sortDir);
-      setUsers(fetchedUsers);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+      if (activeTab === 'pending') {
+        const pending = await getPendingStudents();
+        setPendingStudents(pending);
+      } else {
+        const queryFilters = { ...filters };
+        if (activeTab === 'students') queryFilters.role = 'Student';
+        else if (activeTab === 'staff') queryFilters.excludeRole = 'Student';
+        const data = await getUsers(queryFilters);
+        let sorted = [...data];
+        if (sortBy) {
+          sorted.sort((a: any, b: any) => {
+            const valA = a[sortBy] || '';
+            const valB = b[sortBy] || '';
+            if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+            if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+            return 0;
+          });
+        }
+        setUsers(sorted);
+      }
+    } catch (e) {
+      console.error('Failed to load users', e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFilter = (key: string, value: string) => {
@@ -271,13 +301,13 @@ export default function UserManagement() {
   };
 
   const resetForm = () => {
-    setName(''); setEmail(''); setPassword(''); setRole('Sales/HR');
-    setSalary(0); setStatus('Active');
+    setName(''); setEmail(''); setPassword(''); setRole('Sales/HR'); setSalary(0); setStatus('Active');
     setPermissions({ crm: false, timetable: false, leaves: false, settings: false });
-    setStuPhone(''); setStuDob(''); setStuAddress(''); setStuFather('');
-    setStuMother(''); setStuEmergency(''); setStuBlood('');
-    setStuCourse(''); setStuBatch(''); setStuJoining('');
-    setIsExistingStudent(false);
+    setStuPhone(''); setStuDob(''); setStuAddress(''); setStuFather(''); setStuMother('');
+    setStuEmergency(''); setStuBlood(''); setStuCourse(''); setStuBatch(''); setStuJoining('');
+    setStuFeesTotal(0); setStuFeesPaid(0); setStuTrainingStart(''); setStuGender('Male'); setStuDocsSubmitted(0);
+    setIsExistingStudent(true);
+    setApproveForm({ student_id: '', password: '' });
   };
 
   const handleOpenModal = (user: ERPUser | null, type?: 'staff' | 'student') => {
@@ -331,7 +361,9 @@ export default function UserManagement() {
             phone: stuPhone, dob: stuDob, address: stuAddress,
             father_name: stuFather, mother_name: stuMother,
             emergency_contact: stuEmergency, blood_group: stuBlood,
-            course: stuCourse, batch_number: stuBatch, joining_date: stuJoining, status
+            course: stuCourse, batch_number: stuBatch, joining_date: stuJoining, status,
+            fees_total: stuFeesTotal, fees_paid: stuFeesPaid, fees_pending: stuFeesTotal - stuFeesPaid,
+            training_start_date: stuTrainingStart, gender: stuGender, documents_submitted: stuDocsSubmitted
           });
         }
       }
@@ -369,7 +401,15 @@ export default function UserManagement() {
     reader.onload = e => {
       const text = e.target?.result as string;
       const rows = parseCsv(text);
-      setCsvPreview(rows);
+      // Filter out rows where 'existing_student' is 'N', 'No', 'False', or '0'
+      const validRows = rows.filter(row => {
+        const existing = (row.existing_student_y_n || row.existing_student || row.existing || '').toLowerCase();
+        return !['n', 'no', 'false', '0'].includes(existing);
+      });
+      if (validRows.length < rows.length) {
+        alert(`Filtered out ${rows.length - validRows.length} rows where 'Existing student' was N.`);
+      }
+      setCsvPreview(validRows);
     };
     reader.readAsText(file);
   };
@@ -412,7 +452,29 @@ export default function UserManagement() {
     )}
   ];
 
-  const columns = activeTab === 'staff' ? staffColumns : studentColumns;
+  const pendingColumns = [
+    { key: 'name', header: 'Name' },
+    { key: 'portal_login_email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'course', header: 'Course' },
+    { key: 'fees_total', header: 'Total Fee' },
+    { key: 'fees_paid', header: 'Paid Fee' },
+    { key: 'status', header: 'Status' },
+    { key: 'actions', header: 'Actions', filterable: false, render: (row: any) => (
+      <div className="flex items-center gap-2">
+        <button onClick={(e) => { e.stopPropagation(); setApprovingStudentId(row.id); setIsApproveModalOpen(true); }} className="px-3 py-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-lg">Approve</button>
+        <button onClick={async (e) => {
+          e.stopPropagation();
+          if (confirm('Are you sure you want to reject this student?')) {
+            await rejectStudent(row.id);
+            fetchUsersData();
+          }
+        }} className="px-3 py-1.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg">Reject</button>
+      </div>
+    )}
+  ];
+
+  const columns = activeTab === 'staff' ? staffColumns : (activeTab === 'pending' ? pendingColumns : studentColumns);
 
   const inputCls = "w-full bg-erp-background border border-erp-border rounded-xl px-4 py-2.5 text-sm text-erp-text focus:outline-none focus:border-indigo-500";
 
@@ -449,14 +511,22 @@ export default function UserManagement() {
 
         {/* Tabs */}
         <div className="flex gap-4 mb-5 border-b border-erp-border">
-          {(['staff', 'students'] as const).map(tab => (
-            <button key={tab}
-              className={`pb-2 px-1 font-bold capitalize ${activeTab === tab ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
-              onClick={() => { setActiveTab(tab); setFilters({}); }}
+          <button
+            className={`pb-2 px-1 font-bold capitalize ${activeTab === 'staff' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+            onClick={() => { setActiveTab('staff'); setFilters({}); }}
+          >Staff Members</button>
+          <button
+            className={`pb-2 px-1 font-bold capitalize ${activeTab === 'students' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+            onClick={() => { setActiveTab('students'); setFilters({}); }}
+          >Students</button>
+          {(currentUser?.role === 'CEO' || currentUser?.role === 'Manager') && (
+            <button
+              className={`pb-2 px-1 font-bold capitalize ${activeTab === 'pending' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+              onClick={() => { setActiveTab('pending'); setFilters({}); }}
             >
-              {tab === 'staff' ? 'Staff Members' : 'Students'}
+              Pending Approvals {pendingStudents.length > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">{pendingStudents.length}</span>}
             </button>
-          ))}
+          )}
         </div>
 
         {/* Filters */}
@@ -489,7 +559,7 @@ export default function UserManagement() {
               <span className="font-bold text-erp-text/70 bg-erp-surface px-4 py-2 rounded shadow">Loading users...</span>
             </div>
           )}
-          <DataTable columns={columns} data={users} onSort={handleSort} onEdit={handleEdit} sortBy={sortBy} sortDir={sortDir}
+          <DataTable columns={columns} data={activeTab === 'pending' ? pendingStudents : users} onSort={handleSort} onEdit={activeTab === 'pending' ? undefined : handleEdit} sortBy={sortBy} sortDir={sortDir}
             renderExpandedRow={activeTab === 'students' ? (row) => {
               let moduleProgress: Record<string, number> = {};
               try { moduleProgress = JSON.parse(row.classes_attended_json || '{}'); } catch (e) {}
@@ -673,7 +743,18 @@ export default function UserManagement() {
               {/* Student profile fields */}
               <div className="border-t border-erp-border pt-4">
                 <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Academic Info</p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+                <div className="mb-4 p-3 bg-erp-background border-2 border-erp-border rounded-xl">
+                  <label className="flex items-center gap-2 text-sm font-bold text-erp-text">
+                    <input type="checkbox" checked={isExistingStudent} onChange={e => setIsExistingStudent(e.target.checked)} className="w-4 h-4 accent-indigo-500" />
+                    Is this an existing student? (Check for Yes)
+                  </label>
+                  {!isExistingStudent && (
+                    <p className="text-xs text-red-500 mt-2 font-bold"><AlertCircle className="w-3 h-3 inline mr-1"/>New leads should be added via the CRM pipeline first.</p>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                   <div>
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Course</label>
                     <select value={stuCourse} onChange={e => setStuCourse(e.target.value)} className={inputCls}>
@@ -689,11 +770,34 @@ export default function UserManagement() {
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Joining Date</label>
                     <input type="date" value={stuJoining} onChange={e => setStuJoining(e.target.value)} className={inputCls} />
                   </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Training Start Date</label>
+                    <input type="date" value={stuTrainingStart} onChange={e => setStuTrainingStart(e.target.value)} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Total Fees</label>
+                    <input type="number" value={stuFeesTotal} onChange={e => setStuFeesTotal(Number(e.target.value))} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Fees Paid</label>
+                    <input type="number" value={stuFeesPaid} onChange={e => setStuFeesPaid(Number(e.target.value))} className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Fees Pending</label>
+                    <input type="number" readOnly value={stuFeesTotal - stuFeesPaid} className={`${inputCls} bg-erp-surface text-erp-text/50`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Documents Submitted?</label>
+                    <select value={stuDocsSubmitted} onChange={e => setStuDocsSubmitted(Number(e.target.value))} className={inputCls}>
+                      <option value={1}>Yes</option>
+                      <option value={0}>No</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div className="border-t border-erp-border pt-4">
                 <p className="text-xs font-bold text-erp-text/60 uppercase tracking-wider mb-3">Personal Details</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Phone</label>
                     <input type="tel" value={stuPhone} onChange={e => setStuPhone(e.target.value)} className={inputCls} placeholder="10-digit mobile" />
@@ -703,25 +807,25 @@ export default function UserManagement() {
                     <input type="date" value={stuDob} onChange={e => setStuDob(e.target.value)} className={inputCls} />
                   </div>
                   <div>
+                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Gender</label>
+                    <select value={stuGender} onChange={e => setStuGender(e.target.value)} className={inputCls}>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Blood Group</label>
                     <select value={stuBlood} onChange={e => setStuBlood(e.target.value)} className={inputCls}>
                       <option value="">Select</option>
                       {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                   </div>
-                  <div>
+                  <div className="col-span-2">
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Emergency Contact</label>
                     <input type="tel" value={stuEmergency} onChange={e => setStuEmergency(e.target.value)} className={inputCls} placeholder="Guardian phone" />
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Father's Name</label>
-                    <input type="text" value={stuFather} onChange={e => setStuFather(e.target.value)} className={inputCls} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-erp-text/60 mb-1">Mother's Name</label>
-                    <input type="text" value={stuMother} onChange={e => setStuMother(e.target.value)} className={inputCls} />
-                  </div>
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <label className="block text-xs font-bold text-erp-text/60 mb-1">Address</label>
                     <textarea rows={2} value={stuAddress} onChange={e => setStuAddress(e.target.value)} className={`${inputCls} resize-none`} placeholder="Full residential address" />
                   </div>
@@ -731,7 +835,7 @@ export default function UserManagement() {
 
             <div className="p-5 border-t border-erp-border flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setIsStudentModalOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={() => handleSaveUser(true)}>
+              <Button variant="primary" disabled={!isExistingStudent} onClick={() => handleSaveUser(true)}>
                 {editUser ? 'Save Changes' : 'Add Student'}
               </Button>
             </div>
@@ -750,10 +854,25 @@ export default function UserManagement() {
               <button onClick={() => { setShowCsvModal(false); setCsvPreview([]); setCsvResult(null); }}><X className="w-6 h-6 text-erp-text/60" /></button>
             </div>
             <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
-              <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-indigo-300">
-                <p className="font-bold mb-1">CSV Format Required:</p>
-                <code className="block">name, email, phone, course, batch_number, joining_date, status</code>
-                <p className="mt-1 text-indigo-400">Default password for imported students: <strong>cynex123</strong></p>
+              <div className="flex justify-between items-start gap-4">
+                <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-indigo-300 flex-1">
+                  <p className="font-bold mb-1">CSV Format Required:</p>
+                  <code className="block text-[10px] sm:text-xs">name, email, phone, course, batch_number, joining_date, status, existing_student_y_n</code>
+                  <p className="mt-2 text-indigo-400">Rows where <code className="font-bold">existing_student_y_n</code> is "N" will be auto-rejected.</p>
+                  <p className="mt-1 text-indigo-400">Default password for imported students: <strong>cynex123</strong></p>
+                </div>
+                <Button variant="secondary" className="flex items-center gap-2 text-xs flex-shrink-0" onClick={() => {
+                  const csvContent = "name,email,phone,course,batch_number,joining_date,status,existing_student_y_n\nJohn Doe,john@example.com,1234567890,Frontend,July 2026,2026-07-15,Active,Y\nJane Doe,jane@example.com,0987654321,Backend,Aug 2026,2026-08-01,Active,N";
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'sample_students.csv';
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                }}>
+                  <Download className="w-4 h-4" /> Download Sample CSV
+                </Button>
               </div>
 
               <input ref={csvInputRef} type="file" accept=".csv" className="hidden"
@@ -802,6 +921,42 @@ export default function UserManagement() {
               <Button variant="primary" disabled={csvPreview.length === 0 || csvImporting} onClick={handleCsvImport}>
                 {csvImporting ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Importing...</> : `Import ${csvPreview.length} Students`}
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Approve Pending Student Modal ─── */}
+      {isApproveModalOpen && approvingStudentId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-erp-border">
+              <h2 className="text-lg font-bold text-erp-text flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" /> Approve Student
+              </h2>
+              <button onClick={() => { setIsApproveModalOpen(false); setApprovingStudentId(null); }} className="text-erp-text/50 hover:text-erp-text"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-erp-text/70 mb-2">Assign an ID and password for this student to access the portal.</p>
+              <div>
+                <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Assign Student ID (optional)</label>
+                <input type="text" value={approveForm.student_id} onChange={e => setApproveForm({...approveForm, student_id: e.target.value})} className={inputCls} placeholder="Leave blank to auto-generate" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Set Password *</label>
+                <input type="text" value={approveForm.password} onChange={e => setApproveForm({...approveForm, password: e.target.value})} className={inputCls} placeholder="e.g. Temp@123" />
+              </div>
+            </div>
+            <div className="p-5 border-t border-erp-border flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => { setIsApproveModalOpen(false); setApprovingStudentId(null); }}>Cancel</Button>
+              <Button variant="primary" onClick={async () => {
+                if (!approveForm.password) return alert("Password is required to approve a student.");
+                await approveStudent(approvingStudentId, approveForm.password, approveForm.student_id || undefined);
+                alert("Student approved successfully!");
+                setIsApproveModalOpen(false);
+                setApprovingStudentId(null);
+                fetchUsersData();
+              }}>Approve</Button>
             </div>
           </div>
         </div>
