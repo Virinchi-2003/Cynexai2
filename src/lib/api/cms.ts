@@ -78,10 +78,10 @@ export const getClassQuestions = async (classId: string) => {
   return res.rows;
 };
 
-export const updateClassMetadata = async (classId: string, title: string, youtubeLink: string, meetLink: string) => {
+export const updateClassMetadata = async (classId: string, title: string, youtubeLink: string, meetLink: string, docUrl?: string) => {
   await executeWithRetry(
-    'UPDATE classes SET title = ?, youtube_video_id = ?, meet_link = ? WHERE id = ?',
-    [title, youtubeLink, meetLink, classId]
+    'UPDATE classes SET title = ?, youtube_video_id = ?, meet_link = ?, doc_url = ? WHERE id = ?',
+    [title, youtubeLink, meetLink, docUrl || null, classId]
   );
 };
 

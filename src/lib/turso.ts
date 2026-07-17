@@ -583,6 +583,52 @@ export const initTursoDB = async () => {
         )
       `);
 
+      // THE ACTIVE CRM TABLE — used by all crm.ts API functions
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS crm_leads (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          email TEXT,
+          phone TEXT,
+          course_interest TEXT,
+          source TEXT,
+          status TEXT DEFAULT 'New',
+          assigned_to TEXT,
+          notes TEXT,
+          grad_year TEXT,
+          qualification TEXT,
+          it_background TEXT,
+          preferred_mode TEXT,
+          location TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          created_by TEXT,
+          referred_by_student_id TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS crm_activities (
+          id TEXT PRIMARY KEY,
+          lead_id TEXT,
+          user_id TEXT,
+          type TEXT,
+          content TEXT,
+          student_id TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS crm_stage_history (
+          id TEXT PRIMARY KEY,
+          lead_id TEXT,
+          old_stage TEXT,
+          new_stage TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       await client.execute(`
         CREATE TABLE IF NOT EXISTS demos (
           id TEXT PRIMARY KEY,
@@ -650,7 +696,33 @@ export const initTursoDB = async () => {
           portal_login_email TEXT,
           status TEXT,
           preferred_mode TEXT,
-          classes_attended_json TEXT
+          classes_attended_json TEXT,
+          batch_number TEXT,
+          course TEXT,
+          topic_completed TEXT,
+          joining_date TEXT,
+          phone TEXT,
+          dob TEXT,
+          address TEXT,
+          father_name TEXT,
+          mother_name TEXT,
+          emergency_contact TEXT,
+          blood_group TEXT,
+          streak INTEGER DEFAULT 0,
+          coins INTEGER DEFAULT 0,
+          last_streak_date TEXT
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS student_documents (
+          id TEXT PRIMARY KEY,
+          student_id TEXT NOT NULL,
+          doc_type TEXT NOT NULL,
+          file_name TEXT,
+          file_data TEXT,
+          uploaded_by TEXT,
+          uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
@@ -700,7 +772,18 @@ export const initTursoDB = async () => {
           title TEXT,
           type TEXT,
           status TEXT,
-          order_index INTEGER
+          order_index INTEGER,
+          batch_id TEXT,
+          date TEXT,
+          start_time TEXT,
+          end_time TEXT,
+          teacher_id TEXT,
+          meet_link TEXT,
+          youtube_video_id TEXT,
+          ai_ppt_markdown TEXT,
+          ai_keypoints TEXT,
+          ai_script TEXT,
+          doc_url TEXT
         )
       `);
 
@@ -1102,6 +1185,47 @@ export const initTursoDB = async () => {
       await addColumn('students', 'streak INTEGER DEFAULT 0');
       await addColumn('students', 'coins INTEGER DEFAULT 0');
       await addColumn('students', 'last_streak_date TEXT');
+
+      // Full student profile columns (safe migrations)
+      await addColumn('students', 'batch_number TEXT');
+      await addColumn('students', 'course TEXT');
+      await addColumn('students', 'topic_completed TEXT');
+      await addColumn('students', 'joining_date TEXT');
+      await addColumn('students', 'phone TEXT');
+      await addColumn('students', 'dob TEXT');
+      await addColumn('students', 'address TEXT');
+      await addColumn('students', 'father_name TEXT');
+      await addColumn('students', 'mother_name TEXT');
+      await addColumn('students', 'emergency_contact TEXT');
+      await addColumn('students', 'blood_group TEXT');
+
+      // Class full columns
+      await addColumn('classes', 'batch_id TEXT');
+      await addColumn('classes', 'date TEXT');
+      await addColumn('classes', 'start_time TEXT');
+      await addColumn('classes', 'end_time TEXT');
+      await addColumn('classes', 'teacher_id TEXT');
+      await addColumn('classes', 'meet_link TEXT');
+      await addColumn('classes', 'youtube_video_id TEXT');
+      await addColumn('classes', 'ai_ppt_markdown TEXT');
+      await addColumn('classes', 'ai_keypoints TEXT');
+      await addColumn('classes', 'ai_script TEXT');
+      await addColumn('classes', 'doc_url TEXT');
+
+      // CRM leads columns safety
+      await addColumn('crm_leads', 'referred_by_student_id TEXT');
+      await addColumn('crm_leads', 'email TEXT');
+      await addColumn('crm_leads', 'notes TEXT');
+      await addColumn('crm_leads', 'grad_year TEXT');
+      await addColumn('crm_leads', 'qualification TEXT');
+      await addColumn('crm_leads', 'it_background TEXT');
+      await addColumn('crm_leads', 'preferred_mode TEXT');
+      await addColumn('crm_leads', 'location TEXT');
+      await addColumn('crm_leads', 'updated_at TEXT');
+      await addColumn('crm_leads', 'created_by TEXT');
+
+      // CRM activities student_id
+      await addColumn('crm_activities', 'student_id TEXT');
 
       // Update users table for employees
       await addColumn('users', 'password_encrypted TEXT');

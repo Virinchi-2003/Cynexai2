@@ -7,6 +7,16 @@ import { createLead } from '../../lib/api/crm';
 import { getCoursesForPitch } from '../../lib/api/sales';
 import { getCurrentUser } from '../../lib/auth';
 
+// Defined OUTSIDE the component to prevent focus loss on re-render
+const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+  <div>
+    <label className="block text-xs font-bold text-erp-text/60 mb-1.5 uppercase tracking-wider">
+      {label} {required ? <span className="text-red-500">*</span> : <span className="text-erp-text/30 font-medium normal-case tracking-normal">(optional)</span>}
+    </label>
+    {children}
+  </div>
+);
+
 export default function LeadCapture() {
   const navigate = useNavigate();
   const user = getCurrentUser();
@@ -89,14 +99,6 @@ export default function LeadCapture() {
     { value: 'Other', label: 'Other' },
   ];
 
-  const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
-    <div>
-      <label className="block text-xs font-bold text-erp-text/60 mb-1.5 uppercase tracking-wider">
-        {label} {required ? <span className="text-red-500">*</span> : <span className="text-erp-text/30 font-medium normal-case tracking-normal">(optional)</span>}
-      </label>
-      {children}
-    </div>
-  );
 
   const inputClass = "w-full bg-erp-surface border-2 border-erp-border rounded-2xl p-3.5 font-semibold text-erp-text outline-none focus:border-erp-primary transition-colors placeholder-erp-text/30 text-sm";
 

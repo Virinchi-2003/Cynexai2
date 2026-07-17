@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2, Wand2 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion } from '../../lib/api/cms';
-import { generateAIMaterials } from '../../lib/aiGenerator';
+import { generateAIMaterials, generateAIQuestions } from '../../lib/aiGenerator';
 import { isTursoConfigured } from '../../lib/turso';
+
 
 export default function ClassEditor() {
   const navigate = useNavigate();
@@ -20,7 +21,10 @@ export default function ClassEditor() {
   
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generatingQA, setGeneratingQA] = useState(false);
   const [aiStatus, setAiStatus] = useState({ ppt: false, script: false });
+  const [docUrl, setDocUrl] = useState('');
+
 
   // Class Questions state
   const [questions, setQuestions] = useState<any[]>([]);
@@ -45,6 +49,8 @@ export default function ClassEditor() {
         setClassTitle(data.title as string);
         setYoutubeLink(data.youtube_video_id as string || '');
         setMeetLink(data.meet_link as string || '');
+        setDocUrl(data.doc_url as string || '');
+
         
         setAiStatus({
           ppt: !!data.ai_ppt_markdown,
@@ -71,31 +77,57 @@ export default function ClassEditor() {
   const handleSave = async () => {
     if (!classId) return;
     try {
-      await updateClassMetadata(classId as string, classTitle, youtubeLink, meetLink);
-      alert("Class saved successfully!");
+      await updateClassMetadata(classId as string, classTitle, youtubeLink, meetLink, docUrl);
+      alert('Class saved successfully!');
       navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`);
     } catch (e) {
-      console.error("Error saving class", e);
-      alert("Failed to save class.");
+      console.error('Error saving class', e);
+      alert('Failed to save class.');
     }
   };
+
 
   const handleGenerateAI = async () => {
     setGenerating(true);
     try {
       const { ppt, keypoints, script } = await generateAIMaterials(classTitle);
-      
       await updateClassAiMaterials(classId as string, ppt, keypoints, script);
-      
       setAiStatus({ ppt: true, script: true });
-      alert("AI Materials generated and saved successfully!");
+      alert('AI Materials generated and saved successfully!');
     } catch (error) {
       console.error(error);
-      alert("Failed to generate AI materials.");
+      alert('Failed to generate AI materials.');
     } finally {
       setGenerating(false);
     }
   };
+
+  const handleGenerateAIQuestions = async () => {
+    if (!classId || !classTitle) { alert('Please enter a class title first.'); return; }
+    setGeneratingQA(true);
+    try {
+      const qs = await generateAIQuestions(classTitle);
+      for (const q of qs) {
+        const qId = 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+        await createClassQuestion(
+          qId, classId as string, q.type, q.question_text,
+          q.type === 'mcq' ? JSON.stringify(q.options) : null,
+          q.type === 'mcq' ? (q.correct_answer_idx ?? 0) : null,
+          q.type === 'coding' ? JSON.stringify({ code: q.boilerplate }) : null,
+          q.type === 'coding' ? (q.test_cases || null) : null
+        );
+      }
+      await fetchQuestions();
+      alert(`✅ ${qs.length} AI questions generated and saved!`);
+    } catch (err: any) {
+      if (err.message === 'QUOTA_EXCEEDED') alert('AI quota exceeded. Try again later.');
+      else alert('Failed to generate AI questions.');
+      console.error(err);
+    } finally {
+      setGeneratingQA(false);
+    }
+  };
+
 
   const handleAddQuestion = async () => {
     if (!classId || !newQText) return;
@@ -173,6 +205,13 @@ export default function ClassEditor() {
                 </label>
                 <input type="url" value={youtubeLink} onChange={(e) => setYoutubeLink(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
               </div>
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-1 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-400" /> Class Notes / Document URL (PDF, Google Doc, etc.)
+                </label>
+                <input type="url" value={docUrl} onChange={(e) => setDocUrl(e.target.value)} placeholder="https://docs.google.com/..." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+
             </div>
           </Card>
 
@@ -201,7 +240,19 @@ export default function ClassEditor() {
 
             {/* Create form */}
             <div className="border-t border-slate-800 pt-6 space-y-4">
-              <h3 className="font-bold text-erp-text text-sm uppercase tracking-wide">Configure New Add-on</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-erp-text text-sm uppercase tracking-wide">Configure New Add-on</h3>
+                <Button
+                  onClick={handleGenerateAIQuestions}
+                  disabled={generatingQA || !classTitle}
+                  className="bg-purple-600 hover:bg-purple-500 flex items-center gap-2 text-xs h-8 border-none"
+                >
+                  {generatingQA
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating Q&A...</>
+                    : <><Wand2 className="w-3.5 h-3.5" /> Generate Q&A with AI</>}
+                </Button>
+              </div>
+
               
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 cursor-pointer text-sm">

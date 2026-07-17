@@ -188,3 +188,105 @@ export async function deleteUser(id: string, email: string): Promise<void> {
     throw error;
   }
 }
+
+// ─── STUDENT DOCUMENTS ──────────────────────────────────────────────────────
+
+export async function uploadStudentDocument(
+  studentId: string,
+  docType: string,
+  fileName: string,
+  fileData: string, // base64 string
+  uploadedBy: string
+): Promise<string> {
+  const id = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  await executeWithRetry(
+    `INSERT INTO student_documents (id, student_id, doc_type, file_name, file_data, uploaded_by, uploaded_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, studentId, docType, fileName, fileData, uploadedBy, new Date().toISOString()]
+  );
+  return id;
+}
+
+export async function getStudentDocuments(studentId: string): Promise<any[]> {
+  try {
+    const res = await executeWithRetry(
+      `SELECT id, student_id, doc_type, file_name, uploaded_by, uploaded_at FROM student_documents WHERE student_id = ? ORDER BY uploaded_at DESC`,
+      [studentId]
+    );
+    return res.rows;
+  } catch (error) {
+    console.error('Failed to get student documents', error);
+    return [];
+  }
+}
+
+export async function getStudentDocumentData(docId: string): Promise<string | null> {
+  try {
+    const res = await executeWithRetry(
+      `SELECT file_data FROM student_documents WHERE id = ?`,
+      [docId]
+    );
+    return res.rows[0]?.file_data as string ?? null;
+  } catch (error) {
+    console.error('Failed to get document data', error);
+    return null;
+  }
+}
+
+export async function deleteStudentDocument(docId: string): Promise<void> {
+  await executeWithRetry(`DELETE FROM student_documents WHERE id = ?`, [docId]);
+}
+
+export async function updateStudentProfile(studentId: string, profile: {
+  phone?: string; dob?: string; address?: string;
+  father_name?: string; mother_name?: string;
+  emergency_contact?: string; blood_group?: string;
+  batch_number?: string; course?: string; joining_date?: string; status?: string;
+}): Promise<void> {
+  const fields = Object.keys(profile) as (keyof typeof profile)[];
+  if (fields.length === 0) return;
+  const setClauses = fields.map(f => `${f} = ?`).join(', ');
+  const args = [...fields.map(f => (profile[f] ?? null) as any), studentId];
+  await executeWithRetry(`UPDATE students SET ${setClauses} WHERE id = ?`, args);
+}
+
+// ─── CSV BULK STUDENT IMPORT ────────────────────────────────────────────────
+
+export async function bulkImportStudents(rows: {
+  name: string; email: string; phone?: string;
+  course?: string; batch_number?: string; joining_date?: string;
+  status?: string; password?: string;
+}[]): Promise<{ imported: number; errors: string[] }> {
+  const { encryptPassword } = await import('../crypto');
+  let imported = 0;
+  const errors: string[] = [];
+
+  for (const row of rows) {
+    if (!row.name || !row.email) {
+      errors.push(`Skipped row — missing name or email: ${JSON.stringify(row)}`);
+      continue;
+    }
+    try {
+      const userId = `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const studentId = `stu_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      const studentCode = `CNX-${new Date().getFullYear()}-${String(imported + 1).padStart(4, '0')}`;
+      const encPw = encryptPassword(row.password || 'cynex123');
+
+      await executeWithRetry(
+        `INSERT OR IGNORE INTO users (id, name, email, phone, role, status, password_hash, password_encrypted)
+         VALUES (?, ?, ?, ?, 'Student', ?, ?, ?)`,
+        [userId, row.name, row.email, row.phone || '', row.status || 'Active', encPw, encPw]
+      );
+      await executeWithRetry(
+        `INSERT OR IGNORE INTO students (id, student_code, portal_login_email, status, course, batch_number, joining_date, phone)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [studentId, studentCode, row.email, row.status || 'Active', row.course || null, row.batch_number || null, row.joining_date || null, row.phone || null]
+      );
+      imported++;
+    } catch (err: any) {
+      errors.push(`Failed for ${row.email}: ${err.message}`);
+    }
+  }
+
+  return { imported, errors };
+}

@@ -138,3 +138,64 @@ Keep it concise but thorough. Use **bold** for key terms. Use inline code for an
     return `## What We Learned\n\n- Core concepts of **${title}**\n- Practical applications in real-world scenarios\n- Key syntax and usage patterns\n\n## Practice Suggestions\n\n1. Build a small project using today's concepts\n2. Review the code examples from the session\n3. Try the coding challenge in the LMS\n\n## Resources\n\n- Search YouTube for "${title} tutorial" for visual learners\n- Practice on [HackerRank](https://hackerrank.com)`;
   }
 }
+
+/**
+ * Generates MCQ + coding Q&A questions for a class lesson.
+ * Returns array of { type, question_text, options, correct_answer_idx, boilerplate, test_cases }
+ */
+export async function generateAIQuestions(title: string): Promise<Array<{
+  type: 'mcq' | 'coding';
+  question_text: string;
+  options?: string[];
+  correct_answer_idx?: number;
+  boilerplate?: string;
+  test_cases?: string;
+}>> {
+  const prompt = `You are a coding instructor for CynexAI. Generate quiz questions for the class: "${title}".
+
+Output EXACTLY this JSON array (no markdown fences, no explanation, just raw JSON):
+[
+  {
+    "type": "mcq",
+    "question_text": "Question text here?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_answer_idx": 0
+  },
+  {
+    "type": "mcq",
+    "question_text": "Another MCQ?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_answer_idx": 2
+  },
+  {
+    "type": "mcq",
+    "question_text": "Third MCQ?",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correct_answer_idx": 1
+  },
+  {
+    "type": "coding",
+    "question_text": "Write a Python function to ... [describe a task related to ${title}]",
+    "boilerplate": "def solution():\\n    # Write your code here\\n    pass",
+    "test_cases": "[{\\"input\\": \\"()\\", \\"expected\\": \\"result\\"}]"
+  }
+]
+
+Generate exactly 3 MCQ questions and 1 coding question related to: ${title}
+The questions must be relevant to the class topic and appropriate for beginners.
+Output ONLY valid JSON. No text before or after.`;
+
+  try {
+    const raw = await callGemini(prompt);
+    // strip possible markdown fences
+    const cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error: any) {
+    console.error('AI Q&A generation failed:', error);
+    if (error?.message?.includes('429') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
+      throw new Error('QUOTA_EXCEEDED');
+    }
+    throw error;
+  }
+}
