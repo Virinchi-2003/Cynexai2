@@ -1141,6 +1141,16 @@ export const initTursoDB = async () => {
           UNIQUE(project_id, user_id)
         )
       `);
+      // Migrations - Add new columns safely
+      const addColumn = async (table: string, columnDef: string) => {
+        try {
+          await client.execute(`ALTER TABLE ${table} ADD COLUMN ${columnDef}`);
+        } catch (e: any) {
+          if (!e.message.includes('duplicate column name') && !e.message.includes('already exists')) {
+            console.error(`Migration error on ${table}:`, e);
+          }
+        }
+      };
 
       // Add phone/status columns to users for staff
       await addColumn('users', 'phone TEXT');
@@ -1155,16 +1165,6 @@ export const initTursoDB = async () => {
       // Sync user created content from LocalStorage
       await syncLocalStorageToTurso();
 
-      // Migrations - Add new columns safely
-      const addColumn = async (table: string, columnDef: string) => {
-        try {
-          await client.execute(`ALTER TABLE ${table} ADD COLUMN ${columnDef}`);
-        } catch (e: any) {
-          if (!e.message.includes('duplicate column name')) {
-            console.error(`Migration error on ${table}:`, e);
-          }
-        }
-      };
 
       await addColumn('crm_leads', 'created_by TEXT');
       await addColumn('leads', 'referred_by_student_id TEXT');
