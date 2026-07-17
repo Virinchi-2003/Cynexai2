@@ -80,55 +80,71 @@ export interface MockInterview {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getStudentDashboardData(studentId: string): Promise<StudentDashboardData> {
+  // NEVER throw from this function — always return a safe default
+  let stu: any = null;
   try {
-    // First try to find student record by ID or email to get their course
     const studentRow = await executeWithRetry(
-      `SELECT st.*, u.email FROM students st
-       LEFT JOIN users u ON st.portal_login_email = u.email
-       WHERE st.id = ? OR st.portal_login_email = (SELECT email FROM users WHERE id = ?)
-       LIMIT 1`,
-      [studentId, studentId]
+      `SELECT * FROM students WHERE id = ? LIMIT 1`,
+      [studentId]
     );
-    const stu = studentRow.rows.length > 0 ? studentRow.rows[0] : null;
-
-    // Try onboarding chain first, then fall back to students.course column
-    let activeCourse: any = null;
-
-    try {
-      const chainRes = await executeWithRetry(
-        `SELECT c.* FROM courses c
-         JOIN sales s ON c.id = s.course_id
-         JOIN onboardings o ON s.id = o.sale_id
-         JOIN students st ON o.id = st.onboarding_id
-         WHERE st.id = ? OR st.portal_login_email = (SELECT email FROM users WHERE id = ?)
-         LIMIT 1`,
-        [studentId, studentId]
+    // Also try portal_login_email match
+    if (studentRow.rows.length > 0) {
+      stu = studentRow.rows[0];
+    } else {
+      const byEmail = await executeWithRetry(
+        `SELECT st.* FROM students st JOIN users u ON st.portal_login_email = u.email WHERE u.id = ? LIMIT 1`,
+        [studentId]
       );
-      if (chainRes.rows.length > 0) activeCourse = chainRes.rows[0];
-    } catch { /* chain may not exist */ }
+      if (byEmail.rows.length > 0) stu = byEmail.rows[0];
+    }
+  } catch { /* students table may not exist */ }
 
-    // Fallback: look up course by name from students.course column
-    if (!activeCourse && stu?.course) {
+  const gamification = stu
+    ? { streak: Number(stu.streak) || 0, coins: Number(stu.coins) || 0 }
+    : { streak: 0, coins: 0 };
+
+  // Find active course
+  let activeCourse: any = null;
+  try {
+    // Try onboarding chain
+    const chainRes = await executeWithRetry(
+      `SELECT c.* FROM courses c
+       JOIN sales s ON c.id = s.course_id
+       JOIN onboardings o ON s.id = o.sale_id
+       JOIN students st ON o.id = st.onboarding_id
+       WHERE st.id = ?
+       LIMIT 1`,
+      [studentId]
+    );
+    if (chainRes.rows.length > 0) activeCourse = chainRes.rows[0];
+  } catch { /* no chain */ }
+
+  // Fallback: students.course field
+  if (!activeCourse && stu?.course) {
+    try {
       const directRes = await executeWithRetry(
         `SELECT * FROM courses WHERE name = ? OR title = ? LIMIT 1`,
         [stu.course, stu.course]
       );
       if (directRes.rows.length > 0) activeCourse = directRes.rows[0];
-    }
+    } catch { /* no courses */ }
+  }
 
-    // Fallback 2: just get first course
-    if (!activeCourse) {
+  // Fallback: first course
+  if (!activeCourse) {
+    try {
       const fallback = await executeWithRetry(`SELECT * FROM courses ORDER BY created_at ASC LIMIT 1`);
-      if (fallback.rows.length === 0) {
-        return { course: null, gamification: { streak: 0, coins: 0 }, modules: [], upcomingClass: null };
-      }
-      activeCourse = fallback.rows[0];
-    }
+      if (fallback.rows.length > 0) activeCourse = fallback.rows[0];
+    } catch { /* no courses table */ }
+  }
 
-    const gamification = stu
-      ? { streak: Number(stu.streak) || 0, coins: Number(stu.coins) || 0 }
-      : { streak: 0, coins: 0 };
+  if (!activeCourse) {
+    return { course: null, gamification, modules: [], upcomingClass: null };
+  }
 
+  // Modules
+  let modulesData: any[] = [];
+  try {
     const modRes = await executeWithRetry(
       `SELECT m.*, cmm.order_index as map_order
        FROM modules m
@@ -138,20 +154,26 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
       [activeCourse.id]
     );
 
-    const clsRes = await executeWithRetry(
-      `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
-         SELECT module_id FROM course_module_mapping WHERE course_id = ?
-       )`,
-      [activeCourse.id]
-    );
+    let clsRows: any[] = [];
+    try {
+      const clsRes = await executeWithRetry(
+        `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
+           SELECT module_id FROM course_module_mapping WHERE course_id = ?
+         )`,
+        [activeCourse.id]
+      );
+      clsRows = clsRes.rows;
+    } catch { /* no classes */ }
 
-    const progRes = await executeWithRetry(
-      "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
-      [studentId]
-    );
-    const completedSet = new Set(progRes.rows.map((r: any) => r.lesson_id));
+    let completedSet = new Set<string>();
+    try {
+      const progRes = await executeWithRetry(
+        "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
+        [studentId]
+      );
+      completedSet = new Set(progRes.rows.map((r: any) => r.lesson_id));
+    } catch { /* no progress */ }
 
-    // Q&A responses per class
     let qaByClass: Record<string, number> = {};
     try {
       const qaRes = await executeWithRetry(
@@ -159,10 +181,10 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
         [studentId]
       );
       qaRes.rows.forEach((r: any) => { qaByClass[r.class_id] = Number(r.cnt); });
-    } catch { /* no qa_responses */ }
+    } catch { /* no qa */ }
 
-    const modulesData = modRes.rows.map((m: any) => {
-      const mClasses = clsRes.rows.filter((c: any) => c.module_id === m.id);
+    modulesData = modRes.rows.map((m: any) => {
+      const mClasses = clsRows.filter((c: any) => c.module_id === m.id);
       const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed').length;
       const qaTotal = mClasses.reduce((s: number, c: any) => s + (qaByClass[c.id] || 0), 0);
       const quizClasses = mClasses.filter((c: any) => ['quiz','qa','q&a'].includes((c.type||'').toLowerCase())).length;
@@ -177,31 +199,28 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
         codeExerciseCount: codeClasses,
       };
     });
+  } catch { /* no module mapping */ }
 
-    // Upcoming class from timetable_slots first, then CMS classes
-    let upcomingClass = null;
+  // Upcoming class
+  let upcomingClass = null;
+  try {
+    const tsRes = await executeWithRetry(
+      `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
+       WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+    );
+    if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
+  } catch { /* no timetable */ }
+  if (!upcomingClass) {
     try {
-      const tsRes = await executeWithRetry(
-        `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
-         WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+      const clsUp = await executeWithRetry(
+        `SELECT id, title, date, start_time, meet_link, type FROM classes
+         WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
       );
-      if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
-    } catch { /* no timetable */ }
-    if (!upcomingClass) {
-      try {
-        const clsUp = await executeWithRetry(
-          `SELECT id, title, date, start_time, meet_link, type FROM classes
-           WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
-        );
-        if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
-      } catch { /* ignore */ }
-    }
-
-    return { course: activeCourse, gamification, modules: modulesData, upcomingClass };
-  } catch (error) {
-    console.error('Failed to load student dashboard data', error);
-    throw error;
+      if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
+    } catch { /* ignore */ }
   }
+
+  return { course: activeCourse, gamification, modules: modulesData, upcomingClass };
 }
 
 // ─── Class Flow ───────────────────────────────────────────────────────────────

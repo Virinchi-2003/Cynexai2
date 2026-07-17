@@ -9,9 +9,16 @@ import {
   Bell,
   Flame,
   Coins,
+  Shield,
   Video,
   Loader2,
   AlertCircle,
+  Play,
+  Lock,
+  CheckCircle2,
+  Sparkles,
+  TrendingUp,
+  Clock,
 } from 'lucide-react';
 import { getCurrentUser } from '../../lib/auth';
 import {
@@ -31,7 +38,6 @@ function formatDate(dateStr: string | null | undefined): string {
 
 function formatTime(timeStr: string | null | undefined): string {
   if (!timeStr) return '';
-  // timeStr may be "HH:MM:SS" or "HH:MM"
   const [h, m] = timeStr.split(':');
   const hour = parseInt(h, 10);
   const ampm = hour >= 12 ? 'PM' : 'AM';
@@ -39,15 +45,58 @@ function formatTime(timeStr: string | null | undefined): string {
   return `${displayH}:${m} ${ampm}`;
 }
 
+// ─── SVG Progress Ring ────────────────────────────────────────────────────────
+
+function ProgressRing({ pct, size = 72 }: { pct: number; size?: number }) {
+  const r = (size - 10) / 2;
+  const circumference = 2 * Math.PI * r;
+  const offset = circumference - (pct / 100) * circumference;
+
+  return (
+    <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        stroke="rgba(255,255,255,0.06)"
+        strokeWidth={6}
+        fill="none"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        stroke="url(#ringGrad)"
+        strokeWidth={6}
+        fill="none"
+        strokeDasharray={circumference}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="transition-all duration-700"
+      />
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
-function ProgressBar({ pct, gradient = 'from-blue-500 to-indigo-600', height = 'h-2' }: {
+function ProgressBar({
+  pct,
+  gradient = 'from-cyan-500 to-violet-500',
+  height = 'h-1.5',
+}: {
   pct: number;
   gradient?: string;
   height?: string;
 }) {
   return (
-    <div className={`w-full ${height} bg-foreground/10 rounded-full overflow-hidden`}>
+    <div className={`w-full ${height} bg-white/[0.06] rounded-full overflow-hidden`}>
       <div
         className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
@@ -56,20 +105,22 @@ function ProgressBar({ pct, gradient = 'from-blue-500 to-indigo-600', height = '
   );
 }
 
-// ─── Announcements Marquee ────────────────────────────────────────────────────
+// ─── Announcements Banner ─────────────────────────────────────────────────────
 
 function AnnouncementsBanner({ announcements }: { announcements: Announcement[] }) {
   if (announcements.length === 0) return null;
-  const text = announcements.map((a) => `📢 ${a.title}`).join('   •   ');
+  const text = announcements.map((a) => a.title).join('   •   ');
 
   return (
-    <div className="relative flex items-center overflow-hidden rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/30 px-4 py-2.5 gap-3">
-      <div className="flex-shrink-0 flex items-center gap-1.5 text-blue-400 font-bold text-xs uppercase tracking-wider">
-        <Bell className="w-3.5 h-3.5" />
-        News
+    <div className="flex items-center overflow-hidden rounded-xl bg-gradient-to-r from-cyan-600/[0.12] to-violet-600/[0.08] border border-cyan-500/20 px-4 py-2.5 gap-3">
+      <div className="flex-shrink-0 flex items-center gap-1.5">
+        <Bell className="w-3.5 h-3.5 text-cyan-400" strokeWidth={2.5} />
+        <span className="text-cyan-400 font-bold text-[10px] uppercase tracking-widest">
+          News
+        </span>
       </div>
-      <div className="flex-1 overflow-hidden">
-        <div className="whitespace-nowrap animate-marquee inline-block text-sm text-foreground/80 font-medium">
+      <div className="flex-1 overflow-hidden relative">
+        <div className="whitespace-nowrap animate-marquee inline-block text-sm text-[#94a3b8] font-medium">
           {text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{text}
         </div>
       </div>
@@ -77,19 +128,7 @@ function AnnouncementsBanner({ announcements }: { announcements: Announcement[] 
   );
 }
 
-// ─── Glass Card ───────────────────────────────────────────────────────────────
-
-function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div
-      className={`bg-surface border border-border rounded-2xl backdrop-blur-sm ${className}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-// ─── Course Hero ──────────────────────────────────────────────────────────────
+// ─── Course Hero Card ─────────────────────────────────────────────────────────
 
 function CourseHeroCard({ course, modules }: { course: any; modules: any[] }) {
   const totalClasses = modules.reduce((s, m) => s + (m.totalClasses || 0), 0);
@@ -97,81 +136,92 @@ function CourseHeroCard({ course, modules }: { course: any; modules: any[] }) {
   const overallPct = totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-500/20">
-      {/* Background decoration */}
-      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-      <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-full bg-indigo-400/10 blur-2xl pointer-events-none" />
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-600/20 via-violet-600/10 to-transparent border border-cyan-500/20 p-5 shadow-[0_0_30px_rgba(6,182,212,0.08)]">
+      {/* Decorative blobs */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-cyan-500/[0.07] blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-violet-500/[0.07] blur-3xl pointer-events-none" />
 
-      <div className="relative z-10">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-              <BookOpen className="w-5 h-5 text-white" />
+      <div className="relative z-10 flex items-start gap-4">
+        {/* Left: text */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-7 h-7 rounded-lg bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-3.5 h-3.5 text-cyan-400" />
             </div>
-            <div>
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Current Course</p>
-              <h2 className="text-white font-bold text-lg leading-tight line-clamp-1">
-                {course.title || course.name || 'Your Course'}
-              </h2>
-            </div>
+            <p className="text-cyan-400/80 text-[10px] font-bold uppercase tracking-widest">
+              Current Course
+            </p>
           </div>
-          <div className="flex-shrink-0 text-right">
-            <span className="text-3xl font-black text-white">{overallPct}%</span>
-            <p className="text-white/60 text-[10px] font-semibold uppercase">Complete</p>
+          <h2 className="text-[#e2e8f0] font-black text-lg leading-tight line-clamp-2 mb-3">
+            {course.title || course.name || 'Your Course'}
+          </h2>
+
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center">
+              <span className="text-[#94a3b8] text-xs font-medium">
+                {completedClasses} of {totalClasses} classes
+              </span>
+              <span className="text-[#e2e8f0] text-xs font-bold">{modules.length} modules</span>
+            </div>
+            <ProgressBar pct={overallPct} height="h-2" />
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-white/70 font-medium">
-            <span>{completedClasses} of {totalClasses} classes done</span>
-            <span>{modules.length} modules</span>
+        {/* Right: ring + pct */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-1">
+          <div className="relative">
+            <ProgressRing pct={overallPct} size={76} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[#e2e8f0] text-base font-black leading-none">
+                {overallPct}%
+              </span>
+            </div>
           </div>
-          <div className="h-2.5 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full bg-white transition-all duration-700"
-              style={{ width: `${overallPct}%` }}
-            />
-          </div>
+          <span className="text-[#475569] text-[9px] font-bold uppercase tracking-wider">
+            Complete
+          </span>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Gamification Stats ───────────────────────────────────────────────────────
+// ─── Gamification Stat Cards ──────────────────────────────────────────────────
 
-function GamificationRow({ streak, coins }: { streak: number; coins: number }) {
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  sublabel,
+  iconColor,
+  bgGrad,
+  borderColor,
+}: {
+  icon: React.ElementType;
+  value: number;
+  label: string;
+  sublabel: string;
+  iconColor: string;
+  bgGrad: string;
+  borderColor: string;
+}) {
   return (
-    <div className="grid grid-cols-2 gap-3">
-      {/* Streak */}
-      <GlassCard className="p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/5 pointer-events-none rounded-2xl" />
-        <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl">🔥</span>
-          </div>
-          <div>
-            <p className="text-2xl font-black text-orange-400 leading-none">{streak}</p>
-            <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mt-0.5">Day Streak</p>
-          </div>
+    <div className={`relative overflow-hidden rounded-2xl bg-white/[0.03] border ${borderColor} p-4`}>
+      <div className={`absolute inset-0 ${bgGrad} pointer-events-none rounded-2xl`} />
+      <div className="relative flex items-center gap-3">
+        <div
+          className={`w-11 h-11 rounded-xl ${bgGrad} border ${borderColor} flex items-center justify-center flex-shrink-0`}
+        >
+          <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2.5} />
         </div>
-        <p className="text-muted-foreground text-[11px] mt-2 relative">Keep it going! Study daily.</p>
-      </GlassCard>
-
-      {/* Coins */}
-      <GlassCard className="p-4 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 to-amber-500/5 pointer-events-none rounded-2xl" />
-        <div className="relative flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-yellow-500/15 border border-yellow-500/25 flex items-center justify-center flex-shrink-0">
-            <span className="text-2xl">🪙</span>
-          </div>
-          <div>
-            <p className="text-2xl font-black text-yellow-400 leading-none">{coins}</p>
-            <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide mt-0.5">Coins</p>
-          </div>
+        <div className="min-w-0">
+          <p className={`text-2xl font-black ${iconColor} leading-none`}>{value}</p>
+          <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wide mt-0.5">
+            {label}
+          </p>
         </div>
-        <p className="text-muted-foreground text-[11px] mt-2 relative">Earn more by answering Q&amp;A.</p>
-      </GlassCard>
+      </div>
+      <p className="text-[#475569] text-[11px] mt-2.5 relative leading-snug">{sublabel}</p>
     </div>
   );
 }
@@ -193,14 +243,15 @@ function UpcomingClassCard({ cls }: { cls: any }) {
   };
 
   return (
-    <GlassCard className="p-5">
+    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-4">
+      {/* Header */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
           <Calendar className="w-3.5 h-3.5 text-emerald-400" />
         </div>
-        <h3 className="text-foreground font-bold text-sm">Upcoming Class</h3>
+        <h3 className="text-[#e2e8f0] font-bold text-sm flex-1">Upcoming Class</h3>
         {isLive && (
-          <span className="ml-auto flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+          <span className="flex items-center gap-1.5 text-[10px] font-black text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
             LIVE
           </span>
@@ -208,32 +259,41 @@ function UpcomingClassCard({ cls }: { cls: any }) {
       </div>
 
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-foreground font-semibold text-base line-clamp-2 mb-1.5">
+        <div className="min-w-0 flex-1">
+          <p className="text-[#e2e8f0] font-semibold text-sm line-clamp-2 mb-2 leading-snug">
             {cls.title || 'Upcoming Session'}
           </p>
-          <div className="flex items-center gap-3 text-muted-foreground text-xs font-medium">
+          <div className="flex items-center gap-3 text-[#475569] text-xs font-medium">
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {formatDate(cls.date)}
             </span>
             {cls.start_time && (
               <span className="flex items-center gap-1">
-                <Zap className="w-3 h-3" />
+                <Clock className="w-3 h-3" />
                 {formatTime(cls.start_time)}
               </span>
             )}
           </div>
         </div>
+
         <button
           onClick={handleJoin}
-          className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/25 hover:opacity-90 transition-opacity"
+          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-lg transition-opacity duration-150 hover:opacity-90 ${
+            isLive
+              ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/25'
+              : 'bg-gradient-to-r from-cyan-500 to-cyan-600 shadow-cyan-500/25'
+          }`}
         >
-          {isLive ? <Video className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+          {isLive ? (
+            <Video className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronRight className="w-3.5 h-3.5" />
+          )}
           {isLive ? 'Join' : 'View'}
         </button>
       </div>
-    </GlassCard>
+    </div>
   );
 }
 
@@ -242,45 +302,91 @@ function UpcomingClassCard({ cls }: { cls: any }) {
 function ModuleCard({ mod, index }: { mod: any; index: number }) {
   const navigate = useNavigate();
   const pct = mod.progressPct ?? 0;
-  const gradients = [
-    'from-blue-500 to-indigo-600',
-    'from-purple-500 to-violet-600',
-    'from-emerald-500 to-teal-600',
-    'from-orange-500 to-red-500',
-    'from-pink-500 to-rose-600',
-    'from-cyan-500 to-blue-600',
+
+  const cardGradients = [
+    { from: 'from-cyan-500/20', to: 'to-blue-600/10', border: 'border-cyan-500/20', bar: 'from-cyan-500 to-blue-500', icon: 'text-cyan-400', iconBg: 'bg-cyan-500/15' },
+    { from: 'from-violet-500/20', to: 'to-purple-600/10', border: 'border-violet-500/20', bar: 'from-violet-500 to-purple-500', icon: 'text-violet-400', iconBg: 'bg-violet-500/15' },
+    { from: 'from-emerald-500/20', to: 'to-teal-600/10', border: 'border-emerald-500/20', bar: 'from-emerald-500 to-teal-500', icon: 'text-emerald-400', iconBg: 'bg-emerald-500/15' },
+    { from: 'from-orange-500/20', to: 'to-red-500/10', border: 'border-orange-500/20', bar: 'from-orange-500 to-red-500', icon: 'text-orange-400', iconBg: 'bg-orange-500/15' },
+    { from: 'from-pink-500/20', to: 'to-rose-500/10', border: 'border-pink-500/20', bar: 'from-pink-500 to-rose-500', icon: 'text-pink-400', iconBg: 'bg-pink-500/15' },
+    { from: 'from-amber-500/20', to: 'to-yellow-500/10', border: 'border-amber-500/20', bar: 'from-amber-500 to-yellow-500', icon: 'text-amber-400', iconBg: 'bg-amber-500/15' },
   ];
-  const grad = gradients[index % gradients.length];
+
+  const c = cardGradients[index % cardGradients.length];
+
+  // Determine module status
+  const isCompleted = pct >= 100;
+  const isLocked = pct === 0 && mod.completedClasses === 0;
+  const StatusIcon = isCompleted ? CheckCircle2 : isLocked ? Lock : Play;
+  const statusColor = isCompleted ? 'text-emerald-400' : isLocked ? 'text-[#475569]' : c.icon;
 
   return (
     <button
       onClick={() => navigate(`/student/module/${mod.id}`)}
       className="w-full text-left group"
     >
-      <GlassCard className="p-4 hover:border-primary/40 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-        <div className="flex items-start gap-3 mb-3">
-          <div
-            className={`w-9 h-9 rounded-xl bg-gradient-to-br ${grad} flex items-center justify-center flex-shrink-0 shadow-md`}
-          >
-            <Trophy className="w-4 h-4 text-white" />
+      <div
+        className={`relative rounded-2xl bg-white/[0.03] border ${c.border} p-4 transition-all duration-200 hover:bg-white/[0.05] hover:shadow-[0_0_20px_rgba(6,182,212,0.08)] hover:-translate-y-0.5`}
+      >
+        {/* Subtle gradient overlay */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${c.from} ${c.to} rounded-2xl pointer-events-none`} />
+
+        <div className="relative">
+          {/* Top row */}
+          <div className="flex items-start gap-3 mb-3">
+            {/* Number badge */}
+            <div
+              className={`w-9 h-9 rounded-xl ${c.iconBg} border ${c.border} flex items-center justify-center flex-shrink-0 text-[13px] font-black ${c.icon}`}
+            >
+              {index + 1}
+            </div>
+
+            {/* Title + meta */}
+            <div className="flex-1 min-w-0">
+              <p className={`text-[#e2e8f0] font-bold text-sm leading-tight line-clamp-2 group-hover:${c.icon} transition-colors`}>
+                {mod.title || mod.name || `Module ${index + 1}`}
+              </p>
+              <p className="text-[#475569] text-[11px] mt-0.5 font-medium">
+                {mod.completedClasses ?? 0}/{mod.totalClasses ?? 0} classes
+                {(mod.questionsAnswered ?? 0) > 0 && ` · ${mod.questionsAnswered} Q&A`}
+                {(mod.codeExerciseCount ?? 0) > 0 && ` · ${mod.codeExerciseCount} exercises`}
+              </p>
+            </div>
+
+            {/* Status icon + pct */}
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <StatusIcon className={`w-4 h-4 ${statusColor}`} strokeWidth={2.5} />
+              <span className={`text-xs font-black ${c.icon}`}>{pct}%</span>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-foreground font-semibold text-sm leading-tight line-clamp-2 group-hover:text-primary transition-colors">
-              {mod.title || mod.name || `Module ${index + 1}`}
-            </p>
-            <p className="text-muted-foreground text-[11px] mt-0.5">
-              {mod.completedClasses ?? 0}/{mod.totalClasses ?? 0} classes
-            </p>
-          </div>
-          <div className="flex-shrink-0 text-right">
-            <span className={`text-sm font-black bg-gradient-to-r ${grad} bg-clip-text text-transparent`}>
-              {pct}%
-            </span>
-          </div>
+
+          {/* Progress bar */}
+          <ProgressBar pct={pct} gradient={c.bar} height="h-1.5" />
         </div>
-        <ProgressBar pct={pct} gradient={grad} />
-      </GlassCard>
+      </div>
     </button>
+  );
+}
+
+// ─── Section Heading ──────────────────────────────────────────────────────────
+
+function SectionHeading({
+  icon: Icon,
+  title,
+  meta,
+}: {
+  icon: React.ElementType;
+  title: string;
+  meta?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between mb-3">
+      <h2 className="text-[#e2e8f0] font-bold text-sm flex items-center gap-2">
+        <Icon className="w-4 h-4 text-cyan-400" strokeWidth={2.5} />
+        {title}
+      </h2>
+      {meta && <span className="text-[#475569] text-xs font-medium">{meta}</span>}
+    </div>
   );
 }
 
@@ -289,11 +395,11 @@ function ModuleCard({ mod, index }: { mod: any; index: number }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-600/20 border border-blue-500/20 flex items-center justify-center mb-5">
-        <BookOpen className="w-9 h-9 text-blue-400" />
+      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-violet-500/10 border border-cyan-500/20 flex items-center justify-center mb-5">
+        <BookOpen className="w-9 h-9 text-cyan-400" />
       </div>
-      <h3 className="text-foreground font-bold text-xl mb-2">No Course Yet</h3>
-      <p className="text-muted-foreground text-sm max-w-xs">
+      <h3 className="text-[#e2e8f0] font-bold text-xl mb-2">No Course Yet</h3>
+      <p className="text-[#94a3b8] text-sm max-w-xs leading-relaxed">
         Your course hasn&apos;t been set up yet. Contact your coordinator to get started.
       </p>
     </div>
@@ -308,14 +414,29 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
       <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4">
         <AlertCircle className="w-8 h-8 text-red-400" />
       </div>
-      <h3 className="text-foreground font-bold text-lg mb-1">Failed to load</h3>
-      <p className="text-muted-foreground text-sm mb-4">Could not fetch your dashboard data.</p>
+      <h3 className="text-[#e2e8f0] font-bold text-lg mb-1">Failed to load</h3>
+      <p className="text-[#94a3b8] text-sm mb-5">Could not fetch your dashboard data.</p>
       <button
         onClick={onRetry}
-        className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-sm font-bold hover:opacity-90 transition-opacity"
+        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 hover:opacity-90 transition-opacity"
       >
         Retry
       </button>
+    </div>
+  );
+}
+
+// ─── Loading State ────────────────────────────────────────────────────────────
+
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center h-full min-h-[60vh]">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-xl shadow-cyan-500/30">
+          <Loader2 className="w-7 h-7 text-white animate-spin" />
+        </div>
+        <p className="text-[#94a3b8] text-sm font-medium">Loading your dashboard…</p>
+      </div>
     </div>
   );
 }
@@ -332,19 +453,25 @@ export default function StudentPortal() {
   const [error, setError] = useState(false);
 
   const loadData = async () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     setLoading(true);
     setError(false);
     try {
-      const [dash, ann] = await Promise.all([
-        getStudentDashboardData(user.id),
-        getAnnouncements(),
+      const u = getCurrentUser();
+      if (!u) {
+        navigate('/login');
+        return;
+      }
+      const [dashResult, annsResult] = await Promise.all([
+        getStudentDashboardData(u.id).catch(() => ({
+          course: null,
+          gamification: { streak: 0, coins: 0 },
+          modules: [],
+          upcomingClass: null,
+        })),
+        getAnnouncements().catch(() => []),
       ]);
-      setDashData(dash);
-      setAnnouncements(ann);
+      setDashData(dashResult as StudentDashboardData);
+      setAnnouncements(annsResult);
     } catch (e) {
       console.error('StudentPortal load error:', e);
       setError(true);
@@ -358,18 +485,7 @@ export default function StudentPortal() {
   }, [user?.id]);
 
   // ── Loading ──
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-xl shadow-blue-500/30 animate-pulse">
-            <Loader2 className="w-7 h-7 text-white animate-spin" />
-          </div>
-          <p className="text-muted-foreground text-sm font-medium">Loading your dashboard…</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <LoadingState />;
 
   // ── Error ──
   if (error) {
@@ -383,7 +499,7 @@ export default function StudentPortal() {
   // ── No course ──
   if (!dashData?.course) {
     return (
-      <div className="p-6">
+      <div className="p-4 md:p-6 space-y-4">
         <AnnouncementsBanner announcements={announcements} />
         <EmptyState />
       </div>
@@ -391,58 +507,161 @@ export default function StudentPortal() {
   }
 
   const { course, gamification, modules, upcomingClass } = dashData;
+  const firstName = user?.name?.split(' ')[0] ?? 'Student';
 
+  // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 md:p-6 space-y-5 max-w-3xl mx-auto">
-
+    <div className="p-4 md:p-6">
       {/* ── Announcements Banner ── */}
-      <AnnouncementsBanner announcements={announcements} />
+      {announcements.length > 0 && (
+        <div className="mb-5">
+          <AnnouncementsBanner announcements={announcements} />
+        </div>
+      )}
 
       {/* ── Greeting ── */}
-      <div>
-        <p className="text-muted-foreground text-sm font-medium">
+      <div className="mb-5">
+        <p className="text-[#94a3b8] text-sm font-medium">
           Welcome back,{' '}
-          <span className="text-foreground font-bold">{user?.name?.split(' ')[0] ?? 'Student'}</span> 👋
+          <span className="text-[#e2e8f0] font-bold">{firstName}</span>
         </p>
-        <h1 className="text-foreground text-2xl font-black mt-0.5 leading-tight">Your Dashboard</h1>
+        <h1 className="text-[#e2e8f0] text-2xl font-black mt-0.5 leading-tight">
+          Your Dashboard
+        </h1>
       </div>
 
-      {/* ── Course Hero ── */}
-      <CourseHeroCard course={course} modules={modules} />
+      {/* ══ Two-column desktop layout ══ */}
+      <div className="flex flex-col md:flex-row gap-5 items-start">
 
-      {/* ── Gamification Stats ── */}
-      <GamificationRow streak={gamification.streak} coins={gamification.coins} />
+        {/* ── LEFT COLUMN ── */}
+        <div className="flex-1 min-w-0 space-y-5">
 
-      {/* ── Upcoming Class ── */}
-      {upcomingClass && <UpcomingClassCard cls={upcomingClass} />}
+          {/* Course Hero */}
+          <CourseHeroCard course={course} modules={modules} />
 
-      {/* ── Modules Grid ── */}
-      {modules.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-foreground font-bold text-base flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-primary" />
-              Modules
-            </h2>
-            <span className="text-muted-foreground text-xs font-medium">{modules.length} total</span>
+          {/* Gamification stats (mobile: visible here; desktop: shown in right col) */}
+          <div className="md:hidden grid grid-cols-3 gap-3">
+            <div className="rounded-2xl bg-white/[0.03] border border-orange-500/20 p-3 flex flex-col items-center gap-1 bg-gradient-to-br from-orange-500/10 to-transparent">
+              <Flame className="w-5 h-5 text-orange-400" strokeWidth={2.5} />
+              <span className="text-orange-400 text-xl font-black leading-none">
+                {gamification.streak}
+              </span>
+              <span className="text-[#475569] text-[9px] font-bold uppercase tracking-wider">Streak</span>
+            </div>
+            <div className="rounded-2xl bg-white/[0.03] border border-amber-500/20 p-3 flex flex-col items-center gap-1 bg-gradient-to-br from-amber-500/10 to-transparent">
+              <Coins className="w-5 h-5 text-amber-400" strokeWidth={2.5} />
+              <span className="text-amber-400 text-xl font-black leading-none">
+                {gamification.coins}
+              </span>
+              <span className="text-[#475569] text-[9px] font-bold uppercase tracking-wider">Coins</span>
+            </div>
+            <div className="rounded-2xl bg-white/[0.03] border border-violet-500/20 p-3 flex flex-col items-center gap-1 bg-gradient-to-br from-violet-500/10 to-transparent">
+              <Trophy className="w-5 h-5 text-violet-400" strokeWidth={2.5} />
+              <span className="text-violet-400 text-xl font-black leading-none">0</span>
+              <span className="text-[#475569] text-[9px] font-bold uppercase tracking-wider">Trophies</span>
+            </div>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {modules.map((mod, i) => (
-              <ModuleCard key={mod.id ?? i} mod={mod} index={i} />
-            ))}
+
+          {/* Modules */}
+          {modules.length > 0 ? (
+            <section>
+              <SectionHeading
+                icon={BookOpen}
+                title="Modules"
+                meta={`${modules.length} total`}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {modules.map((mod, i) => (
+                  <ModuleCard key={mod.id ?? i} mod={mod} index={i} />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] p-6 text-center">
+              <Trophy className="w-8 h-8 text-[#475569] mx-auto mb-2" />
+              <p className="text-[#94a3b8] text-sm">No modules have been added to your course yet.</p>
+            </div>
+          )}
+        </div>
+
+        {/* ── RIGHT COLUMN (desktop only) ── */}
+        <div className="w-full md:w-80 flex-shrink-0 space-y-4">
+
+          {/* Gamification stats */}
+          <div className="hidden md:block space-y-3">
+            <SectionHeading icon={Zap} title="Your Stats" />
+            <StatCard
+              icon={Flame}
+              value={gamification.streak}
+              label="Day Streak"
+              sublabel="Study daily to keep your streak alive."
+              iconColor="text-orange-400"
+              bgGrad="bg-gradient-to-br from-orange-500/10 to-transparent"
+              borderColor="border-orange-500/20"
+            />
+            <StatCard
+              icon={Coins}
+              value={gamification.coins}
+              label="Coins"
+              sublabel="Earn more by completing Q&A sessions."
+              iconColor="text-amber-400"
+              bgGrad="bg-gradient-to-br from-amber-500/10 to-transparent"
+              borderColor="border-amber-500/20"
+            />
+            <StatCard
+              icon={TrendingUp}
+              value={modules.reduce((s, m) => s + (m.completedClasses || 0), 0)}
+              label="Classes Done"
+              sublabel="Total across all course modules."
+              iconColor="text-cyan-400"
+              bgGrad="bg-gradient-to-br from-cyan-500/10 to-transparent"
+              borderColor="border-cyan-500/20"
+            />
           </div>
-        </section>
-      )}
 
-      {/* ── No modules yet ── */}
-      {modules.length === 0 && (
-        <GlassCard className="p-6 text-center">
-          <Trophy className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <p className="text-muted-foreground text-sm">No modules have been added to your course yet.</p>
-        </GlassCard>
-      )}
+          {/* Upcoming Class */}
+          {upcomingClass && (
+            <div>
+              <SectionHeading icon={Calendar} title="Upcoming Class" />
+              <UpcomingClassCard cls={upcomingClass} />
+            </div>
+          )}
 
-      {/* ── Bottom spacer for mobile nav ── */}
+          {/* Announcements card (desktop) */}
+          {announcements.length > 0 && (
+            <div className="hidden md:block">
+              <SectionHeading icon={Bell} title="Announcements" meta={`${announcements.length}`} />
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.07] divide-y divide-white/[0.05] overflow-hidden">
+                {announcements.slice(0, 4).map((ann, i) => (
+                  <div key={ann.id ?? i} className="px-4 py-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 mt-1.5 flex-shrink-0" />
+                      <p className="text-[#94a3b8] text-xs font-medium leading-snug line-clamp-2">
+                        {ann.title}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quick tip card */}
+          <div className="hidden md:flex items-start gap-3 rounded-2xl bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20 p-4">
+            <div className="w-8 h-8 rounded-xl bg-violet-500/20 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
+              <Sparkles className="w-4 h-4 text-violet-400" strokeWidth={2} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[#e2e8f0] text-xs font-bold mb-0.5">Pro Tip</p>
+              <p className="text-[#475569] text-[11px] leading-snug">
+                Complete at least one class daily to maintain your streak and earn bonus coins.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom spacer for mobile nav */}
       <div className="h-4" />
     </div>
   );
