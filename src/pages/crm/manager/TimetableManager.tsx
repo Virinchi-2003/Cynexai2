@@ -192,7 +192,7 @@ export default function TimetableManager() {
   };
 
   return (
-    <div className="flex flex-col w-full bg-erp-background overflow-y-auto">
+    <div className="flex flex-col w-full bg-erp-background">
       <div className="flex flex-col p-4 md:p-8 min-w-0 pb-32">
         <div className="flex justify-between items-center mb-8">
           <div>

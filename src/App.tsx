@@ -106,8 +106,8 @@ const CRMLayout = ({ children }: { children: React.ReactNode }) => {
         {isSidebarOpen ? <ChevronLeft className="w-4 h-4 text-erp-text" /> : <ChevronRight className="w-4 h-4 text-erp-text" />}
       </button>
       
-      {/* Main Content Area — adds bottom padding on mobile for nav bar */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden pb-20 md:pb-0">
+      {/* Main Content Area — overflow-y-auto allows each page to scroll */}
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto pb-20 md:pb-0">
         {children}
       </div>
 
