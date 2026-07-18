@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+const fs = require('fs');
+
+const newStudents = `import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Search, Filter, ChevronDown, ChevronRight, X,
@@ -28,7 +30,7 @@ interface StudentStat {
 function Badge({ color, children }: { color: string; children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
-      style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
+      style={{ background: \`\${color}18\`, color, border: \`1px solid \${color}30\` }}>
       {children}
     </span>
   );
@@ -100,7 +102,7 @@ export default function StudentsPage() {
   const loadStudents = async () => {
     if (!client) return;
     try {
-      let sql = `
+      let sql = \`
         SELECT 
           s.id, s.name, s.portal_login_email as email, s.phone, s.course,
           s.batch_number, s.status, s.joining_date,
@@ -111,13 +113,13 @@ export default function StudentsPage() {
           (SELECT COUNT(*) FROM student_progress sp WHERE sp.student_id = s.id AND sp.completed = 1) as completedClasses
         FROM students s
         WHERE 1=1
-      `;
+      \`;
       const args: any[] = [];
-      if (search) { sql += ` AND (s.name LIKE ? OR s.portal_login_email LIKE ? OR s.phone LIKE ?)`; const q = `%${search}%`; args.push(q, q, q); }
-      if (courseFilter) { sql += ` AND s.course = ?`; args.push(courseFilter); }
-      if (batchFilter) { sql += ` AND s.batch_number = ?`; args.push(batchFilter); }
-      if (statusFilter) { sql += ` AND s.status = ?`; args.push(statusFilter); }
-      sql += ` ORDER BY s.name ASC LIMIT 200`;
+      if (search) { sql += \` AND (s.name LIKE ? OR s.portal_login_email LIKE ? OR s.phone LIKE ?)\`; const q = \`%\${search}%\`; args.push(q, q, q); }
+      if (courseFilter) { sql += \` AND s.course = ?\`; args.push(courseFilter); }
+      if (batchFilter) { sql += \` AND s.batch_number = ?\`; args.push(batchFilter); }
+      if (statusFilter) { sql += \` AND s.status = ?\`; args.push(statusFilter); }
+      sql += \` ORDER BY s.name ASC LIMIT 200\`;
 
       const res = await client.execute({ sql, args });
       const data = res.rows.map((r: any) => ({
@@ -133,8 +135,8 @@ export default function StudentsPage() {
       }));
       setStudents(data);
 
-      const cRes = await client.execute({ sql: `SELECT DISTINCT course FROM students WHERE course IS NOT NULL AND course != '' ORDER BY course`, args: [] }).catch(() => ({ rows: [] }));
-      const bRes = await client.execute({ sql: `SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL AND batch_number != '' ORDER BY batch_number`, args: [] }).catch(() => ({ rows: [] }));
+      const cRes = await client.execute({ sql: \`SELECT DISTINCT course FROM students WHERE course IS NOT NULL AND course != '' ORDER BY course\`, args: [] }).catch(() => ({ rows: [] }));
+      const bRes = await client.execute({ sql: \`SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL AND batch_number != '' ORDER BY batch_number\`, args: [] }).catch(() => ({ rows: [] }));
       setCourses(cRes.rows.map((r: any) => r.course).filter(Boolean));
       setBatches(bRes.rows.map((r: any) => r.batch_number).filter(Boolean));
     } catch (e) { console.error(e); }
@@ -147,7 +149,7 @@ export default function StudentsPage() {
     try {
       if (!client) return;
       const modRes = await client.execute({
-        sql: `
+        sql: \`
           SELECT m.id, m.title,
             (SELECT COUNT(*) FROM classes c WHERE c.module_id = m.id) as totalClasses,
             (SELECT COUNT(*) FROM student_progress sp
@@ -158,17 +160,17 @@ export default function StudentsPage() {
           JOIN courses co ON cmm.course_id = co.id
           WHERE (co.name = ? OR co.title = ?)
           ORDER BY cmm.order_index ASC
-        `,
+        \`,
         args: [stu.id, stu.course || '', stu.course || ''],
       }).catch(() => ({ rows: [] }));
 
       const actRes = await client.execute({
-        sql: `SELECT sp.created_at, c.title as class_title, m.title as module_title
+        sql: \`SELECT sp.created_at, c.title as class_title, m.title as module_title
               FROM student_progress sp
               JOIN classes c ON sp.lesson_id = c.id
               JOIN modules m ON c.module_id = m.id
               WHERE sp.student_id = ? AND sp.completed = 1
-              ORDER BY sp.created_at DESC LIMIT 10`,
+              ORDER BY sp.created_at DESC LIMIT 10\`,
         args: [stu.id],
       }).catch(() => ({ rows: [] }));
 
@@ -186,13 +188,13 @@ export default function StudentsPage() {
       if (field === 'badges' && adjustDelta > 0) {
         for (let i = 0; i < adjustDelta; i++) {
           await client.execute({
-            sql: `INSERT INTO badges (id, student_id, name, awarded_at) VALUES (?, ?, ?, ?)`,
-            args: [`bdg_${Date.now()}_${i}`, student.id, adjustReason || 'Achievement Badge', new Date().toISOString()],
+            sql: \`INSERT INTO badges (id, student_id, name, awarded_at) VALUES (?, ?, ?, ?)\`,
+            args: [\`bdg_\${Date.now()}_\${i}\`, student.id, adjustReason || 'Achievement Badge', new Date().toISOString()],
           });
         }
       } else if (col) {
         await client.execute({
-          sql: `UPDATE students SET ${col} = MAX(0, COALESCE(${col}, 0) + ?) WHERE id = ?`,
+          sql: \`UPDATE students SET \${col} = MAX(0, COALESCE(\${col}, 0) + ?) WHERE id = ?\`,
           args: [adjustDelta, student.id],
         });
       }
@@ -211,23 +213,23 @@ export default function StudentsPage() {
     try {
       if (action === 'add') {
         const res = await client.execute({
-          sql: `SELECT c.id FROM classes c WHERE c.module_id = ? AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1) ORDER BY c.order_index ASC LIMIT 1`,
+          sql: \`SELECT c.id FROM classes c WHERE c.module_id = ? AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1) ORDER BY c.order_index ASC LIMIT 1\`,
           args: [moduleId, selectedStudent.id]
         });
         if (res.rows.length > 0) {
           const classId = res.rows[0].id as string;
           await client.execute({
-            sql: `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
-            args: [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, selectedStudent.id, classId, new Date().toISOString()]
+            sql: \`INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)\`,
+            args: [\`sp_\${Date.now()}_\${Math.random().toString(36).substr(2, 5)}\`, selectedStudent.id, classId, new Date().toISOString()]
           });
         }
       } else {
         const res = await client.execute({
-          sql: `SELECT sp.id FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1 ORDER BY sp.created_at DESC LIMIT 1`,
+          sql: \`SELECT sp.id FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1 ORDER BY sp.created_at DESC LIMIT 1\`,
           args: [selectedStudent.id, moduleId]
         });
         if (res.rows.length > 0) {
-          await client.execute({ sql: `DELETE FROM student_progress WHERE id = ?`, args: [res.rows[0].id] });
+          await client.execute({ sql: \`DELETE FROM student_progress WHERE id = ?\`, args: [res.rows[0].id] });
         }
       }
       await openStudentDetail(selectedStudent);
@@ -252,8 +254,8 @@ export default function StudentsPage() {
   };
 
   const parseCsv = (text: string) => {
-    const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
+    const lines = text.trim().split('\\n');
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\\s+/g, '_'));
     return lines.slice(1).map(line => {
       const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
       const obj: any = {};
@@ -271,7 +273,7 @@ export default function StudentsPage() {
         const existing = (row.existing_student_y_n || row.existing_student || row.existing || '').toLowerCase();
         return !['n', 'no', 'false', '0'].includes(existing);
       });
-      if (validRows.length < rows.length) alert(`Filtered out ${rows.length - validRows.length} rows where 'Existing student' was N.`);
+      if (validRows.length < rows.length) alert(\`Filtered out \${rows.length - validRows.length} rows where 'Existing student' was N.\`);
       setCsvPreview(validRows);
     };
     reader.readAsText(file);
@@ -288,7 +290,7 @@ export default function StudentsPage() {
   const downloadSampleCsv = () => {
     const headers = 'name,email,phone,course,batch_number,joining_date,training_start_date,status,gender,blood_group,address,emergency_contact,fees_total,fees_paid,dob,existing_student_y_n';
     const row1 = 'Rahul Sharma,rahul@example.com,9876543210,Data Science with AI,July 2026,2026-07-15,2026-07-20,Active,Male,B+,"123 Main St, Mumbai",9876500000,50000,25000,2003-05-10,Y';
-    const csvContent = [headers, row1].join('\n');
+    const csvContent = [headers, row1].join('\\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'sample_students.csv'; a.click();
@@ -329,12 +331,12 @@ export default function StudentsPage() {
         {/* Tabs */}
         <div className="flex gap-4 mb-5 border-b border-erp-border">
           <button
-            className={`pb-2 px-1 font-bold capitalize ${activeTab === 'students' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+            className={\`pb-2 px-1 font-bold capitalize \${activeTab === 'students' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}\`}
             onClick={() => { setActiveTab('students'); }}
           >All Students</button>
           {(me?.role === 'CEO' || me?.role === 'Manager') && (
             <button
-              className={`pb-2 px-1 font-bold capitalize ${activeTab === 'pending' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}`}
+              className={\`pb-2 px-1 font-bold capitalize \${activeTab === 'pending' ? 'text-erp-primary border-b-2 border-erp-primary' : 'text-erp-text/50 hover:text-erp-text'}\`}
               onClick={() => { setActiveTab('pending'); }}
             >
               Pending Approvals {pendingStudents.length > 0 && <span className="ml-1 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[10px]">{pendingStudents.length}</span>}
@@ -348,17 +350,17 @@ export default function StudentsPage() {
             <div className="bg-erp-surface border border-erp-border rounded-2xl p-4 mb-4 flex flex-wrap gap-3">
               <div className="flex-1 min-w-[200px] relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, phone..." className={`${inputCls} pl-9`} />
+                <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, email, phone..." className={\`\${inputCls} pl-9\`} />
               </div>
-              <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} className={`w-48 ${inputCls}`}>
+              <select value={courseFilter} onChange={e => setCourseFilter(e.target.value)} className={\`w-48 \${inputCls}\`}>
                 <option value="">All Courses</option>
                 {courses.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select value={batchFilter} onChange={e => setBatchFilter(e.target.value)} className={`w-36 ${inputCls}`}>
+              <select value={batchFilter} onChange={e => setBatchFilter(e.target.value)} className={\`w-36 \${inputCls}\`}>
                 <option value="">All Batches</option>
                 {batches.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
-              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={`w-32 ${inputCls}`}>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={\`w-32 \${inputCls}\`}>
                 <option value="">All Status</option>
                 {['Active', 'Suspended', 'Alumni', 'Pending'].map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -374,8 +376,8 @@ export default function StudentsPage() {
                 <div className="space-y-2">
                   {students.map(stu => (
                     <div key={stu.id} onClick={() => openStudentDetail(stu)}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-2xl border cursor-pointer transition-all hover:shadow-md ${selectedStudent?.id === stu.id ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-erp-border bg-erp-surface hover:border-erp-border/60'}`}>
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0" style={{ background: `linear-gradient(135deg, #6366f1, #8b5cf6)` }}>
+                      className={\`flex items-center gap-4 px-4 py-3 rounded-2xl border cursor-pointer transition-all hover:shadow-md \${selectedStudent?.id === stu.id ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-erp-border bg-erp-surface hover:border-erp-border/60'}\`}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0" style={{ background: \`linear-gradient(135deg, #6366f1, #8b5cf6)\` }}>
                         {stu.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -479,7 +481,7 @@ export default function StudentsPage() {
                             </div>
                           </div>
                         </div>
-                        <div className="h-1.5 rounded-full overflow-hidden bg-erp-border/40"><div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: `${pct}%` }} /></div>
+                        <div className="h-1.5 rounded-full overflow-hidden bg-erp-border/40"><div className="h-full rounded-full bg-indigo-500 transition-all duration-500" style={{ width: \`\${pct}%\` }} /></div>
                       </div>
                     );
                   })}
@@ -580,3 +582,7 @@ export default function StudentsPage() {
     </div>
   );
 }
+`;
+
+fs.writeFileSync('src/pages/crm/manager/Students.tsx', newStudents);
+console.log('Students.tsx updated.');

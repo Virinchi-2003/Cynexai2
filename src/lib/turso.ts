@@ -1199,6 +1199,7 @@ export const initTursoDB = async () => {
       await addColumn('students', 'streak INTEGER DEFAULT 0');
       await addColumn('students', 'coins INTEGER DEFAULT 0');
       await addColumn('students', 'last_streak_date TEXT');
+      await addColumn('student_progress', 'created_at TEXT');
 
       // Full student profile columns (safe migrations)
       await addColumn('students', 'batch_number TEXT');

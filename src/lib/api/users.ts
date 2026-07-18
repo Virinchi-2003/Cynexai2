@@ -168,19 +168,49 @@ export async function saveUser(user: any): Promise<void> {
       );
     }
 
-    if (user.role === 'Student') {
-      const existing = await executeWithRetry(`SELECT id FROM students WHERE portal_login_email = ?`, [user.email]);
-      if (existing.rows.length === 0) {
-        const studentCode = `CNX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-        const stuId = `stu_${Date.now()}`;
-        await executeWithRetry(
-          `INSERT INTO students (id, student_code, portal_login_email, status, phone) VALUES (?, ?, ?, ?, ?)`,
-          [stuId, studentCode, user.email, status, user.phone || null]
-        );
-      }
-    }
+    // Student creation is now handled exclusively by saveStudent()
   } catch (error) {
     console.error('Failed to save user', error);
+    throw error;
+  }
+}
+
+export async function saveStudent(studentData: any): Promise<void> {
+  try {
+    const encPw = studentData.password ? encryptPassword(studentData.password) : encryptPassword('cynex123');
+    const status = studentData.status || 'Active';
+
+    // 1. Save to users table
+    if (studentData.id) {
+      await executeWithRetry(
+        "UPDATE users SET name=?, email=?, phone=?, role='Student', status=?, password_hash=?, password_encrypted=? WHERE id=?",
+        [studentData.name, studentData.email, studentData.phone || '', status, encPw, encPw, studentData.id]
+      );
+    } else {
+      const newId = `usr_${Date.now()}`;
+      await executeWithRetry(
+        "INSERT INTO users (id, name, email, phone, role, salary, status, password_hash, password_encrypted) VALUES (?, ?, ?, ?, 'Student', 0, ?, ?, ?)",
+        [newId, studentData.name, studentData.email, studentData.phone || '', status, encPw, encPw]
+      );
+    }
+
+    // 2. Save to students table
+    const existing = await executeWithRetry(`SELECT id FROM students WHERE portal_login_email = ?`, [studentData.email]);
+    if (existing.rows.length === 0) {
+      const studentCode = `CNX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+      const stuId = `stu_${Date.now()}`;
+      await executeWithRetry(
+        `INSERT INTO students (id, student_code, name, portal_login_email, status, phone, course, batch_number, joining_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [stuId, studentCode, studentData.name, studentData.email, status, studentData.phone || null, studentData.course || null, studentData.batch_number || null, studentData.joining_date || null]
+      );
+    } else {
+      await executeWithRetry(
+        `UPDATE students SET name=?, phone=?, course=?, batch_number=?, joining_date=?, status=? WHERE portal_login_email=?`,
+        [studentData.name, studentData.phone || null, studentData.course || null, studentData.batch_number || null, studentData.joining_date || null, status, studentData.email]
+      );
+    }
+  } catch (error) {
+    console.error('Failed to save student', error);
     throw error;
   }
 }
@@ -328,12 +358,12 @@ export async function bulkImportStudents(rows: {
       );
       await executeWithRetry(
         `INSERT OR IGNORE INTO students (
-          id, student_code, portal_login_email, status, course, batch_number, joining_date, phone,
+          id, student_code, name, portal_login_email, status, course, batch_number, joining_date, phone,
           training_start_date, gender, blood_group, address, emergency_contact,
           fees_total, fees_paid, fees_pending, dob
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          studentId, studentCode, row.email, row.status || 'Active',
+          studentId, studentCode, row.name, row.email, row.status || 'Active',
           row.course || null, row.batch_number || null, row.joining_date || null, row.phone || null,
           row.training_start_date || null, row.gender || null, row.blood_group || null,
           row.address || null, row.emergency_contact || null,
