@@ -280,7 +280,7 @@ export default function StudentsPage() {
     setStuBatch(stu.batch_number || '');
     setStatus(stu.status || 'Active');
     
-    // Fetch full student profile
+    // Fetch full student profile and user password
     try {
       const res = await client.execute({ sql: 'SELECT * FROM students WHERE id = ?', args: [stu.id] });
       if (res.rows.length > 0) {
@@ -301,6 +301,14 @@ export default function StudentsPage() {
         setOtherAttachments(r.other_attachments as string || '');
         setDocumentsSubmitted(r.documents_submitted as number || '');
       }
+      
+      // Fetch user password
+      if (stu.email) {
+        const uRes = await client.execute({ sql: 'SELECT password_encrypted FROM users WHERE email = ?', args: [stu.email] });
+        if (uRes.rows.length > 0 && uRes.rows[0].password_encrypted) {
+           setPassword(decryptPassword(uRes.rows[0].password_encrypted as string));
+        }
+      }
     } catch(e) {}
     
     setIsStudentModalOpen(true);
@@ -315,14 +323,8 @@ export default function StudentsPage() {
         joining_date: joiningDate
       };
       
-      if (!editStudentId) {
-        await saveStudent(studentData);
-      } else {
-        // Update user
-        if (studentData.id) {
-          await patchUser(studentData.id, { name, email, phone: stuPhone, status });
-        }
-      }
+      // saveStudent handles both INSERT and UPDATE for users and students tables, including password encryption
+      await saveStudent(studentData);
       
       // Update student profile
       await updateStudentProfile(email, {
