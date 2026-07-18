@@ -268,6 +268,15 @@ export async function getClassFlowData(classId: string, studentId?: string): Pro
 
 export async function markClassWatched(studentId: string, classId: string): Promise<void> {
   try {
+    let realStudentId = studentId;
+    try {
+      const res = await executeWithRetry(
+        "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+        [studentId, studentId]
+      );
+      if (res.rows.length > 0) realStudentId = res.rows[0].id as string;
+    } catch (e) {}
+
     const id = `sp_${Date.now()}`;
     await executeWithRetry(
       `INSERT OR IGNORE INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
@@ -276,7 +285,7 @@ export async function markClassWatched(studentId: string, classId: string): Prom
     // Update streak
     await executeWithRetry(
       `UPDATE students SET last_streak_date = ?, streak = streak + 1 WHERE id = ? AND (last_streak_date IS NULL OR last_streak_date != date('now'))`,
-      [new Date().toISOString().split('T')[0], studentId]
+      [new Date().toISOString().split('T')[0], realStudentId]
     );
   } catch (e) {
     console.error('Failed to mark class watched', e);
@@ -301,9 +310,18 @@ export async function saveQaResponse(input: QaResponseInput): Promise<void> {
     [id, input.studentId, input.classId, input.questionId, input.answerIdx ?? null, input.isCorrect ? 1 : 0, input.codeAnswer ?? null, new Date().toISOString()]
   );
   if (input.isCorrect) {
+    let realStudentId = input.studentId;
+    try {
+      const res = await executeWithRetry(
+        "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+        [input.studentId, input.studentId]
+      );
+      if (res.rows.length > 0) realStudentId = res.rows[0].id as string;
+    } catch (e) {}
+    
     await executeWithRetry(
       `UPDATE students SET coins = coins + 5 WHERE id = ?`,
-      [input.studentId]
+      [realStudentId]
     );
   }
 }
@@ -479,6 +497,17 @@ export interface MockInterviewInput {
 
 export async function saveMockInterview(input: MockInterviewInput): Promise<void> {
   const id = `mi_${Date.now()}`;
+  
+  // Resolve real student ID
+  let realStudentId = input.studentId;
+  try {
+    const res = await executeWithRetry(
+      "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+      [input.studentId, input.studentId]
+    );
+    if (res.rows.length > 0) realStudentId = res.rows[0].id as string;
+  } catch (e) {}
+
   await executeWithRetry(
     `INSERT INTO mock_interviews (id, student_id, transcript, feedback, score, coins_awarded, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [id, input.studentId, input.transcript, input.feedback, input.score, input.coinsAwarded, new Date().toISOString()]
@@ -486,7 +515,7 @@ export async function saveMockInterview(input: MockInterviewInput): Promise<void
   if (input.coinsAwarded > 0) {
     await executeWithRetry(
       `UPDATE students SET coins = coins + ? WHERE id = ?`,
-      [input.coinsAwarded, input.studentId]
+      [input.coinsAwarded, realStudentId]
     );
   }
 }
@@ -573,17 +602,18 @@ export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[],
 export async function spendCoins(studentId: string, amount: number): Promise<boolean> {
   try {
     const res = await executeWithRetry(
-      "SELECT coins FROM students WHERE id = ?",
-      [studentId]
+      "SELECT id, coins FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+      [studentId, studentId]
     );
     if (res.rows.length === 0) return false;
     
+    const realStudentId = res.rows[0].id;
     const currentCoins = Number(res.rows[0].coins) || 0;
     if (currentCoins < amount) return false;
     
     await executeWithRetry(
       "UPDATE students SET coins = coins - ? WHERE id = ?",
-      [amount, studentId]
+      [amount, realStudentId]
     );
     return true;
   } catch (e) {

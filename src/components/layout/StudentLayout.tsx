@@ -51,7 +51,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     if (!client) return;
     try {
       const [studRow, progRow, badgeRow, notifRow] = await Promise.all([
-        client.execute({ sql: 'SELECT streak, coins FROM students WHERE id = ? LIMIT 1', args: [user!.id] })
+        client.execute({ sql: 'SELECT streak, coins FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1', args: [user!.id, user!.id] })
           .catch(() => ({ rows: [] })),
         client.execute({ sql: 'SELECT COUNT(*) as done FROM student_progress WHERE student_id = ? AND completed = 1', args: [user!.id] })
           .catch(() => ({ rows: [] })),
@@ -158,7 +158,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] font-bold" style={{ color: T.textMuted }}>
-            <span>XP Progress</span>
+            <span>Level Progress</span>
             <span>{data.completedClasses % 10}/10 classes</span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ background: T.xpTrack }}>

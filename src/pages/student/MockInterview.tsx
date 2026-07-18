@@ -223,12 +223,15 @@ export default function MockInterview() {
     let score = Math.min((turnCount / 10) * 10, 10);
     if (score < 5) score = 5; // Minimum effort score
 
+    // Give 5 coins for every interaction turn (cap at 50 to prevent abuse)
+    const calculatedCoins = Math.min(turnCount * 5, 50);
+
     await saveMockInterview({
       studentId: user.id,
       transcript: JSON.stringify(chatHistory),
       feedback: "Completed dynamic AI interview.",
       score: score,
-      coinsAwarded: COIN_REWARD
+      coinsAwarded: calculatedCoins
     });
   };
 
@@ -372,7 +375,7 @@ export default function MockInterview() {
             </div>
             <div className="bg-zinc-900 rounded-2xl p-6 border border-zinc-800">
               <div className="flex items-center justify-center gap-2 text-3xl font-bold text-yellow-500 mb-1">
-                +{COIN_REWARD} <Star className="w-6 h-6 fill-current" />
+                +{Math.min(turnCount * 5, 50)} <Star className="w-6 h-6 fill-current" />
               </div>
               <div className="text-xs text-zinc-500 uppercase tracking-wider font-semibold">Coins Earned</div>
             </div>
