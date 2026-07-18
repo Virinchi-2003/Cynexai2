@@ -157,14 +157,14 @@ export async function saveUser(user: any): Promise<void> {
 
     if (user.id) {
       await executeWithRetry(
-        "UPDATE users SET name=?, email=?, phone=?, role=?, salary=?, status=?, password_hash=?, password_encrypted=? WHERE id=?",
-        [user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw, user.id]
+        "UPDATE users SET name=?, email=?, phone=?, role=?, salary=?, status=?, password_hash=?, password_encrypted=?, permissions_json=? WHERE id=?",
+        [user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw, user.permissions_json, user.id]
       );
     } else {
       const newId = `usr_${Date.now()}`;
       await executeWithRetry(
-        "INSERT INTO users (id, name, email, phone, role, salary, status, password_hash, password_encrypted) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [newId, user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw]
+        "INSERT INTO users (id, name, email, phone, role, salary, status, password_hash, password_encrypted, permissions_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [newId, user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw, user.permissions_json]
       );
     }
 

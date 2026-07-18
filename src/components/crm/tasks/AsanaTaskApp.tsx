@@ -267,7 +267,7 @@ export default function AsanaTaskApp() {
 
   useEffect(() => {
     loadData();
-    if (user && isManagerOrAbove) {
+    if (user) {
       getErpUsers().then(setUsers);
     }
     // Check active time log

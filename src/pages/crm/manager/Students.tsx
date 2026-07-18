@@ -133,9 +133,9 @@ export default function StudentsPage() {
       }));
       setStudents(data);
 
-      const cRes = await client.execute({ sql: `SELECT DISTINCT course FROM students WHERE course IS NOT NULL AND course != '' ORDER BY course`, args: [] }).catch(() => ({ rows: [] }));
-      const bRes = await client.execute({ sql: `SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL AND batch_number != '' ORDER BY batch_number`, args: [] }).catch(() => ({ rows: [] }));
-      setCourses(cRes.rows.map((r: any) => r.course).filter(Boolean));
+      const cRes = await client.execute({ sql: `SELECT title FROM courses ORDER BY title`, args: [] }).catch(() => ({ rows: [] }));
+      const bRes = await client.execute({ sql: `SELECT name FROM batches ORDER BY name`, args: [] }).catch(() => ({ rows: [] }));
+      setCourses(cRes.rows.map((r: any) => r.title).filter(Boolean));
       setBatches(bRes.rows.map((r: any) => r.batch_number).filter(Boolean));
     } catch (e) { console.error(e); }
   };
@@ -249,7 +249,7 @@ export default function StudentsPage() {
   const [emergencyContact, setEmergencyContact] = useState('');
   const [trainingStartDate, setTrainingStartDate] = useState('');
   const [topicCompleted, setTopicCompleted] = useState('');
-  const [documentsSubmitted, setDocumentsSubmitted] = useState<number | ''>('');
+  const [documentsSubmitted, setDocumentsSubmitted] = useState<number | ''>(0);
 
   const handleEditStudent = async (stu: any) => {
     setEditStudentId(stu.id);
@@ -323,9 +323,9 @@ export default function StudentsPage() {
       setEditStudentId(null);
       setName(''); setEmail(''); setPassword(''); setStuPhone(''); setStuCourse(''); setStuBatch('');
       setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate(''); setFatherName(''); setMotherName(''); setEmergencyContact(''); setTrainingStartDate(''); setTopicCompleted(''); setDocumentsSubmitted('');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('Failed to save student.');
+      alert('Failed to save student. ' + (e.message || ''));
     }
   };
 
@@ -633,7 +633,13 @@ export default function StudentsPage() {
                     <div><label className="text-xs font-bold mb-1 block">Topic Completed</label><input className={inputCls} value={topicCompleted} onChange={e=>setTopicCompleted(e.target.value)} placeholder="e.g. 10/20" /></div>
                     <div><label className="text-xs font-bold mb-1 block">Fees Total</label><input type="number" className={inputCls} value={feesTotal} onChange={e=>setFeesTotal(Number(e.target.value))} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Fees Paid</label><input type="number" className={inputCls} value={feesPaid} onChange={e=>setFeesPaid(Number(e.target.value))} /></div>
-                    <div><label className="text-xs font-bold mb-1 block">Docs Submitted</label><input type="number" className={inputCls} value={documentsSubmitted} onChange={e=>setDocumentsSubmitted(Number(e.target.value))} /></div>
+                    <div>
+     <label className="text-xs font-bold mb-1 block">Existing Student?</label>
+     <select className={inputCls} value={documentsSubmitted === 1 ? 'Y' : 'N'} onChange={e=>setDocumentsSubmitted(e.target.value === 'Y' ? 1 : 0)}>
+       <option value="Y">Y</option>
+       <option value="N">N</option>
+     </select>
+   </div>
                   </div>
                 </div>
               </div>
