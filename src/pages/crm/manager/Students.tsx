@@ -208,6 +208,51 @@ export default function StudentsPage() {
 
   const inputCls = "w-full bg-erp-background border border-erp-border rounded-xl px-3 py-2 text-sm text-erp-text focus:outline-none focus:border-indigo-500";
 
+  const handleModuleAdjust = async (moduleId: string, action: 'add' | 'remove') => {
+    if (!selectedStudent || !client) return;
+    setDetailLoading(true);
+    try {
+      if (action === 'add') {
+        // Find the first uncompleted class in this module
+        const res = await client.execute({
+          sql: `SELECT c.id FROM classes c 
+                WHERE c.module_id = ? 
+                AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1)
+                ORDER BY c.order_index ASC LIMIT 1`,
+          args: [moduleId, selectedStudent.id]
+        });
+        if (res.rows.length > 0) {
+          const classId = res.rows[0].id as string;
+          const ts = new Date().toISOString();
+          await client.execute({
+            sql: `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
+            args: [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, selectedStudent.id, classId, ts]
+          });
+        }
+      } else {
+        // Find the most recently completed class in this module
+        const res = await client.execute({
+          sql: `SELECT sp.id FROM student_progress sp
+                JOIN classes c ON sp.lesson_id = c.id
+                WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1
+                ORDER BY sp.created_at DESC LIMIT 1`,
+          args: [selectedStudent.id, moduleId]
+        });
+        if (res.rows.length > 0) {
+          await client.execute({
+            sql: `DELETE FROM student_progress WHERE id = ?`,
+            args: [res.rows[0].id]
+          });
+        }
+      }
+      await openStudentDetail(selectedStudent);
+    } catch (e) {
+      console.error(e);
+      alert('Failed to update module progress');
+      setDetailLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
 
@@ -437,7 +482,19 @@ export default function StudentsPage() {
                       <div key={mod.id} className="bg-erp-background rounded-xl p-3 border border-erp-border">
                         <div className="flex justify-between items-center mb-1.5">
                           <span className="text-sm font-bold text-erp-text truncate flex-1 mr-2">{mod.title}</span>
-                          <span className="text-xs font-black text-indigo-400">{done}/{total} classes</span>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="text-xs font-black text-indigo-400">{done}/{total}</span>
+                            <div className="flex items-center bg-erp-background border border-erp-border rounded-lg overflow-hidden">
+                              <button onClick={() => handleModuleAdjust(mod.id, 'remove')} disabled={done === 0 || detailLoading}
+                                className="px-1.5 py-0.5 hover:bg-erp-border/30 disabled:opacity-30 text-erp-text/60 hover:text-erp-text transition-colors">
+                                <Minus className="w-3 h-3" strokeWidth={3} />
+                              </button>
+                              <button onClick={() => handleModuleAdjust(mod.id, 'add')} disabled={done >= total || detailLoading}
+                                className="px-1.5 py-0.5 hover:bg-erp-border/30 disabled:opacity-30 text-erp-text/60 hover:text-erp-text transition-colors border-l border-erp-border">
+                                <Plus className="w-3 h-3" strokeWidth={3} />
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div className="h-1.5 rounded-full overflow-hidden bg-erp-border/40">
                           <div className="h-full rounded-full bg-indigo-500 transition-all duration-500"
