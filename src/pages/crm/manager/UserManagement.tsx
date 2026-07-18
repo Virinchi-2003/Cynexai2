@@ -76,6 +76,8 @@ export default function UserManagement() {
       if (user.permissions_json) {
         try { setPermissions(JSON.parse(user.permissions_json)); }
         catch { setPermissions({ crm: false, timetable: false, leaves: false, settings: false }); }
+      } else {
+        setPermissions({ crm: false, timetable: false, leaves: false, settings: false });
       }
     } else {
       setEditUser(null);

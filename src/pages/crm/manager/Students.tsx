@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getCurrentUser } from '../../../lib/auth';
 import { client } from '../../../lib/turso';
+import { decryptPassword } from '../../../lib/crypto';
 import { Button } from '../../../components/ui/erp/Button';
 import { DataTable } from '../../../components/ui/erp/DataTable';
 import {
@@ -214,13 +215,21 @@ export default function StudentsPage() {
           sql: `SELECT c.id FROM classes c WHERE c.module_id = ? AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1) ORDER BY c.order_index ASC LIMIT 1`,
           args: [moduleId, selectedStudent.id]
         });
+        let classId;
         if (res.rows.length > 0) {
-          const classId = res.rows[0].id as string;
+          classId = res.rows[0].id as string;
+        } else {
+          // Auto-generate a dummy class if none exist, so progress can be incremented anyway
+          classId = `cls_dummy_${Date.now()}`;
           await client.execute({
-            sql: `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
-            args: [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, selectedStudent.id, classId, new Date().toISOString()]
+            sql: `INSERT INTO classes (id, module_id, title, order_index) VALUES (?, ?, 'Manual Progress Step', 999)`,
+            args: [classId, moduleId]
           });
         }
+        await client.execute({
+          sql: `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
+          args: [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, selectedStudent.id, classId, new Date().toISOString()]
+        });
       } else {
         const res = await client.execute({
           sql: `SELECT sp.id FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1 ORDER BY sp.created_at DESC LIMIT 1`,
@@ -554,7 +563,7 @@ export default function StudentsPage() {
                             <span className="text-xs font-black text-indigo-400">{done}/{total}</span>
                             <div className="flex items-center bg-erp-background border border-erp-border rounded-lg overflow-hidden">
                               <button onClick={() => handleModuleAdjust(mod.id, 'remove')} disabled={done === 0 || detailLoading} className="px-1.5 py-0.5 hover:bg-erp-border/30 disabled:opacity-30 text-erp-text/60"><Minus className="w-3 h-3" strokeWidth={3} /></button>
-                              <button onClick={() => handleModuleAdjust(mod.id, 'add')} disabled={done >= total || detailLoading} className="px-1.5 py-0.5 hover:bg-erp-border/30 disabled:opacity-30 text-erp-text/60 border-l border-erp-border"><Plus className="w-3 h-3" strokeWidth={3} /></button>
+                              <button onClick={() => handleModuleAdjust(mod.id, 'add')} disabled={detailLoading} className="px-1.5 py-0.5 hover:bg-erp-border/30 disabled:opacity-30 text-erp-text/60 border-l border-erp-border"><Plus className="w-3 h-3" strokeWidth={3} /></button>
                             </div>
                           </div>
                         </div>
@@ -622,10 +631,16 @@ export default function StudentsPage() {
                     </div>
                     <div>
                       <label className="text-xs font-bold mb-1 block">Batch</label>
-                      <select className={inputCls} value={stuBatch} onChange={e=>setStuBatch(e.target.value)}>
-                        <option value="">Select Batch</option>
-                        {batches.map(b => <option key={b} value={b}>{b}</option>)}
-                      </select>
+                      <input 
+                        list="batch-options" 
+                        className={inputCls} 
+                        value={stuBatch} 
+                        onChange={e=>setStuBatch(e.target.value)} 
+                        placeholder="Select or type new batch"
+                      />
+                      <datalist id="batch-options">
+                        {batches.map(b => <option key={b} value={b} />)}
+                      </datalist>
                     </div>
                     <div><label className="text-xs font-bold mb-1 block">Joining Date</label><input type="date" className={inputCls} value={joiningDate} onChange={e=>setJoiningDate(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Training Start Date</label><input type="date" className={inputCls} value={trainingStartDate} onChange={e=>setTrainingStartDate(e.target.value)} /></div>
