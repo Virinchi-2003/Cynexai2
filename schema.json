@@ -1,0 +1,4588 @@
+{
+  "blog_posts": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "image",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "video",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "mock_tests": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "totalQuestions",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "isActive",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "createdAt",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "language",
+      "type": "TEXT",
+      "dflt_value": "'English'"
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "questions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "testId",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "options",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "correctAnswer",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "difficulty",
+      "type": "TEXT",
+      "dflt_value": "'easy'"
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": "'mcq'"
+    },
+    {
+      "name": "sampleInput",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sampleOutput",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "explanation",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isApproved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "aiMetadata",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "testCases",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "boilerplate",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "inputFormat",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "outputFormat",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "constraints",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "ai_settings": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isAiGenerationEnabled",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "maxDailyQuestions",
+      "type": "INTEGER",
+      "dflt_value": "100"
+    },
+    {
+      "name": "currentDailyCount",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "lastResetDate",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "student_performance": [
+    {
+      "name": "userId",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "strength",
+      "type": "REAL",
+      "dflt_value": "0.5"
+    },
+    {
+      "name": "weakTopics",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lastResult",
+      "type": "REAL",
+      "dflt_value": null
+    }
+  ],
+  "webinars": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "instructor",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "participants",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "maxParticipants",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "applications": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "phone",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "appliedAt",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "test_results": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "studentName",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "testId",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "testTitle",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "totalQuestions",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "percentage",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "studentAnswers",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "studentId",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "warnings",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "timeTaken",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'completed'"
+    },
+    {
+      "name": "proctoringLogs",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "confidenceRatings",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "users": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "password_hash",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "phone",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "role",
+      "type": "TEXT",
+      "dflt_value": "'student'"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "dob",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "gender",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "photo_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "address",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "emergency_contact",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "enrollment_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "payment_status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "id_proof",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "qualifications",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "must_change_password",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "mobile_number",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_online",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "last_login",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "last_logout",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referred_by_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "manual_admissions",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "password_encrypted",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "salary",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "avatar",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "permissions_json",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "enrollments": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "progress_percentage",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'active'"
+    }
+  ],
+  "lessons": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "module_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "video_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "module_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "prerequisite_lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_published",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "payments": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "total_amount",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "amount_paid",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "due_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'pending'"
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    }
+  ],
+  "support_tickets": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'open'"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "support_replies": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ticket_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sender_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sender_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sender_role",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "message",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "badges": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "icon",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "color",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "unlocked_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "onboarding_steps": [
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "step_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_done",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    }
+  ],
+  "job_listings": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "company",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "location",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "salary",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "announcements": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "message",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "target_audience",
+      "type": "TEXT",
+      "dflt_value": "'all'"
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isActive",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    }
+  ],
+  "mentorship_sessions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "mentor_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "meeting_link",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "course_discussions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "message",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "testimonials": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "role",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "rating",
+      "type": "INTEGER",
+      "dflt_value": "5"
+    },
+    {
+      "name": "text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "image",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "attendance_sessions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "topic",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "pin_code",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "meeting_link",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "attendance_records": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "marked_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "method",
+      "type": "TEXT",
+      "dflt_value": "'pin'"
+    }
+  ],
+  "certificates": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "issued_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "certificate_number",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "credential_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_data",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "issue_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "download_count",
+      "type": "INTEGER",
+      "dflt_value": null
+    }
+  ],
+  "certificate_credentials": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "username",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "password",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_name",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "doubt_questions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "body",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "tags",
+      "type": "TEXT",
+      "dflt_value": "'[]'"
+    },
+    {
+      "name": "upvotes",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "is_resolved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "doubt_answers": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "author_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "author_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "author_role",
+      "type": "TEXT",
+      "dflt_value": "'student'"
+    },
+    {
+      "name": "body",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "upvotes",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "is_accepted",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "coding_problems": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "difficulty",
+      "type": "TEXT",
+      "dflt_value": "'easy'"
+    },
+    {
+      "name": "boilerplate",
+      "type": "TEXT",
+      "dflt_value": "'{}'"
+    },
+    {
+      "name": "test_cases",
+      "type": "TEXT",
+      "dflt_value": "'[]'"
+    },
+    {
+      "name": "constraints",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "code_submissions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "problem_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "code",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "language",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'pending'"
+    },
+    {
+      "name": "runtime_ms",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "submitted_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "batches": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timings",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "capacity",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "mode",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "schedule",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "primary_teacher_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "schedule_pattern",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "daily_recordings": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "subject",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "video_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "recording_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "chapters",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "faqs": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "answer",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "project_submissions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "studentName",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "custom_title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "custom_description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submission_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submission_file",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'pending'"
+    },
+    {
+      "name": "score",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "feedback",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submitted_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "user_progress": [
+    {
+      "name": "userId",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "studentName",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "totalSolved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "easySolved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "mediumSolved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "hardSolved",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "solvedProblems",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lastUpdated",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "currentStreak",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "longestStreak",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "xpPoints",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    }
+  ],
+  "notifications": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "message",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": "'info'"
+    },
+    {
+      "name": "is_read",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "lesson_resources": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "resource_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "resource_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "lesson_attendance_sessions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "attendance_pin",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_active",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "started_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ended_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_by",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "student_attendance": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "check_in_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'present'"
+    }
+  ],
+  "student_lesson_progress": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "watch_percentage",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "quiz_score",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "completed",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "last_watched_timestamp",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "analytics_events": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "event_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "metadata",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "student_notes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timestamp",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "note_text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "ai_lesson_content": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "summary",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "chapters",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "recordings": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "subject",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "video_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "recording_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "chapters",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "attendance": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'present'"
+    },
+    {
+      "name": "marked_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "posts": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "image",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "video",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "reviews": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "role",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "rating",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "image",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "isVisible",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "mock_test_questions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "test_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "option_a",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "option_b",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "option_c",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "option_d",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "correct_answer",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "explanation",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "marks",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": null
+    }
+  ],
+  "quiz_attempts": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "test_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "total_marks",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "answers",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "started_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "completed_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'completed'"
+    },
+    {
+      "name": "quiz_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score_obtained",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "attempted_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "assignment_submissions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assignment_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submission_file",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submission_link",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "marks_obtained",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "feedback",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "submitted_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'Submitted'"
+    }
+  ],
+  "assignments": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "due_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "max_marks",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "files",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "attendance_logs": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "scan_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timestamp",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "attendance_summary": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "class_schedule": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "zoom_link",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "recording_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_holiday",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    }
+  ],
+  "course_materials": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "module_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "external_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_locked",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    }
+  ],
+  "leave_applications": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "reason",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'pending'"
+    },
+    {
+      "name": "applied_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "quiz_questions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "quiz_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question_text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "options",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "correct_option_index",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "points",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": "'mcq'"
+    }
+  ],
+  "quizzes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration_minutes",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "max_attempts",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "passing_percentage",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "sessions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "trainer_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "session_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "qr_token",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "user_batches": [
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "user_sessions": [
+    {
+      "name": "session_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "referrals": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referrer_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referee_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referee_email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "referral_gifts": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "milestone",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "gift_selected",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "daily_quizzes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "questions",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "quiz_submissions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "quiz_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "submitted_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "erp_users": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "password_hash",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "role",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "demos": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "scheduled_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "admissions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "amount",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "discount_locked",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "offer_expiry",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "expected_sale_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referred_by_student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "lesson_progress": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "watched_pct",
+      "type": "REAL",
+      "dflt_value": null
+    }
+  ],
+  "whatsapp_templates": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "body",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "referral_assets": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "uploaded_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "teachers": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "weekly_hours_taught",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "availability_json",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "timetables": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "teacher_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "room_or_link",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "day_of_week",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_time",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "whatsapp_messages": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "direction",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "message_body",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timestamp",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "class_questions": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "class_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question_text",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "options_json",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "correct_answer_idx",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "boilerplate_json",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "test_cases_json",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "course_classes_new": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "module_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "youtube_video_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "meet_link",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_ppt_markdown",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_script",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_keypoints",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_summary",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'draft'"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "leads": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "phone",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_interest",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "source",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "bucket_stage",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assigned_to",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "referred_by_student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "passed_out_year",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "professional_status",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "sales": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "amount_paid",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "total_fee",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "payment_mode",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "transaction_ref",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sales_rep_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timestamp",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "referred_by_student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "admission_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sales_exec_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "manager_approvals": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sale_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "approver_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "decided_at",
+      "type": "DATETIME",
+      "dflt_value": null
+    }
+  ],
+  "onboardings": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sale_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "teacher_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "mode",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "joining_date",
+      "type": "DATETIME",
+      "dflt_value": null
+    },
+    {
+      "name": "remarks",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "students": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "onboarding_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_code",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "portal_login_email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "streak",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "coins",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "last_streak_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "preferred_mode",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "classes_attended_json",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_number",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "topic_completed",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "joining_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "phone",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "dob",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "address",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "father_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "mother_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "emergency_contact",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "blood_group",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "documents_submitted",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "fees_total",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "fees_paid",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "fees_pending",
+      "type": "REAL",
+      "dflt_value": "0"
+    },
+    {
+      "name": "training_start_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "gender",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "approval_status",
+      "type": "TEXT",
+      "dflt_value": "\"Approved\""
+    },
+    {
+      "name": "aadhar_file",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "other_attachments",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "courses": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "instructor_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "price",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'published'"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "sales_pitch_summary",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "sales_pitch_script",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "subtitle",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "placement",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "modules",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "outcomes",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "prerequisites",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "career",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "modules": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "instructor_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'Active'"
+    },
+    {
+      "name": "sequence_order",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    }
+  ],
+  "course_module_mapping": [
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "module_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": null
+    }
+  ],
+  "classes": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "module_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_ppt_markdown",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_script",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_keypoints",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "youtube_video_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "order_index",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "teacher_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "meet_link",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "doc_url",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "student_progress": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lesson_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "completed",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "company_finances": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "category",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "amount",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "gamification_settings": [
+    {
+      "name": "task_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "is_enabled",
+      "type": "BOOLEAN",
+      "dflt_value": null
+    },
+    {
+      "name": "reward_amount",
+      "type": "INTEGER",
+      "dflt_value": null
+    }
+  ],
+  "marketing_metrics": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "platform",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "spend",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "leads_generated",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "traffic",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "marketing_campaigns": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "budget",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "spent",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "leads",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "platform",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "timetable_slots": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "batch_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "day_of_week",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "start_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "end_time",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "teacher_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "timing",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'one-time'"
+    },
+    {
+      "name": "week_start",
+      "type": "TEXT",
+      "dflt_value": "''"
+    }
+  ],
+  "tasks": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assignee_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "priority",
+      "type": "TEXT",
+      "dflt_value": "'Medium'"
+    },
+    {
+      "name": "due_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'To Do'"
+    },
+    {
+      "name": "related_entity",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "updated_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "check_in_count",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "target_check_in_count",
+      "type": "INTEGER",
+      "dflt_value": "1"
+    },
+    {
+      "name": "task_type",
+      "type": "TEXT",
+      "dflt_value": "'One-Time'"
+    },
+    {
+      "name": "target_number",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "current_number",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "start_date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "tags",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "settings": [
+    {
+      "name": "id",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "setting_group",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "key",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "value",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "updated_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "sqlite_sequence": [
+    {
+      "name": "name",
+      "type": "",
+      "dflt_value": null
+    },
+    {
+      "name": "seq",
+      "type": "",
+      "dflt_value": null
+    }
+  ],
+  "task_comments": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "task_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "task_subtasks": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "task_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": "'To Do'"
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "crm_activities": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "content",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "crm_stage_history": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "lead_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "old_stage",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "new_stage",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "DATETIME",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "task_dependencies": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "task_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "depends_on_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "crm_leads": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "email",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "phone",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "course_interest",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "source",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assigned_to",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "grad_year",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "qualification",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "it_background",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "preferred_mode",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "location",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "referred_by_student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "leaves": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "date",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "reason",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "projects": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "color",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "owner_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "status",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "mock_interviews": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "transcript",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "feedback",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "score",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "coins_awarded",
+      "type": "INTEGER",
+      "dflt_value": "0"
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "qa_responses": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "class_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "question_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "answer_idx",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "is_correct",
+      "type": "INTEGER",
+      "dflt_value": null
+    },
+    {
+      "name": "code_answer",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "time_logs": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "task_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "started_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ended_at",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "duration_minutes",
+      "type": "REAL",
+      "dflt_value": null
+    },
+    {
+      "name": "notes",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "project_members": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "project_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "user_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "role",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assigned_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "assigned_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "student_documents": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "student_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "doc_type",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_name",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_data",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "uploaded_by",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "uploaded_at",
+      "type": "TEXT",
+      "dflt_value": "CURRENT_TIMESTAMP"
+    }
+  ],
+  "portal_settings": [
+    {
+      "name": "key",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "value",
+      "type": "TEXT",
+      "dflt_value": "'1'"
+    },
+    {
+      "name": "updated_at",
+      "type": "TEXT",
+      "dflt_value": null
+    }
+  ],
+  "course_shared_materials": [
+    {
+      "name": "id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "title",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "description",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "file_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "material_type",
+      "type": "TEXT",
+      "dflt_value": "'pdf'"
+    },
+    {
+      "name": "course_id",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "created_at",
+      "type": "TEXT",
+      "dflt_value": "datetime('now')"
+    }
+  ]
+}
