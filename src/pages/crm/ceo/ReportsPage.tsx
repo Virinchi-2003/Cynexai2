@@ -71,13 +71,18 @@ function TaskMiniCard({ task }: { task: Task }) {
       <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${task.status === 'Done' ? 'bg-emerald-500' : task.status === 'In Progress' ? 'bg-blue-500' : 'bg-slate-300'}`} />
       <div className="flex-1 min-w-0">
         <p className={`text-xs font-semibold truncate ${task.status === 'Done' ? 'line-through text-erp-text/40' : 'text-erp-text'}`}>{task.title}</p>
-        <div className="flex items-center gap-2 mt-0.5">
+        <div className="flex flex-wrap items-center gap-2 mt-0.5">
           {task.due_date && (
             <span className={`text-[10px] font-bold ${isOverdue ? 'text-red-500' : 'text-erp-text/40'}`}>
               {isOverdue ? '⚠ ' : ''}{new Date(task.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
             </span>
           )}
           {task.tags && <span className="text-[10px] text-erp-text/40 truncate">{task.tags}</span>}
+          {(task as any).created_by_name && (
+            <span className="text-[10px] font-bold text-erp-text/50 bg-erp-border/40 px-1.5 py-0.5 rounded">
+              By: {(task as any).created_by_name}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">

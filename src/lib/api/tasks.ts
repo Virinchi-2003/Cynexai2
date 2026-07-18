@@ -244,7 +244,15 @@ export const deleteTask = async (taskId: string): Promise<{ success: boolean, er
 export const getAllTasks = async (): Promise<Task[]> => {
   if (isTursoConfigured && client) {
     try {
-      const result = await client.execute("SELECT * FROM tasks ORDER BY due_date ASC");
+      const result = await client.execute(`
+        SELECT t.*, 
+               u1.name as assignee_name, 
+               u2.name as created_by_name 
+        FROM tasks t 
+        LEFT JOIN users u1 ON t.assignee_id = u1.id 
+        LEFT JOIN users u2 ON t.created_by = u2.id 
+        ORDER BY t.due_date ASC
+      `);
       return result.rows as unknown as Task[];
     } catch (e) {
       console.error("Failed to fetch all tasks", e);
