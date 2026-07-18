@@ -83,7 +83,7 @@ export default function StudentsPage() {
   // Approvals
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [approvingStudentId, setApprovingStudentId] = useState<string | null>(null);
-  const [approveForm, setApproveForm] = useState({ student_id: '', password: '' });
+  const [approveForm, setApproveForm] = useState({ student_id: '', password: '', portalId: '', batch: '' });
 
   useEffect(() => { loadData(); }, [courseFilter, batchFilter, statusFilter, search, activeTab]);
 
@@ -506,7 +506,7 @@ export default function StudentsPage() {
                 { key: 'course', header: 'Course' },
                 { key: 'actions', header: 'Actions', filterable: false, render: (row: any) => (
                   <div className="flex items-center gap-2">
-                    <button onClick={() => { setApprovingStudentId(row.id); setIsApproveModalOpen(true); }} className="px-3 py-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-lg">Approve</button>
+                    <button onClick={() => { setApprovingStudentId(row.id); setApproveForm({ student_id: row.id, password: 'cnx' + Math.floor(1000 + Math.random() * 9000), portalId: 'CNX-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000), batch: '' }); setIsApproveModalOpen(true); }} className="px-3 py-1.5 text-xs font-bold text-white bg-green-500 hover:bg-green-600 rounded-lg">Approve</button>
                     <button onClick={async () => { if (confirm('Reject?')) { await rejectStudent(row.id); loadData(); } }} className="px-3 py-1.5 text-xs font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg">Reject</button>
                   </div>
                 )}
@@ -701,13 +701,31 @@ export default function StudentsPage() {
           <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-md shadow-2xl p-5">
             <h2 className="text-lg font-bold mb-4">Approve Student</h2>
             <div className="space-y-4">
+              <div><label className="block text-xs font-bold mb-1">Student Portal ID *</label><input type="text" value={approveForm.portalId} onChange={e => setApproveForm({...approveForm, portalId: e.target.value})} className={inputCls} placeholder="e.g. CNX-2026-1001" /></div>
               <div><label className="block text-xs font-bold mb-1">Set Password *</label><input type="text" value={approveForm.password} onChange={e => setApproveForm({...approveForm, password: e.target.value})} className={inputCls} /></div>
+              <div>
+                <label className="block text-xs font-bold mb-1">Assign Batch</label>
+                <input list="approve-batch-options" type="text" value={approveForm.batch} onChange={e => setApproveForm({...approveForm, batch: e.target.value})} className={inputCls} placeholder="Select or type batch" />
+                <datalist id="approve-batch-options">
+                  {batches.map(b => <option key={b} value={b} />)}
+                </datalist>
+              </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <Button variant="ghost" onClick={() => { setIsApproveModalOpen(false); setApprovingStudentId(null); }}>Cancel</Button>
               <Button onClick={async () => {
-                if (!approveForm.password) return alert("Password required.");
-                await approveStudent(approvingStudentId, approveForm.password);
+                if (!approveForm.password || !approveForm.portalId) return alert("Portal ID and Password required.");
+                const stu = pendingStudents.find(s => s.id === approvingStudentId);
+                if (!stu) return alert("Student not found.");
+                
+                await approveStudent(approvingStudentId, approveForm.portalId, approveForm.password, stu.portal_login_email, stu.name);
+                if (approveForm.batch) {
+                  await updateStudentProfile(stu.portal_login_email, { batch_number: approveForm.batch });
+                }
+                if (client) {
+                   await client.execute({ sql: "UPDATE crm_leads SET status = 'Closed Won' WHERE email = ? OR phone = ?", args: [stu.portal_login_email, stu.phone] }).catch(console.error);
+                }
+                
                 alert("Approved!");
                 setIsApproveModalOpen(false); setApprovingStudentId(null);
                 loadData();
