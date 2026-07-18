@@ -127,9 +127,9 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
         </div>
         <div className="flex items-center gap-2">
           {['Manager', 'CEO', 'Admin'].includes(currentUserRole) && (
-            <Button variant="ghost" className="p-2 h-8 w-8 text-red-500 hover:bg-red-50" onClick={handleDelete}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            <button onClick={handleDelete} className="p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors" title="Delete Task">
+              <Trash2 className="w-5 h-5" />
+            </button>
           )}
           <button onClick={onClose} className="p-2 text-erp-text/50 hover:text-erp-text rounded-full hover:bg-erp-background">
             <X className="w-5 h-5" />
