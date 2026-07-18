@@ -73,16 +73,6 @@ export default function MockInterview() {
       setInterviewCost(cost);
       setCoinsAvailable(dashData?.gamification?.coins || 0);
 
-      if (lastInterview) {
-        const daysSince = daysBetween(new Date(lastInterview.created_at), new Date());
-        if (daysSince < COOLDOWN_DAYS) {
-          setCooldownDaysLeft(COOLDOWN_DAYS - daysSince);
-          setPhase('cooldown');
-          setLoading(false);
-          return;
-        }
-      }
-
       // Build context
       let contextStr = "Student taking a mock interview.";
       if (dashData?.modules && dashData.modules.length > 0) {

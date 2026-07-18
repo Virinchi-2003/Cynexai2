@@ -169,12 +169,17 @@ export default function LeadCapture() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Course Interest">
-                <SearchableDropdown
-                  options={[{ value: '', label: 'Select a Course (optional)' }, ...courses]}
-                  value={course}
-                  onChange={setCourse}
-                  placeholder="Select a Course (optional)"
+                <input 
+                  list="lead-course-options"
+                  type="text" 
+                  value={course} 
+                  onChange={e => setCourse(e.target.value)} 
+                  className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-erp-primary transition-colors" 
+                  placeholder="Select or type a Course (optional)" 
                 />
+                <datalist id="lead-course-options">
+                  {courses.map(c => <option key={c.value} value={c.value} />)}
+                </datalist>
               </Field>
               <Field label="Source">
                 <SearchableDropdown

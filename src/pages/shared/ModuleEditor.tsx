@@ -47,9 +47,9 @@ export default function ModuleEditor() {
       setIsClassModalOpen(false);
       setNewClassTitle('');
       await fetchModuleData();
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error creating class:", e);
-      alert("Failed to create class.");
+      alert("Failed to create class: " + (e.message || JSON.stringify(e)));
     }
   };
 

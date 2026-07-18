@@ -259,6 +259,16 @@ export default function StudentsPage() {
   const [trainingStartDate, setTrainingStartDate] = useState('');
   const [topicCompleted, setTopicCompleted] = useState('');
   const [documentsSubmitted, setDocumentsSubmitted] = useState<number | ''>(0);
+  const [aadharFile, setAadharFile] = useState<string>('');
+  const [otherAttachments, setOtherAttachments] = useState<string>('');
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: React.Dispatch<React.SetStateAction<string>>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setter(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const handleEditStudent = async (stu: any) => {
     setEditStudentId(stu.id);
@@ -287,6 +297,8 @@ export default function StudentsPage() {
         setEmergencyContact(r.emergency_contact as string || '');
         setTrainingStartDate(r.training_start_date as string || '');
         setTopicCompleted(r.topic_completed as string || '');
+        setAadharFile(r.aadhar_file as string || '');
+        setOtherAttachments(r.other_attachments as string || '');
         setDocumentsSubmitted(r.documents_submitted as number || '');
       }
     } catch(e) {}
@@ -324,7 +336,9 @@ export default function StudentsPage() {
         emergency_contact: emergencyContact,
         training_start_date: trainingStartDate,
         topic_completed: topicCompleted,
-        documents_submitted: Number(documentsSubmitted) || 0
+        documents_submitted: Number(documentsSubmitted) || 0,
+        aadhar_file: aadharFile,
+        other_attachments: otherAttachments
       });
 
       await loadData();
@@ -655,6 +669,20 @@ export default function StudentsPage() {
        <option value="N">N</option>
      </select>
    </div>
+                  </div>
+
+                  <h3 className="text-sm font-bold text-erp-text border-b border-erp-border pb-2 mt-6 mb-4">Attachments</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold mb-1 block">Aadhar Card</label>
+                      <input type="file" accept="image/*,application/pdf" onChange={e => handleFileUpload(e, setAadharFile)} className={inputCls + " p-1"} />
+                      {aadharFile && <p className="text-xs text-green-500 mt-1 font-semibold">File uploaded</p>}
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold mb-1 block">Other Attachments</label>
+                      <input type="file" accept="image/*,application/pdf" onChange={e => handleFileUpload(e, setOtherAttachments)} className={inputCls + " p-1"} />
+                      {otherAttachments && <p className="text-xs text-green-500 mt-1 font-semibold">File uploaded</p>}
+                    </div>
                   </div>
                 </div>
               </div>

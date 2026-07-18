@@ -95,6 +95,7 @@ export default function LeadPipeline() {
   const [isUploadingCsv, setIsUploadingCsv] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [onboardingLead, setOnboardingLead] = useState<Lead | null>(null);
+  const [courses, setCourses] = useState<string[]>([]);
   const [onboardForm, setOnboardForm] = useState({
     name: '', email: '', phone: '', fees_total: '', fees_paid: '', fees_pending: '',
     joining_date: new Date().toISOString().split('T')[0], training_start_date: '',
@@ -154,6 +155,10 @@ export default function LeadPipeline() {
       });
       return;
     }
+
+    // Optimistic Update
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status: newStatus } : l));
+
     executeMove(leadId, newStatus, partialAmount);
   };
 
@@ -201,6 +206,7 @@ export default function LeadPipeline() {
       dob: onboardForm.dob
     });
 
+    setLeads(prev => prev.map(l => l.id === onboardingLead.id ? { ...l, status: 'Onboarded' } : l));
     executeMove(onboardingLead.id, 'Onboarded', '', onboardForm);
     alert(`Student sent to Manager for Approval: ${onboardingLead.name}.`);
     setOnboardingLead(null);
@@ -556,7 +562,18 @@ export default function LeadPipeline() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Course</label>
-                  <input type="text" required value={onboardForm.course} onChange={e => setOnboardForm({...onboardForm, course: e.target.value})} className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" />
+                  <input 
+                    list="onboard-course-options"
+                    type="text" 
+                    required 
+                    value={onboardForm.course} 
+                    onChange={e => setOnboardForm({...onboardForm, course: e.target.value})} 
+                    className="w-full bg-erp-background border-2 border-erp-border rounded-xl px-3 py-2 text-erp-text focus:outline-none focus:border-erp-primary text-sm" 
+                    placeholder="Select or type course" 
+                  />
+                  <datalist id="onboard-course-options">
+                    {courses.map(c => <option key={c} value={c} />)}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Total Fees</label>
@@ -612,7 +629,21 @@ export default function LeadPipeline() {
       {/* Lead Detail Panel */}
       {selectedLeadId && (
         <div className="fixed inset-0 z-30 bg-erp-background md:inset-auto md:absolute md:right-0 md:top-0 md:h-full md:w-[480px] shadow-[-10px_0_40px_rgba(0,0,0,0.12)] border-l-2 border-erp-border">
-          <LeadDetailPanel leadId={selectedLeadId} onClose={() => setSelectedLeadId(null)} onUpdate={loadData} />
+          <LeadDetailPanel 
+            leadId={selectedLeadId} 
+            onClose={() => setSelectedLeadId(null)} 
+            onUpdate={loadData} 
+            onRequestOnboard={(l) => {
+              setSelectedLeadId(null);
+              setOnboardingLead(l);
+              setOnboardForm({
+                name: l.name || '', email: l.email || '', phone: l.phone || '',
+                fees_total: '', fees_paid: '', fees_pending: '',
+                joining_date: new Date().toISOString().split('T')[0], training_start_date: '',
+                course: l.course_interest || '', documents_submitted: 0, gender: 'Male', dob: ''
+              });
+            }}
+          />
         </div>
       )}
     </div>

@@ -22,17 +22,17 @@ const STATUS_BUCKETS = [
   'Demo Completed',
   'Admission Completed',
   'Sale Partial Closed',
-  'Sale completed',
-  'Onboarding completed'
+  'Onboarded'
 ];
 
 interface LeadDetailPanelProps {
   leadId: string;
   onClose: () => void;
   onUpdate: () => void;
+  onRequestOnboard?: (lead: Lead) => void;
 }
 
-export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelProps) {
+export function LeadDetailPanel({ leadId, onClose, onUpdate, onRequestOnboard }: LeadDetailPanelProps) {
   const [lead, setLead] = useState<Lead | null>(null);
   const [sale, setSale] = useState<any | null>(null);
   const [showAdmission, setShowAdmission] = useState(false);
@@ -60,6 +60,16 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate }: LeadDetailPanelPr
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatus = e.target.value;
+    
+    if (newStatus === 'Onboarded') {
+      if (onRequestOnboard && lead) {
+        onRequestOnboard(lead);
+      } else {
+        alert('Onboarding not available from this context.');
+      }
+      return;
+    }
+
     setIsUpdatingStatus(true);
     
     let partialAmount = '';
