@@ -101,7 +101,7 @@ export default function StudentsPage() {
 
       const res = await client.execute({ sql, args });
       const data = res.rows.map((r: any) => ({
-        id: r.id, name: r.name, email: r.email, phone: r.phone,
+        id: r.id, name: r.name || 'Unknown', email: r.email, phone: r.phone,
         course: r.course, batch_number: r.batch_number, status: r.status,
         joining_date: r.joining_date, portal_login_email: r.portal_login_email,
         streak: Number(r.streak) || 0,
