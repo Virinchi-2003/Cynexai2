@@ -156,10 +156,10 @@ export default function StudentsPage() {
           FROM modules m
           JOIN course_module_mapping cmm ON m.id = cmm.module_id
           JOIN courses co ON cmm.course_id = co.id
-          WHERE (co.name = ? OR co.title = ?)
+          WHERE (co.title = ?)
           ORDER BY cmm.order_index ASC
         `,
-        args: [stu.id, stu.course || '', stu.course || ''],
+        args: [stu.id, stu.course || ''],
       }).catch(() => ({ rows: [] }));
 
       const actRes = await client.execute({
@@ -244,6 +244,12 @@ export default function StudentsPage() {
   const [feesTotal, setFeesTotal] = useState<number | ''>('');
   const [feesPaid, setFeesPaid] = useState<number | ''>('');
   const [joiningDate, setJoiningDate] = useState('');
+  const [fatherName, setFatherName] = useState('');
+  const [motherName, setMotherName] = useState('');
+  const [emergencyContact, setEmergencyContact] = useState('');
+  const [trainingStartDate, setTrainingStartDate] = useState('');
+  const [topicCompleted, setTopicCompleted] = useState('');
+  const [documentsSubmitted, setDocumentsSubmitted] = useState<number | ''>('');
 
   const handleEditStudent = async (stu: any) => {
     setEditStudentId(stu.id);
@@ -267,6 +273,12 @@ export default function StudentsPage() {
         setFeesTotal(r.fees_total as number || '');
         setFeesPaid(r.fees_paid as number || '');
         setJoiningDate(r.joining_date as string || '');
+        setFatherName(r.father_name as string || '');
+        setMotherName(r.mother_name as string || '');
+        setEmergencyContact(r.emergency_contact as string || '');
+        setTrainingStartDate(r.training_start_date as string || '');
+        setTopicCompleted(r.topic_completed as string || '');
+        setDocumentsSubmitted(r.documents_submitted as number || '');
       }
     } catch(e) {}
     
@@ -297,14 +309,20 @@ export default function StudentsPage() {
         dob, address, gender, blood_group: bloodGroup, 
         fees_total: Number(feesTotal) || 0, 
         fees_paid: Number(feesPaid) || 0,
-        joining_date: joiningDate
+        joining_date: joiningDate,
+        father_name: fatherName,
+        mother_name: motherName,
+        emergency_contact: emergencyContact,
+        training_start_date: trainingStartDate,
+        topic_completed: topicCompleted,
+        documents_submitted: Number(documentsSubmitted) || 0
       });
 
       await loadData();
       setIsStudentModalOpen(false);
       setEditStudentId(null);
       setName(''); setEmail(''); setPassword(''); setStuPhone(''); setStuCourse(''); setStuBatch('');
-      setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate('');
+      setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate(''); setFatherName(''); setMotherName(''); setEmergencyContact(''); setTrainingStartDate(''); setTopicCompleted(''); setDocumentsSubmitted('');
     } catch (e) {
       console.error(e);
       alert('Failed to save student.');
@@ -380,9 +398,7 @@ export default function StudentsPage() {
             <Button onClick={() => { setEditStudentId(null); setName(''); setEmail(''); setPassword(''); setStuPhone(''); setStuCourse(''); setStuBatch(''); setStatus('Active'); setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate(''); setIsStudentModalOpen(true); }}>
               <UserPlus className="w-4 h-4 mr-2" /> Add Student
             </Button>
-            <Button variant="secondary" onClick={() => navigate('/user-management')}>
-              <Edit2 className="w-4 h-4 mr-2" /> Manage Staff
-            </Button>
+
           </div>
         </div>
 
@@ -587,18 +603,37 @@ export default function StudentsPage() {
                     <div><label className="text-xs font-bold mb-1 block">Phone</label><input className={inputCls} value={stuPhone} onChange={e=>setStuPhone(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">DOB</label><input type="date" className={inputCls} value={dob} onChange={e=>setDob(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Gender</label><select className={inputCls} value={gender} onChange={e=>setGender(e.target.value)}><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+                    <div><label className="text-xs font-bold mb-1 block">Blood Group</label><input className={inputCls} value={bloodGroup} onChange={e=>setBloodGroup(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Emergency Contact</label><input className={inputCls} value={emergencyContact} onChange={e=>setEmergencyContact(e.target.value)} /></div>
                     <div className="col-span-2"><label className="text-xs font-bold mb-1 block">Address</label><input className={inputCls} value={address} onChange={e=>setAddress(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Father's Name</label><input className={inputCls} value={fatherName} onChange={e=>setFatherName(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Mother's Name</label><input className={inputCls} value={motherName} onChange={e=>setMotherName(e.target.value)} /></div>
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-erp-text mb-3 uppercase tracking-wider text-erp-text/50">Enrollment</h3>
+                  <h3 className="text-sm font-black text-erp-text mb-3 uppercase tracking-wider text-erp-text/50">Enrollment & Progress</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-xs font-bold mb-1 block">Course</label><input className={inputCls} value={stuCourse} onChange={e=>setStuCourse(e.target.value)} /></div>
-                    <div><label className="text-xs font-bold mb-1 block">Batch</label><input className={inputCls} value={stuBatch} onChange={e=>setStuBatch(e.target.value)} /></div>
+                    <div>
+                      <label className="text-xs font-bold mb-1 block">Course</label>
+                      <select className={inputCls} value={stuCourse} onChange={e=>setStuCourse(e.target.value)}>
+                        <option value="">Select Course</option>
+                        {courses.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold mb-1 block">Batch</label>
+                      <select className={inputCls} value={stuBatch} onChange={e=>setStuBatch(e.target.value)}>
+                        <option value="">Select Batch</option>
+                        {batches.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
                     <div><label className="text-xs font-bold mb-1 block">Joining Date</label><input type="date" className={inputCls} value={joiningDate} onChange={e=>setJoiningDate(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Training Start Date</label><input type="date" className={inputCls} value={trainingStartDate} onChange={e=>setTrainingStartDate(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Status</label><select className={inputCls} value={status} onChange={e=>setStatus(e.target.value)}><option value="Active">Active</option><option value="Suspended">Suspended</option><option value="Alumni">Alumni</option></select></div>
+                    <div><label className="text-xs font-bold mb-1 block">Topic Completed</label><input className={inputCls} value={topicCompleted} onChange={e=>setTopicCompleted(e.target.value)} placeholder="e.g. 10/20" /></div>
                     <div><label className="text-xs font-bold mb-1 block">Fees Total</label><input type="number" className={inputCls} value={feesTotal} onChange={e=>setFeesTotal(Number(e.target.value))} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Fees Paid</label><input type="number" className={inputCls} value={feesPaid} onChange={e=>setFeesPaid(Number(e.target.value))} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Docs Submitted</label><input type="number" className={inputCls} value={documentsSubmitted} onChange={e=>setDocumentsSubmitted(Number(e.target.value))} /></div>
                   </div>
                 </div>
               </div>
