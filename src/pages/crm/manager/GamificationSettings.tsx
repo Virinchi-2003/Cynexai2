@@ -23,17 +23,26 @@ export default function GamificationSettings() {
       setLoading(true);
       const fetchedSettings = await getGamificationSettings();
       
-      // If empty, seed defaults for UI fallback (normally DB would have this)
+      // If empty or missing keys, seed defaults for UI fallback (normally DB would have this)
+      const defaults = [
+        { task_type: 'daily_login', is_enabled: true, reward_amount: 10 },
+        { task_type: 'amop_test_pass', is_enabled: true, reward_amount: 50 },
+        { task_type: 'coding_challenge', is_enabled: true, reward_amount: 30 },
+        { task_type: 'attendance_30m', is_enabled: true, reward_amount: 20 },
+        { task_type: 'ai_interview_cost', is_enabled: true, reward_amount: 50 },
+      ];
+
       if (fetchedSettings.length === 0) {
-        const defaults = [
-          { task_type: 'daily_login', is_enabled: true, reward_amount: 10 },
-          { task_type: 'amop_test_pass', is_enabled: true, reward_amount: 50 },
-          { task_type: 'coding_challenge', is_enabled: true, reward_amount: 30 },
-          { task_type: 'attendance_30m', is_enabled: true, reward_amount: 20 },
-        ];
         setSettings(defaults);
       } else {
-        setSettings(fetchedSettings);
+        // Merge fetched with defaults to ensure ai_interview_cost shows up
+        const merged = [...fetchedSettings];
+        defaults.forEach(def => {
+          if (!merged.find(m => m.task_type === def.task_type)) {
+            merged.push(def);
+          }
+        });
+        setSettings(merged);
       }
     } catch (e) {
       console.error("Failed to fetch gamification settings", e);
@@ -106,7 +115,9 @@ export default function GamificationSettings() {
                     <div key={setting.task_type} className="flex items-center justify-between bg-erp-background p-4 rounded-xl border border-erp-border">
                       <div>
                         <h3 className="font-bold text-erp-text capitalize">{setting.task_type.replace(/_/g, ' ')}</h3>
-                        <p className="text-xs text-erp-text/60">Amount: {setting.reward_amount} Coins</p>
+                        <p className="text-xs text-erp-text/60">
+                          {setting.task_type.includes('cost') ? `Cost: ${setting.reward_amount} Coins` : `Reward: ${setting.reward_amount} Coins`}
+                        </p>
                       </div>
                       
                       <div className="flex items-center gap-4">

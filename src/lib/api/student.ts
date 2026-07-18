@@ -570,3 +570,24 @@ export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[],
   return res.json();
 }
 
+export async function spendCoins(studentId: string, amount: number): Promise<boolean> {
+  try {
+    const res = await executeWithRetry(
+      "SELECT coins FROM students WHERE id = ?",
+      [studentId]
+    );
+    if (res.rows.length === 0) return false;
+    
+    const currentCoins = Number(res.rows[0].coins) || 0;
+    if (currentCoins < amount) return false;
+    
+    await executeWithRetry(
+      "UPDATE students SET coins = coins - ? WHERE id = ?",
+      [amount, studentId]
+    );
+    return true;
+  } catch (e) {
+    console.error("Failed to spend coins", e);
+    return false;
+  }
+}

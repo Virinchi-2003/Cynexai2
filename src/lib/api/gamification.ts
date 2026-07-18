@@ -39,8 +39,8 @@ export async function getGamificationSettings(): Promise<GameSetting[]> {
 export async function updateGamificationSetting(taskType: string, isEnabled: boolean, rewardAmount: number): Promise<void> {
   try {
     await executeWithRetry(
-      "UPDATE gamification_settings SET is_enabled = ?, reward_amount = ? WHERE task_type = ?",
-      [isEnabled ? 1 : 0, rewardAmount, taskType]
+      "INSERT OR REPLACE INTO gamification_settings (task_type, is_enabled, reward_amount) VALUES (?, ?, ?)",
+      [taskType, isEnabled ? 1 : 0, rewardAmount]
     );
   } catch (error) {
     console.error("Failed to update gamification setting", error);

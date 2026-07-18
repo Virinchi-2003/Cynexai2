@@ -3,6 +3,8 @@ import { getCurrentUser } from '../../lib/auth';
 import { getLastMockInterview, saveMockInterview, getStudentDashboardData, processVoiceInterview, getInitialInterviewAudio } from '../../lib/api/student';
 import { Mic, Loader2, CheckCircle, Clock, Star, Play, Settings, XCircle } from 'lucide-react';
 import { Avatar2D } from '../../components/ui/Avatar2D';
+import { getGamificationSettings } from '../../lib/api/gamification';
+import { spendCoins } from '../../lib/api/student';
 
 const COOLDOWN_DAYS = 5;
 const COIN_REWARD = 20;
@@ -32,6 +34,8 @@ export default function MockInterview() {
   const [phase, setPhase] = useState<Phase>('setup');
   const [loading, setLoading] = useState(true);
   const [cooldownDaysLeft, setCooldownDaysLeft] = useState(0);
+  const [coinsAvailable, setCoinsAvailable] = useState(0);
+  const [interviewCost, setInterviewCost] = useState(50);
   
   // Context
   const [studentContext, setStudentContext] = useState<string>('Student in training');
@@ -58,10 +62,16 @@ export default function MockInterview() {
   useEffect(() => {
     if (!user) return;
     const init = async () => {
-      const [lastInterview, dashData] = await Promise.all([
+      const [lastInterview, dashData, gameSettings] = await Promise.all([
         getLastMockInterview(user.id),
-        getStudentDashboardData(user.id).catch(() => ({ modules: [], course: null, gamification: { streak: 0, coins: 0 }, upcomingClass: null }))
+        getStudentDashboardData(user.id).catch(() => ({ modules: [], course: null, gamification: { streak: 0, coins: 0 }, upcomingClass: null })),
+        getGamificationSettings().catch(() => [])
       ]);
+
+      const costSetting = gameSettings.find(s => s.task_type === 'ai_interview_cost');
+      const cost = costSetting ? costSetting.reward_amount : 50;
+      setInterviewCost(cost);
+      setCoinsAvailable(dashData?.gamification?.coins || 0);
 
       if (lastInterview) {
         const daysSince = daysBetween(new Date(lastInterview.created_at), new Date());
@@ -108,10 +118,24 @@ export default function MockInterview() {
   };
 
   const startInterview = async () => {
+    if (coinsAvailable < interviewCost) {
+      alert(`You need ${interviewCost} coins to start an interview.`);
+      return;
+    }
+
+    if (!user) return;
+    setProcessingAI(true);
+    const spent = await spendCoins(user.id, interviewCost);
+    if (!spent) {
+      alert("Failed to deduct coins. Please try again.");
+      setProcessingAI(false);
+      return;
+    }
+
+    setCoinsAvailable(prev => prev - interviewCost);
     setPhase('interview');
     setChatHistory([]);
     setTurnCount(1);
-    setProcessingAI(true);
     
     try {
       const { aiResponse, audioBase64 } = await getInitialInterviewAudio(studentContext, voice);
@@ -248,6 +272,25 @@ export default function MockInterview() {
           </div>
 
           <div className="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-8 shadow-2xl">
+            {/* Economy Banner */}
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-800/50 border border-zinc-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center">
+                  <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-zinc-300">Your Balance</p>
+                  <p className="text-xl font-bold text-white">{coinsAvailable} Coins</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-zinc-300">Session Cost</p>
+                <p className={`text-xl font-bold ${coinsAvailable >= interviewCost ? 'text-purple-400' : 'text-red-400'}`}>
+                  -{interviewCost} Coins
+                </p>
+              </div>
+            </div>
+
             <div className="space-y-4">
               <label className="flex items-center gap-2 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
                 <Settings className="w-4 h-4" /> Interviewer Voice
@@ -292,9 +335,11 @@ export default function MockInterview() {
 
             <button
               onClick={startInterview}
-              className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-lg shadow-lg hover:shadow-purple-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              disabled={coinsAvailable < interviewCost}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-lg shadow-lg hover:shadow-purple-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Play className="w-5 h-5 fill-current" /> Enter Interview Room
+              <Play className="w-5 h-5 fill-current" /> 
+              {coinsAvailable >= interviewCost ? 'Spend Coins & Enter Room' : 'Not Enough Coins'}
             </button>
           </div>
         </div>
