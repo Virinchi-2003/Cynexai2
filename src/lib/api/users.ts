@@ -419,12 +419,20 @@ export async function approveStudent(studentId: string, portalId: string, passwo
     ['Approved', portalId, studentId]
   );
 
-  // 2. Create actual User for login
-  await executeWithRetry(
-    `INSERT INTO users (id, name, email, role, status, password_hash, password_encrypted)
-     VALUES (?, ?, ?, 'Student', 'Active', ?, ?)`,
-    [userId, name, email, encPw, encPw]
-  );
+  // 2. Create or Update actual User for login
+  const existingUser = await executeWithRetry(`SELECT id FROM users WHERE email = ?`, [email]);
+  if (existingUser.rows.length > 0) {
+    await executeWithRetry(
+      `UPDATE users SET password_hash = ?, password_encrypted = ?, status = 'Active' WHERE email = ?`,
+      [encPw, encPw, email]
+    );
+  } else {
+    await executeWithRetry(
+      `INSERT INTO users (id, name, email, role, status, password_hash, password_encrypted)
+       VALUES (?, ?, ?, 'Student', 'Active', ?, ?)`,
+      [userId, name, email, encPw, encPw]
+    );
+  }
 }
 
 export async function rejectStudent(studentId: string): Promise<void> {

@@ -111,7 +111,7 @@ export default function StudentsPage() {
           (SELECT COUNT(*) FROM badges b WHERE b.student_id = s.id) as badges,
           (SELECT COUNT(*) FROM student_progress sp WHERE sp.student_id = s.id AND sp.completed = 1) as completedClasses
         FROM students s
-        WHERE 1=1
+        WHERE (s.approval_status = 'Approved' OR s.approval_status IS NULL)
       `;
       const args: any[] = [];
       if (search) { sql += ` AND (s.name LIKE ? OR s.portal_login_email LIKE ? OR s.phone LIKE ?)`; const q = `%${search}%`; args.push(q, q, q); }
