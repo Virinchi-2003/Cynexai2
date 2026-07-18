@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { getLeads, updateLeadStatus, addActivity, createLead, claimLead } from '../../lib/api/crm';
+import { getCoursesForPitch } from '../../lib/api/sales';
 import { createPendingStudent } from '../../lib/api/users';
 import { Lead, LeadStatus } from '../../lib/types';
 import { getCurrentUser } from '../../lib/auth';
@@ -46,11 +47,23 @@ function MobileLeadCard({ lead, stage, onClick }: { lead: Lead; stage: typeof PI
           </span>
         )}
       </div>
-      {lead.course_interest && (
-        <span className="inline-block text-[11px] font-semibold text-erp-primary bg-erp-primary/10 px-2 py-0.5 rounded-full mb-2">
-          {lead.course_interest}
-        </span>
-      )}
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {lead.course_interest && (
+          <span className="text-[10px] font-semibold text-erp-primary bg-erp-primary/10 px-1.5 py-0.5 rounded-full">
+            {lead.course_interest}
+          </span>
+        )}
+        {lead.source && (
+          <span className="text-[10px] font-semibold text-erp-text/60 bg-erp-border px-1.5 py-0.5 rounded-full">
+            {lead.source}
+          </span>
+        )}
+        {(lead.qualification || lead.grad_year) && (
+          <span className="text-[10px] font-medium text-erp-text/60">
+            {[lead.qualification, lead.grad_year].filter(Boolean).join(' • ')}
+          </span>
+        )}
+      </div>
       <div className="flex items-center justify-between mt-1">
         <span className="text-xs text-erp-text/50 font-medium">{lead.phone || '—'}</span>
         <div className="flex gap-1.5">
@@ -108,7 +121,10 @@ export default function LeadPipeline() {
   const navigate = useNavigate();
   const user = getCurrentUser();
 
-  const loadData = useCallback(() => { getLeads().then(setLeads); }, []);
+  const loadData = useCallback(() => { 
+    getLeads().then(setLeads); 
+    getCoursesForPitch().then(res => setCourses(res.map(c => c.title)));
+  }, []);
   useEffect(() => { loadData(); }, []);
 
   const visibleStages = showAllStages
@@ -496,8 +512,18 @@ export default function LeadPipeline() {
                                 }}
                               >
                                 <p className="font-bold text-[13px] text-erp-text truncate">{lead.name}</p>
-                                {lead.course_interest && (
-                                  <span className="text-[10px] font-semibold text-erp-primary bg-erp-primary/10 px-1.5 py-0.5 rounded-full w-max">{lead.course_interest}</span>
+                                <div className="flex flex-wrap gap-1 mt-0.5">
+                                  {lead.course_interest && (
+                                    <span className="text-[10px] font-semibold text-erp-primary bg-erp-primary/10 px-1.5 py-0.5 rounded-full">{lead.course_interest}</span>
+                                  )}
+                                  {lead.source && (
+                                    <span className="text-[10px] font-semibold text-erp-text/70 bg-erp-border/60 px-1.5 py-0.5 rounded-full">{lead.source}</span>
+                                  )}
+                                </div>
+                                {(lead.qualification || lead.grad_year) && (
+                                  <p className="text-[10px] font-medium text-erp-text/50 truncate mt-0.5">
+                                    {[lead.qualification, lead.grad_year].filter(Boolean).join(' • ')}
+                                  </p>
                                 )}
                                 <div className="flex items-center justify-between mt-1">
                                   <span className="text-[11px] text-erp-text/50 font-medium truncate flex-1">{lead.phone || '—'}</span>
