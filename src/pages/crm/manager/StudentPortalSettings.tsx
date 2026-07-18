@@ -21,7 +21,7 @@ const FEATURE_FLAGS = [
   { key: 'show_leaderboard',    label: 'Leaderboard',              desc: 'Student ranking by coins and referrals' },
   { key: 'show_mock_interview', label: 'AI Mock Interview',        desc: 'AI-powered voice mock interview feature' },
   { key: 'show_attendance',     label: 'Attendance Page',          desc: 'Students can see their attendance history' },
-  { key: 'show_gamification',   label: 'Gamification (XP/Coins)',  desc: 'Streak, coins, level system visibility' },
+  { key: 'show_gamification',   label: 'Gamification (Level/Coins)',  desc: 'Streak, coins, level system visibility' },
 ];
 
 // ─── Shared Styles ────────────────────────────────────────────────────────────
