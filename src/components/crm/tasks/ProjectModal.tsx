@@ -7,6 +7,7 @@ import { getCurrentUser } from '../../../lib/auth';
 interface ProjectModalProps {
   onClose: () => void;
   onSuccess: (projectId: string) => void;
+  project?: Project | null;
 }
 
 const COLORS = [
@@ -22,10 +23,10 @@ const COLORS = [
   '#64748b', // Slate
 ];
 
-export function ProjectModal({ onClose, onSuccess }: ProjectModalProps) {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [color, setColor] = useState(COLORS[5]);
+export function ProjectModal({ onClose, onSuccess, project }: ProjectModalProps) {
+  const [name, setName] = useState(project?.name || '');
+  const [description, setDescription] = useState(project?.description || '');
+  const [color, setColor] = useState(project?.color || COLORS[5]);
   const [loading, setLoading] = useState(false);
   const user = getCurrentUser();
 
@@ -35,15 +36,23 @@ export function ProjectModal({ onClose, onSuccess }: ProjectModalProps) {
     
     setLoading(true);
     try {
-      const id = await createProject({
-        name: name.trim(),
-        description: description.trim() || null,
-        color,
-        owner_id: user.id,
-        status: 'Active'
-      });
-      if (id) {
-        onSuccess(id);
+      if (project) {
+        const { updateProject } = await import('../../../lib/api/projects');
+        await updateProject(project.id, {
+          name: name.trim(),
+          description: description.trim() || null,
+          color,
+        });
+        onSuccess(project.id);
+      } else {
+        const id = await createProject({
+          name: name.trim(),
+          description: description.trim() || null,
+          color,
+          owner_id: user.id,
+          status: 'Active'
+        });
+        if (id) onSuccess(id);
       }
     } finally {
       setLoading(false);
@@ -54,7 +63,7 @@ export function ProjectModal({ onClose, onSuccess }: ProjectModalProps) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md bg-erp-background rounded-2xl shadow-2xl border-2 border-erp-border overflow-hidden animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between p-4 border-b border-erp-border bg-white">
-          <h2 className="text-xl font-display font-bold text-erp-text">New Project</h2>
+          <h2 className="text-xl font-display font-bold text-erp-text">{project ? 'Edit Project' : 'New Project'}</h2>
           <button onClick={onClose} className="p-1 text-erp-text/50 hover:text-erp-text hover:bg-erp-surface rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
@@ -104,7 +113,7 @@ export function ProjectModal({ onClose, onSuccess }: ProjectModalProps) {
           <div className="pt-2 flex justify-end gap-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={!name.trim() || loading} className="min-w-[100px]">
-              {loading ? 'Creating...' : 'Create Project'}
+              {loading ? 'Saving...' : (project ? 'Save Changes' : 'Create Project')}
             </Button>
           </div>
         </form>

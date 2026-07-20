@@ -14,7 +14,7 @@ import { TaskAppSidebar } from './TaskAppSidebar';
 import { ProjectModal } from './ProjectModal';
 import { ProjectHierarchyPanel } from './ProjectHierarchyPanel';
 import {
-  LayoutList, LayoutGrid, CalendarDays, Plus, Search, X,
+  Menu, LayoutList, LayoutGrid, CalendarDays, Plus, Search, X,
   FolderOpen, Users, Crown, Shield, Clock, Target, BarChart2,
   ChevronDown, AlertTriangle, CheckCircle2, Circle, Timer, Zap
 } from 'lucide-react';
@@ -250,6 +250,8 @@ export default function AsanaTaskApp() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showNewTask, setShowNewTask] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
@@ -349,18 +351,32 @@ export default function AsanaTaskApp() {
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background relative">
 
+      {/* Mobile Sidebar Backdrop */}
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <TaskAppSidebar
-        currentView={currentView}
-        onViewChange={(view, projectId) => {
-          setCurrentView(view);
-          setCurrentProjectId(projectId || null);
-          setSelectedTask(null);
-          setShowHierarchyForProject(null);
-        }}
-        projects={projects}
-        onNewProject={() => setShowNewProject(true)}
-      />
+      <div className={`
+        absolute inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0
+        ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <TaskAppSidebar
+          currentView={currentView}
+          onViewChange={(view, projectId) => {
+            setCurrentView(view);
+            setCurrentProjectId(projectId || null);
+            setSelectedTask(null);
+            setShowHierarchyForProject(null);
+            setIsMobileSidebarOpen(false); // Close on mobile after selection
+          }}
+          projects={projects}
+          onNewProject={() => setShowNewProject(true)}
+        />
+      </div>
 
       {/* Main Content */}
       <div className={`flex-1 flex flex-col p-4 md:p-6 min-w-0 h-full transition-all duration-300 overflow-y-auto ${selectedTask ? 'hidden lg:flex lg:pr-4' : 'w-full'}`}>
@@ -368,11 +384,29 @@ export default function AsanaTaskApp() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-start justify-between mb-4 gap-3 border-b border-erp-border/50 pb-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
+            <button 
+              className="md:hidden p-1.5 -ml-1.5 rounded-lg text-erp-text/60 hover:bg-erp-surface flex-shrink-0 mt-0.5"
+              onClick={() => setIsMobileSidebarOpen(true)}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            
             {currentProject && (
               <div className="w-4 h-4 rounded mt-1.5 flex-shrink-0" style={{ backgroundColor: currentProject.color || '#94a3b8' }} />
             )}
-            <div className="min-w-0">
-              <h1 className="text-2xl font-display font-bold text-erp-text truncate">{viewTitle()}</h1>
+            
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-display font-bold text-erp-text truncate">{viewTitle()}</h1>
+                {currentProject && isManagerOrAbove && (
+                  <button 
+                    onClick={() => setEditingProject(currentProject)}
+                    className="p-1.5 text-erp-text/40 hover:text-erp-primary hover:bg-erp-primary/10 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  </button>
+                )}
+              </div>
               {currentProject?.description && (
                 <p className="text-sm text-erp-text/50 mt-0.5 truncate">{currentProject.description}</p>
               )}
@@ -550,12 +584,17 @@ export default function AsanaTaskApp() {
         </div>
       )}
 
-      {/* New Project Modal */}
-      {showNewProject && (
+      {/* New/Edit Project Modal */}
+      {(showNewProject || editingProject) && (
         <ProjectModal
-          onClose={() => setShowNewProject(false)}
+          project={editingProject}
+          onClose={() => {
+            setShowNewProject(false);
+            setEditingProject(null);
+          }}
           onSuccess={(newId) => {
             setShowNewProject(false);
+            setEditingProject(null);
             loadData();
             setCurrentView(`project_${newId}`);
             setCurrentProjectId(newId);

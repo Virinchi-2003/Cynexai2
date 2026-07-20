@@ -46,8 +46,9 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
 
   return (
     <div className="bg-white border-2 border-erp-border rounded-xl overflow-hidden shadow-sm">
-      <table className="w-full text-left border-collapse">
-        <thead className="bg-erp-surface border-b border-erp-border text-xs font-bold text-erp-text/60 uppercase tracking-wider">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[800px]">
+          <thead className="bg-erp-surface border-b border-erp-border text-xs font-bold text-erp-text/60 uppercase tracking-wider">
           <tr>
             <th className="p-3 w-10 text-center"></th>
             <th className="p-3">Task Name</th>
@@ -143,6 +144,7 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

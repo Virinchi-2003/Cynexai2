@@ -113,6 +113,11 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
     }
   };
 
+  const getUserName = (id: string) => {
+    const u = users.find(user => user.id === id);
+    return u ? u.name : id;
+  };
+
   return (
     <div className="flex flex-col h-full bg-erp-surface border-l-2 border-erp-border overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-erp-border bg-erp-background">
@@ -159,13 +164,12 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
                 onChange={(e) => handleChange('assignee_id', e.target.value)}
                 className="bg-transparent hover:bg-erp-background px-2 py-1 -mx-2 rounded outline-none border-none text-erp-text font-medium cursor-pointer"
               >
-                <option value={editedTask.assignee_id}>{editedTask.assignee_id}</option>
                 {users.map(u => (
                   <option key={u.id} value={u.id}>{u.name} ({u.role})</option>
                 ))}
               </select>
             ) : (
-              <span className="font-medium text-erp-text px-2 py-1 -mx-2">{editedTask.assignee_id}</span>
+              <span className="font-medium text-erp-text px-2 py-1 -mx-2">{getUserName(editedTask.assignee_id)}</span>
             )}
           </div>
 
