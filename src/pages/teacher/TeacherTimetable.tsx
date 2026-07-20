@@ -276,21 +276,20 @@ export default function TeacherTimetable() {
           </div>
         </Card>
       </div>
-    </div>
 
-    {/* Reschedule Modal */}
-    {reschedulingSlot && (
-      <RescheduleModal
-        slot={{
-          id: reschedulingSlot.id,
-          title: reschedulingSlot.course_name || reschedulingSlot.batch_name || 'Class',
-          start_time: reschedulingSlot.start_time,
-          batch_id: reschedulingSlot.batch_id,
-        }}
-        onClose={() => setReschedulingSlot(null)}
-        onSuccess={() => { fetchData(); }}
-      />
-    )}
-  </div>
+      {/* Reschedule Modal */}
+      {reschedulingSlot && (
+        <RescheduleModal
+          slot={{
+            id: reschedulingSlot.id,
+            title: reschedulingSlot.course_name || reschedulingSlot.batch_name || 'Class',
+            start_time: reschedulingSlot.start_time,
+            batch_id: reschedulingSlot.batch_id,
+          }}
+          onClose={() => setReschedulingSlot(null)}
+          onSuccess={() => { fetchData(); }}
+        />
+      )}
+    </div>
   );
 }

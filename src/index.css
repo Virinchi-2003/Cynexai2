@@ -1,9 +1,9 @@
+/* Google Fonts — Sora for student portal headings */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Google Fonts — Sora for student portal headings */
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800;900&display=swap');
 
 /* ─────────────────────────────────────────────────────────────────────────────
    PREMIUM DESIGN SYSTEM — Light (Warm White) + Dark (Rich Black)
