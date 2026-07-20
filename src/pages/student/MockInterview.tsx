@@ -480,11 +480,7 @@ export default function MockInterview() {
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-zinc-900/90 backdrop-blur-2xl px-6 py-4 rounded-full border border-zinc-700/50 shadow-2xl">
         <div className="flex items-center justify-center gap-4">
           <button
-            onMouseDown={startRecording}
-            onMouseUp={stopRecording}
-            onMouseLeave={stopRecording}
-            onTouchStart={startRecording}
-            onTouchEnd={stopRecording}
+            onClick={isRecording ? stopRecording : startRecording}
             disabled={isAvatarSpeaking || processingAI}
             className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all select-none group ${
               isAvatarSpeaking || processingAI
@@ -493,7 +489,7 @@ export default function MockInterview() {
                 ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.6)] scale-95'
                 : 'bg-zinc-700 hover:bg-zinc-600 text-white active:scale-95'
             }`}
-            title="Hold to Speak"
+            title={isRecording ? "Click to Send" : "Click to Speak"}
           >
             {processingAI ? (
               <Loader2 className="w-6 h-6 md:w-7 md:h-7 animate-spin" />
