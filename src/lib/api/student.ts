@@ -568,13 +568,19 @@ async function textToSpeech(text: string, voice: string): Promise<string> {
   const DEEPGRAM_API_KEY = import.meta.env.VITE_DEEPGRAM_VOICE_API;
   if (!DEEPGRAM_API_KEY) throw new Error("Missing Deepgram API Key");
 
-  // Map local Piper voices to Deepgram voices
+  // Map voice IDs to Deepgram Aura models
   const voiceMap: Record<string, string> = {
+    'aura-asteria-en': 'aura-asteria-en',
+    'aura-orion-en': 'aura-orion-en',
+    'aura-helios-en': 'aura-helios-en',
+    'aura-angus-en': 'aura-angus-en',
+    'aura-stella-en': 'aura-stella-en',
+    'aura-zeus-en': 'aura-zeus-en',
+    // legacy piper voice names
     'en_US-libritts_r-medium': 'aura-asteria-en',
     'en_GB-alan-medium': 'aura-orion-en',
     'en_US-amy-medium': 'aura-stella-en',
     'en_US-l2arctic-medium': 'aura-zeus-en',
-    'aura-asteria-en': 'aura-asteria-en'
   };
   const targetVoice = voiceMap[voice] || 'aura-asteria-en';
 
@@ -587,13 +593,21 @@ async function textToSpeech(text: string, voice: string): Promise<string> {
     body: JSON.stringify({ text })
   });
 
-  if (!response.ok) throw new Error('Deepgram TTS failed');
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Deepgram TTS failed: ${response.status} ${errText}`);
+  }
 
   const arrayBuffer = await response.arrayBuffer();
-  const base64 = btoa(
-    new Uint8Array(arrayBuffer)
-      .reduce((data, byte) => data + String.fromCharCode(byte), '')
-  );
+  // Use Uint8Array properly - btoa cannot handle values > 127 directly
+  const uint8Array = new Uint8Array(arrayBuffer);
+  let binary = '';
+  const chunkSize = 8192; // process in chunks to avoid stack overflow
+  for (let i = 0; i < uint8Array.length; i += chunkSize) {
+    const chunk = uint8Array.subarray(i, i + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+  const base64 = btoa(binary);
   return `data:audio/mp3;base64,${base64}`;
 }
 
@@ -629,23 +643,55 @@ async function generateChatResponse(messages: any[]): Promise<string> {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.3-70b-versatile',
       messages,
-      temperature: 0.7,
-      max_tokens: 150
+      temperature: 0.85,
+      max_tokens: 200
     })
   });
 
-  if (!response.ok) throw new Error('Groq LLM failed');
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Groq LLM failed: ${response.status} ${errText}`);
+  }
   const data = await response.json();
-  return data.choices[0]?.message?.content || 'Okay, I understand.';
+  return data.choices[0]?.message?.content || 'Hmm, I see. Could you tell me a bit more about that?';
 }
+
+// Indian HR interview structured question bank (used to guide the AI)
+const INDIAN_HR_SYSTEM_PROMPT = `You are Priya Sharma, a senior HR manager at a reputed Indian IT/tech company based in Hyderabad. You have 10+ years of experience conducting interviews.
+
+Your personality:
+- Warm but professional, uses Indian professional English naturally
+- Occasionally uses phrases like "So", "Alright", "Very good", "I see", "That's interesting"
+- Direct and to the point, does not waste time
+- Follows a structured interview flow
+
+Interview structure you MUST follow (guide naturally through each phase):
+1. Greeting & self-introduction request (turn 1)
+2. Educational background & course details (turn 2-3)
+3. Technical skills & what they've learned (turn 3-4)
+4. Strengths and weaknesses (turn 4-5)
+5. Situational/behavioral questions like "Tell me about a challenge you faced" (turn 5-7)
+6. Why they want this career/role (turn 7-8)
+7. Where they see themselves in 5 years (turn 8-9)
+8. Salary expectations or availability (turn 9-10)
+9. Any questions for us? (turn 10+)
+
+Rules:
+- Speak ONLY as the HR interviewer - do NOT act as both interviewer and candidate
+- Ask ONLY ONE question per response
+- Keep each response to 2-3 sentences maximum — clear and natural for spoken audio
+- Do NOT use bullet points, asterisks, or markdown formatting in your responses
+- Respond naturally to what the candidate says before asking next question
+- Be encouraging but maintain professional evaluation tone
+- NEVER end the interview yourself — only the candidate ends it`;
 
 export async function getInitialInterviewAudio(context: string, voice: string): Promise<{ aiResponse: string, audioBase64: string }> {
   try {
     const messages = [
-      { role: 'system', content: 'You are an expert interviewer. Start the interview by briefly greeting the candidate and asking them to introduce themselves. Keep it under 2 sentences.' },
-      { role: 'user', content: context }
+      { role: 'system', content: INDIAN_HR_SYSTEM_PROMPT },
+      { role: 'user', content: `[CONTEXT: ${context}] The candidate has just entered the interview room. Start the interview with a warm professional greeting and ask them to introduce themselves. Keep it to 2 sentences maximum.` }
     ];
     
     const aiResponse = await generateChatResponse(messages);
@@ -662,11 +708,20 @@ export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[],
   try {
     // 1. STT
     const transcript = await speechToText(audioBlob);
+    if (!transcript || transcript.trim().length < 2) {
+      throw new Error('Could not understand audio. Please speak clearly.');
+    }
     
-    // 2. LLM
+    // 2. LLM — with Indian HR persona and turn awareness
     const messages = [
-      { role: 'system', content: `You are an expert interviewer. The candidate is interviewing for a position. Context: ${context}. Keep responses conversational, concise (1-3 sentences max), and ask one relevant follow-up question.` },
-      ...chatHistory.map(h => ({ role: h.role === 'student' ? 'user' : 'assistant', content: h.content })),
+      { 
+        role: 'system', 
+        content: `${INDIAN_HR_SYSTEM_PROMPT}\n\n[CONTEXT: ${context}]\n[Current turn: ${turnCount}. Guide the interview naturally based on the turn number and conversation flow.]` 
+      },
+      ...chatHistory.map(h => ({ 
+        role: h.role === 'user' ? 'user' : 'assistant', 
+        content: h.content 
+      })),
       { role: 'user', content: transcript }
     ];
     const aiResponse = await generateChatResponse(messages);

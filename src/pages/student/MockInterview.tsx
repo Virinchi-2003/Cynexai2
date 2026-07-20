@@ -10,10 +10,10 @@ const COOLDOWN_DAYS = 5;
 const COIN_REWARD = 20;
 
 const VOICES = [
-  { id: 'aura-asteria-en', name: 'US Female (Asteria)' },
-  { id: 'aura-orion-en', name: 'US Male (Orion)' },
-  { id: 'aura-helios-en', name: 'UK Male (Helios)' },
-  { id: 'aura-angus-en', name: 'Irish Male (Angus)' },
+  { id: 'aura-asteria-en', name: '🇮🇳 Priya (Indian HR Female)', desc: 'Warm & professional' },
+  { id: 'aura-orion-en', name: '🇮🇳 Arjun (Indian HR Male)', desc: 'Authoritative & clear' },
+  { id: 'aura-helios-en', name: '🌐 Vikram (International Male)', desc: 'MNC style' },
+  { id: 'aura-angus-en', name: '🌐 Meera (International Female)', desc: 'Senior management' },
 ];
 
 const SPEEDS = [
@@ -95,29 +95,40 @@ export default function MockInterview() {
   }, [user?.id]);
 
   const playAudioBase64 = (base64Str: string) => {
-    // base64Str may already contain the data URI prefix
     if (!base64Str) { setIsAvatarSpeaking(false); return; }
     try {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
+        audioPlayerRef.current.src = '';
       }
+      // textToSpeech already returns full data URI — don't double-prefix
       const audioUrl = base64Str.startsWith('data:') ? base64Str : `data:audio/mp3;base64,${base64Str}`;
       const audio = new Audio(audioUrl);
       audio.playbackRate = speed;
       audioPlayerRef.current = audio;
 
-      audio.onplay = () => setIsAvatarSpeaking(true);
+      // Must set speaking BEFORE play() so UI updates instantly
+      setIsAvatarSpeaking(true);
       audio.onended = () => setIsAvatarSpeaking(false);
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.error('Audio element error:', e);
         setIsAvatarSpeaking(false);
         setTtsAvailable(false);
       };
       
-      audio.play().catch(e => {
-        console.error('Audio play error', e);
-        setIsAvatarSpeaking(false);
-        setTtsAvailable(false);
-      });
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(e => {
+          console.error('Audio play() rejected:', e);
+          setIsAvatarSpeaking(false);
+          // Autoplay blocked - user interaction needed
+          if (e.name === 'NotAllowedError') {
+            console.warn('Autoplay blocked. Audio will play on next user interaction.');
+          } else {
+            setTtsAvailable(false);
+          }
+        });
+      }
     } catch (e) {
       console.error('Audio error:', e);
       setIsAvatarSpeaking(false);
@@ -149,6 +160,7 @@ export default function MockInterview() {
     setPhase('interview');
     setChatHistory([]);
     setTurnCount(1);
+    setTtsAvailable(true); // reset on new session
     
     try {
       const { aiResponse, audioBase64 } = await getInitialInterviewAudio(studentContext, voice);
@@ -157,7 +169,7 @@ export default function MockInterview() {
     } catch (err) {
       console.error("Initial audio error", err);
       // Fallback: still show the interview with text-only mode
-      setChatHistory([{ role: 'ai', content: "Hello! Welcome to your mock interview. Could you please start by introducing yourself — your name, background, and what you\'ve been studying recently?" }]);
+      setChatHistory([{ role: 'ai', content: "Hello! Welcome. I'm Priya Sharma from HR. Please take a seat and tell me a bit about yourself — your background and what you've been studying recently." }]);
       setTtsAvailable(false);
     } finally {
       setProcessingAI(false);
@@ -222,11 +234,15 @@ export default function MockInterview() {
       if (audioBase64) {
         playAudioBase64(audioBase64);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('AI Processing error:', err);
-      const fallbackMsg = 'I see. Could you tell me more about your experience with that topic?';
+      // Show specific error if it's about audio quality
+      const isAudioErr = err?.message?.includes('understand');
+      const fallbackMsg = isAudioErr 
+        ? 'I did not quite catch that. Could you please repeat yourself more clearly?'
+        : 'I see. That is interesting. Could you elaborate a bit more on that?';
       setChatHistory(prev => [...prev, { role: 'ai', content: fallbackMsg }]);
-      setTtsAvailable(false);
+      if (!isAudioErr) setTtsAvailable(false);
     } finally {
       setProcessingAI(false);
     }
@@ -290,8 +306,12 @@ export default function MockInterview() {
       <div className="min-h-[calc(100vh-4rem)] bg-black p-4 md:p-8 flex flex-col items-center justify-center">
         <div className="max-w-xl w-full space-y-8">
           <div className="text-center space-y-2">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Virtual Interview</h1>
-            <p className="text-zinc-400">Configure your interviewer settings before we begin.</p>
+            <h1 className="text-4xl font-bold text-white tracking-tight">🇮🇳 HR Interview Simulator</h1>
+            <p className="text-zinc-400">Practice with an AI Indian HR interviewer — just like the real thing.</p>
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <span className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full font-semibold">Powered by Groq LLaMA 3.3</span>
+              <span className="text-xs bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full font-semibold">Deepgram TTS</span>
+            </div>
           </div>
 
           <div className="bg-zinc-900/50 backdrop-blur-xl border border-zinc-800 p-6 md:p-8 rounded-3xl space-y-8 shadow-2xl">
@@ -314,9 +334,9 @@ export default function MockInterview() {
               </div>
             </div>
 
-            <div className="space-y-4">
+          <div className="space-y-4">
               <label className="flex items-center gap-2 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
-                <Settings className="w-4 h-4" /> Interviewer Voice
+                <Settings className="w-4 h-4" /> Interviewer Persona
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {VOICES.map(v => (
@@ -329,7 +349,8 @@ export default function MockInterview() {
                         : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-800'
                     }`}
                   >
-                    <div className="font-medium">{v.name}</div>
+                    <div className="font-semibold text-sm">{v.name}</div>
+                    <div className="text-xs text-zinc-500 mt-0.5">{v.desc}</div>
                   </button>
                 ))}
               </div>
@@ -507,7 +528,7 @@ export default function MockInterview() {
               )}
             </button>
             <p className="text-xs text-zinc-500 text-center">
-              Turn {turnCount} of 10
+              Question {turnCount} — End anytime using the End button
             </p>
           </div>
         </div>
