@@ -346,3 +346,86 @@ export async function getCourseClassesMap(courseId: string) {
     return [];
   }
 }
+
+// ─── Class Reschedule / Postpone ────────────────────────────────────────────
+
+export interface RescheduleInput {
+  slotId: string;
+  slotTitle: string;
+  originalDate?: string;
+  originalTime: string;
+  newDate?: string;
+  newTime: string;
+  reason: string;
+  createdBy: string;
+  batchId?: string;  // batch to notify
+  courseId?: string; // course to notify
+}
+
+export async function postponeClass(input: RescheduleInput): Promise<{ success: boolean; message: string }> {
+  try {
+    // Create the class_reschedules table if it doesn't exist
+    await executeWithRetry(`
+      CREATE TABLE IF NOT EXISTS class_reschedules (
+        id TEXT PRIMARY KEY,
+        slot_id TEXT,
+        slot_title TEXT,
+        original_time TEXT,
+        new_time TEXT,
+        new_date TEXT,
+        reason TEXT,
+        created_by TEXT,
+        batch_id TEXT,
+        course_id TEXT,
+        created_at TEXT
+      )
+    `);
+
+    const id = `rs_${Date.now()}`;
+    await executeWithRetry(
+      `INSERT INTO class_reschedules (id, slot_id, slot_title, original_time, new_time, new_date, reason, created_by, batch_id, course_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [id, input.slotId, input.slotTitle, input.originalTime, input.newTime, input.newDate || null, input.reason, input.createdBy, input.batchId || null, input.courseId || null, new Date().toISOString()]
+    );
+
+    // Also insert into announcements table so students see it as a popup
+    const announcementId = `ann_rs_${Date.now()}`;
+    const announcementBody = `📅 Class "${input.slotTitle}" has been rescheduled.\n\n🕐 Original Time: ${input.originalTime}\n🕐 New Time: ${input.newTime}${input.newDate ? `\n📆 New Date: ${input.newDate}` : ''}\n\n📝 Reason: ${input.reason}`;
+    
+    await executeWithRetry(
+      `INSERT INTO announcements (id, title, body, is_active, created_at, batch_id) VALUES (?, ?, ?, 1, ?, ?)`,
+      [announcementId, `⏰ Class Rescheduled: ${input.slotTitle}`, announcementBody, new Date().toISOString(), input.batchId || null]
+    );
+
+    // Update the timetable slot's time
+    await executeWithRetry(
+      `UPDATE timetable_slots SET start_time = ? WHERE id = ?`,
+      [input.newTime, input.slotId]
+    );
+
+    return { success: true, message: 'Class rescheduled and students notified.' };
+  } catch (e) {
+    console.error('Failed to postpone class:', e);
+    return { success: false, message: 'Failed to reschedule class.' };
+  }
+}
+
+export async function getRescheduleHistory(slotId?: string): Promise<any[]> {
+  try {
+    await executeWithRetry(`
+      CREATE TABLE IF NOT EXISTS class_reschedules (
+        id TEXT PRIMARY KEY, slot_id TEXT, slot_title TEXT,
+        original_time TEXT, new_time TEXT, new_date TEXT,
+        reason TEXT, created_by TEXT, batch_id TEXT, course_id TEXT, created_at TEXT
+      )
+    `);
+    const res = slotId
+      ? await executeWithRetry(`SELECT * FROM class_reschedules WHERE slot_id = ? ORDER BY created_at DESC`, [slotId])
+      : await executeWithRetry(`SELECT * FROM class_reschedules ORDER BY created_at DESC LIMIT 50`);
+    return res.rows;
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+

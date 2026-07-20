@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, ArrowLeft, Zap, ChevronLeft, ChevronRight, Video, MapPin, Users } from 'lucide-react';
+import { Calendar, Clock, ArrowLeft, ChevronLeft, ChevronRight, Video, MapPin, Users, AlarmClock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { getCurrentUser } from '../../lib/auth';
 import { getGlobalTimetable, GlobalTimetableSlot, getBatchesList } from '../../lib/api/manager';
+import { RescheduleModal } from '../../components/crm/classes/RescheduleModal';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
@@ -64,6 +65,7 @@ export default function TeacherTimetable() {
   const [loading, setLoading] = useState(true);
   const [currentWeekStart, setCurrentWeekStart] = useState(getMonday(new Date()));
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [reschedulingSlot, setReschedulingSlot] = useState<GlobalTimetableSlot | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000); // update every minute
@@ -244,14 +246,22 @@ export default function TeacherTimetable() {
                                   </div>
                                 </div>
                                 {statusColor !== 'past' && (
-                                  <Button 
-                                    onClick={() => navigate(`/teacher/live?classId=${classItem.id}&type=${classItem.status}`)}
-                                    variant="primary"
-                                    className={`w-full py-1.5 text-[10px] h-auto ${statusColor === 'live' ? 'bg-red-600 hover:bg-red-700 border-red-700 shadow-md' : 'bg-indigo-600'}`}
-                                  >
-                                    <Video className="w-3 h-3 mr-1" /> 
-                                    {statusColor === 'live' ? 'JOIN LIVE CLASS' : 'Launch Studio'}
-                                  </Button>
+                                  <div className="flex flex-col gap-1">
+                                    <Button 
+                                      onClick={() => navigate(`/teacher/live?classId=${classItem.id}&type=${classItem.status}`)}
+                                      variant="primary"
+                                      className={`w-full py-1.5 text-[10px] h-auto ${statusColor === 'live' ? 'bg-red-600 hover:bg-red-700 border-red-700 shadow-md' : 'bg-indigo-600'}`}
+                                    >
+                                      <Video className="w-3 h-3 mr-1" /> 
+                                      {statusColor === 'live' ? 'JOIN LIVE CLASS' : 'Launch Studio'}
+                                    </Button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); setReschedulingSlot(classItem); }}
+                                      className="w-full py-1 text-[10px] font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg flex items-center justify-center gap-1 transition-colors"
+                                    >
+                                      <AlarmClock className="w-3 h-3" /> Postpone
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -267,5 +277,20 @@ export default function TeacherTimetable() {
         </Card>
       </div>
     </div>
+
+    {/* Reschedule Modal */}
+    {reschedulingSlot && (
+      <RescheduleModal
+        slot={{
+          id: reschedulingSlot.id,
+          title: reschedulingSlot.course_name || reschedulingSlot.batch_name || 'Class',
+          start_time: reschedulingSlot.start_time,
+          batch_id: reschedulingSlot.batch_id,
+        }}
+        onClose={() => setReschedulingSlot(null)}
+        onSuccess={() => { fetchData(); }}
+      />
+    )}
+  </div>
   );
 }

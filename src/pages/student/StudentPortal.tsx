@@ -19,6 +19,8 @@ import {
   Sparkles,
   TrendingUp,
   Clock,
+  X,
+  AlarmClock,
 } from 'lucide-react';
 import { getCurrentUser } from '../../lib/auth';
 import {
@@ -123,6 +125,44 @@ function AnnouncementsBanner({ announcements }: { announcements: Announcement[] 
         <div className="whitespace-nowrap animate-marquee inline-block text-sm text-slate-700 dark:text-[#94a3b8] font-medium">
           {text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{text}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Reschedule Notification Popup ───────────────────────────────────────────
+
+function ReschedulePopup({ announcements, onDismiss }: { announcements: Announcement[]; onDismiss: (id: string) => void }) {
+  const rescheduleAnns = announcements.filter(a => a.title?.startsWith('⏰'));
+  const [currentIdx, setCurrentIdx] = React.useState(0);
+  if (rescheduleAnns.length === 0) return null;
+  const ann = rescheduleAnns[currentIdx];
+  if (!ann) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pointer-events-none">
+      <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-orange-300 dark:border-orange-500/40 rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
+        <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-200 dark:border-orange-500/20">
+          <AlarmClock className="w-5 h-5 text-orange-500 flex-shrink-0" />
+          <span className="flex-1 font-bold text-orange-700 dark:text-orange-400 text-sm">{ann.title}</span>
+          <button
+            onClick={() => {
+              onDismiss(ann.id);
+              if (currentIdx < rescheduleAnns.length - 1) setCurrentIdx(i => i + 1);
+            }}
+            className="w-7 h-7 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-500/20 flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4 text-orange-500" />
+          </button>
+        </div>
+        <div className="px-4 py-3">
+          <pre className="text-sm text-slate-600 dark:text-zinc-300 whitespace-pre-wrap font-sans leading-relaxed">{ann.body}</pre>
+        </div>
+        {rescheduleAnns.length > 1 && (
+          <div className="px-4 py-2 border-t border-slate-100 dark:border-zinc-800 text-xs text-slate-400 text-center">
+            {currentIdx + 1} of {rescheduleAnns.length} notifications
+          </div>
+        )}
       </div>
     </div>
   );
@@ -451,6 +491,9 @@ export default function StudentPortal() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [dismissedAnnIds, setDismissedAnnIds] = useState<Set<string>>(new Set());
+
+  const handleDismiss = (id: string) => setDismissedAnnIds(prev => new Set([...prev, id]));
 
   const loadData = async () => {
     setLoading(true);
@@ -512,6 +555,12 @@ export default function StudentPortal() {
   // ──────────────────────────────────────────────────────────────────────────
   return (
     <div className="p-4 md:p-6">
+      {/* ── Reschedule Popup Notifications ── */}
+      <ReschedulePopup
+        announcements={announcements.filter(a => !dismissedAnnIds.has(a.id))}
+        onDismiss={handleDismiss}
+      />
+
       {/* ── Announcements Banner ── */}
       {announcements.length > 0 && (
         <div className="mb-5">

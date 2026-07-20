@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
-import { getClassFlowData, saveQaResponse, markClassWatched } from '../../lib/api/student';
-import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle } from 'lucide-react';
+import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
+import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Question {
   id: string;
@@ -12,6 +12,8 @@ interface Question {
   correct_answer_idx: number;
   boilerplate_json?: string;
 }
+
+const REQUIRED_WATCH_SECONDS = 15 * 60; // 15 minutes for live attendance
 
 export default function ClassFlow() {
   const [searchParams] = useSearchParams();
@@ -24,6 +26,8 @@ export default function ClassFlow() {
   const [hasWatched, setHasWatched] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [attendanceMarked, setAttendanceMarked] = useState(false);
+  const [showMaterials, setShowMaterials] = useState(true);
 
   // Q&A state
   const [currentQIdx, setCurrentQIdx] = useState(0);
@@ -33,10 +37,15 @@ export default function ClassFlow() {
   const [qaComplete, setQaComplete] = useState(false);
   const [score, setScore] = useState(0);
 
-  // Watch timer
+  // Watch timer (for recorded YouTube classes)
   const watchStartRef = useRef<number | null>(null);
   const [watchedSeconds, setWatchedSeconds] = useState(0);
-  const REQUIRED_WATCH_SECONDS = 5 * 60; // 5 min for dev (30 min in prod)
+  const REQUIRED_VIDEO_SECONDS = 5 * 60; // 5 min for video completion unlock
+
+  // Live attendance timer (15 min for live classes)
+  const liveStartRef = useRef<number | null>(null);
+  const [liveSeconds, setLiveSeconds] = useState(0);
+  const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -49,19 +58,46 @@ export default function ClassFlow() {
     });
   }, [classId, user?.id]);
 
-  // Watch timer logic
+  // Start live attendance timer when class is live type and loaded
+  useEffect(() => {
+    if (!classData || !user) return;
+    const isLive = classData.type === 'live' || classData.meet_link;
+    if (!isLive || attendanceMarked) return;
+
+    // Start counting when student is on the page
+    liveStartRef.current = Date.now();
+    liveIntervalRef.current = setInterval(() => {
+      setLiveSeconds(prev => {
+        const next = prev + 1;
+        if (next >= REQUIRED_WATCH_SECONDS && user && !attendanceMarked) {
+          // Auto-mark attendance
+          submitOnlineAttendance(user.id, classId).then(result => {
+            if (result.success) {
+              setAttendanceMarked(true);
+            }
+          });
+          if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
+        }
+        return next;
+      });
+    }, 1000);
+
+    return () => {
+      if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
+    };
+  }, [classData, user?.id, attendanceMarked]);
+
+  // YouTube watch timer
   useEffect(() => {
     if (hasWatched) return;
     let interval: ReturnType<typeof setInterval>;
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.event === 'onStateChange' && e.data.info === 1) {
-        // YouTube playing
         watchStartRef.current = Date.now();
         interval = setInterval(() => {
-          const elapsed = Math.floor((Date.now() - (watchStartRef.current || Date.now())) / 1000);
           setWatchedSeconds(prev => {
             const next = prev + 1;
-            if (next >= REQUIRED_WATCH_SECONDS && user && !hasWatched) {
+            if (next >= REQUIRED_VIDEO_SECONDS && user && !hasWatched) {
               markClassWatched(user.id, classId).then(() => setHasWatched(true));
               clearInterval(interval);
             }
@@ -85,7 +121,7 @@ export default function ClassFlow() {
     if (selectedAnswers[q.id] === undefined && q.type !== 'code') return;
     const isCorrect = q.type === 'mcq'
       ? selectedAnswers[q.id] === q.correct_answer_idx
-      : true; // code answers are always "submitted"
+      : true;
 
     setSubmittedAnswers(prev => ({ ...prev, [q.id]: isCorrect }));
     if (isCorrect) setScore(s => s + 1);
@@ -129,9 +165,16 @@ export default function ClassFlow() {
     );
   }
 
-  const watchPct = Math.min(100, (watchedSeconds / REQUIRED_WATCH_SECONDS) * 100);
+  const isLiveClass = classData.type === 'live' || (!classData.youtube_video_id && classData.meet_link);
+  const isRecordedClass = !isLiveClass;
+  const watchPct = Math.min(100, (watchedSeconds / REQUIRED_VIDEO_SECONDS) * 100);
+  const livePct = Math.min(100, (liveSeconds / REQUIRED_WATCH_SECONDS) * 100);
+  const liveMinLeft = Math.max(0, Math.ceil((REQUIRED_WATCH_SECONDS - liveSeconds) / 60));
   const currentQ = questions[currentQIdx];
   const parsedOptions = currentQ ? (() => { try { return JSON.parse(currentQ.options_json || '[]'); } catch { return []; } })() : [];
+
+  // Parse AI materials from ai_script or ai_ppt_markdown
+  const aiMaterials = classData.ai_script || classData.ai_ppt_markdown || null;
 
   return (
     <div className="min-h-full bg-background p-4 md:p-8">
@@ -148,56 +191,146 @@ export default function ClassFlow() {
           <h1 className="text-xl font-bold text-foreground">{classData.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {/* Class type badge */}
+          {isLiveClass ? (
+            <span className="flex items-center gap-1 text-xs bg-red-500/10 text-red-500 font-bold px-3 py-1.5 rounded-full border border-red-500/20">
+              <Wifi className="w-3 h-3 animate-pulse" /> Live
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-400 font-bold px-3 py-1.5 rounded-full border border-blue-500/20">
+              <Video className="w-3 h-3" /> Recorded
+            </span>
+          )}
           {hasWatched && <span className="flex items-center gap-1 text-xs bg-green-500/10 text-green-400 font-bold px-3 py-1.5 rounded-full border border-green-500/20"><CheckCircle className="w-3 h-3" /> Watched</span>}
+          {attendanceMarked && <span className="flex items-center gap-1 text-xs bg-purple-500/10 text-purple-400 font-bold px-3 py-1.5 rounded-full border border-purple-500/20"><CheckCircle className="w-3 h-3" /> Attendance ✓</span>}
           {hasAnswered && <span className="flex items-center gap-1 text-xs bg-blue-500/10 text-blue-400 font-bold px-3 py-1.5 rounded-full border border-blue-500/20"><Star className="w-3 h-3" /> Completed</span>}
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Video Section */}
-        {classData.youtube_video_id ? (
-          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
-            <div className="relative aspect-video bg-black">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${classData.youtube_video_id}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
-                className="w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                title={classData.title}
-              />
-            </div>
-            {!hasWatched && (
-              <div className="p-4 bg-surface border-t border-border">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Watch Progress</span>
-                  <span className="text-xs font-bold text-primary">{Math.floor(watchedSeconds / 60)}m / 5m required</span>
+
+        {/* ── RECORDED CLASS: YouTube Video ── */}
+        {isRecordedClass && (
+          <>
+            {classData.youtube_video_id ? (
+              <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
+                <div className="relative aspect-video bg-black">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${classData.youtube_video_id}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title={classData.title}
+                  />
                 </div>
-                <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-1000" style={{ width: `${watchPct}%` }} />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">Watch at least 5 minutes to unlock Q&A and earn coins.</p>
+                {!hasWatched && (
+                  <div className="p-4 bg-surface border-t border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Watch Progress</span>
+                      <span className="text-xs font-bold text-primary">{Math.floor(watchedSeconds / 60)}m / 5m required</span>
+                    </div>
+                    <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-1000" style={{ width: `${watchPct}%` }} />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">Watch at least 5 minutes to unlock Q&A and earn coins.</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                <h3 className="font-bold text-amber-800 text-lg mb-1">Video Not Available Yet</h3>
+                <p className="text-amber-700 text-sm">The recording for this class hasn't been uploaded. Please check back later or contact your instructor.</p>
               </div>
             )}
-          </div>
-        ) : classData.meet_link ? (
-          <div className="bg-surface border border-border rounded-2xl p-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
-              <Play className="w-8 h-8 text-blue-500" />
+          </>
+        )}
+
+        {/* ── LIVE CLASS: Join Flow + Attendance Timer ── */}
+        {isLiveClass && (
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
+            {/* Live join area */}
+            {classData.meet_link ? (
+              <div className="p-6 text-center border-b border-border">
+                <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                  <Wifi className="w-8 h-8 text-red-500 animate-pulse" />
+                </div>
+                <h3 className="font-bold text-foreground text-lg mb-1">Live Class in Session</h3>
+                <p className="text-muted-foreground text-sm mb-4">Stay on this page for 15 minutes to mark your attendance automatically.</p>
+                <a
+                  href={classData.meet_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg"
+                >
+                  <Play className="w-4 h-4 fill-white" /> Join Live Class
+                </a>
+              </div>
+            ) : (
+              <div className="p-6 text-center border-b border-border">
+                <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="font-bold text-foreground text-lg mb-1">Live Class Scheduled</h3>
+                <p className="text-muted-foreground text-sm">The live link will be available when the class starts.</p>
+              </div>
+            )}
+
+            {/* 15-min attendance timer */}
+            <div className="p-4 bg-surface">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" /> Attendance Progress
+                </span>
+                {attendanceMarked ? (
+                  <span className="text-xs font-bold text-green-500 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" /> Marked!
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-primary">
+                    {liveMinLeft} min remaining
+                  </span>
+                )}
+              </div>
+              <div className="h-3 bg-foreground/10 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${attendanceMarked ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-600'}`}
+                  style={{ width: `${attendanceMarked ? 100 : livePct}%` }}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {attendanceMarked
+                  ? '✅ Attendance marked! Great job attending this live class.'
+                  : 'Stay on this page for 15 minutes to automatically mark attendance.'}
+              </p>
             </div>
-            <h3 className="font-bold text-foreground text-lg mb-2">Live Class</h3>
-            <p className="text-muted-foreground text-sm mb-4">This is a live class. Join via Google Meet.</p>
-            <a href={classData.meet_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:opacity-90 transition-opacity">
-              <Play className="w-4 h-4" /> Join Live Class
-            </a>
-          </div>
-        ) : (
-          <div className="bg-surface border border-border rounded-2xl p-6 text-center">
-            <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
-            <p className="text-muted-foreground">No video available for this class yet.</p>
           </div>
         )}
 
-        {/* AI Summary */}
+        {/* ── AI Materials (inline for all class types) ── */}
+        {aiMaterials && (
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+            <button
+              onClick={() => setShowMaterials(prev => !prev)}
+              className="w-full p-5 flex items-center justify-between hover:bg-foreground/[0.02] transition-colors"
+            >
+              <h2 className="font-bold text-foreground flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-500" />
+                Class Notes & Topics
+              </h2>
+              {showMaterials ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+            {showMaterials && (
+              <div className="px-5 pb-5 border-t border-border">
+                <div className="mt-4 bg-background rounded-xl p-4 border border-border">
+                  <pre className="text-sm text-foreground/80 whitespace-pre-wrap font-sans leading-relaxed">{aiMaterials}</pre>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── AI Summary ── */}
         {classData.ai_summary && (
           <div className="bg-surface border border-border rounded-2xl p-5">
             <h2 className="font-bold text-foreground flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
@@ -205,7 +338,7 @@ export default function ClassFlow() {
           </div>
         )}
 
-        {/* Q&A Section */}
+        {/* ── Q&A Section ── */}
         {questions.length > 0 && (
           <div className="bg-surface border border-border rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-border bg-foreground/[0.02]">
@@ -220,7 +353,7 @@ export default function ClassFlow() {
               </h2>
             </div>
 
-            {!hasWatched && !hasAnswered ? (
+            {!hasWatched && !hasAnswered && isRecordedClass ? (
               <div className="p-6 text-center">
                 <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
                 <p className="text-muted-foreground text-sm font-medium">Watch at least 5 minutes of the class to unlock Q&A.</p>

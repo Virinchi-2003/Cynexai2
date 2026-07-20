@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getCurrentUser } from '../../lib/auth';
 import { getLastMockInterview, saveMockInterview, getStudentDashboardData, processVoiceInterview, getInitialInterviewAudio } from '../../lib/api/student';
-import { Mic, Loader2, CheckCircle, Clock, Star, Play, Settings, XCircle } from 'lucide-react';
+import { Mic, Loader2, CheckCircle, Clock, Star, Play, Settings, XCircle, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import { Avatar2D } from '../../components/ui/Avatar2D';
 import { getGamificationSettings } from '../../lib/api/gamification';
 import { spendCoins } from '../../lib/api/student';
@@ -54,6 +54,9 @@ export default function MockInterview() {
   // Conversation State
   const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([]);
   const [turnCount, setTurnCount] = useState(1);
+  const [ttsAvailable, setTtsAvailable] = useState(true);
+  const [showTranscript, setShowTranscript] = useState(true);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -92,20 +95,40 @@ export default function MockInterview() {
   }, [user?.id]);
 
   const playAudioBase64 = (base64Str: string) => {
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-    }
-    const audioUrl = `data:audio/mp3;base64,${base64Str}`;
-    const audio = new Audio(audioUrl);
-    audio.playbackRate = speed;
-    audioPlayerRef.current = audio;
+    // base64Str may already contain the data URI prefix
+    if (!base64Str) { setIsAvatarSpeaking(false); return; }
+    try {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+      }
+      const audioUrl = base64Str.startsWith('data:') ? base64Str : `data:audio/mp3;base64,${base64Str}`;
+      const audio = new Audio(audioUrl);
+      audio.playbackRate = speed;
+      audioPlayerRef.current = audio;
 
-    audio.onplay = () => setIsAvatarSpeaking(true);
-    audio.onended = () => setIsAvatarSpeaking(false);
-    audio.onerror = () => setIsAvatarSpeaking(false);
-    
-    audio.play().catch(e => console.error("Audio play error", e));
+      audio.onplay = () => setIsAvatarSpeaking(true);
+      audio.onended = () => setIsAvatarSpeaking(false);
+      audio.onerror = () => {
+        setIsAvatarSpeaking(false);
+        setTtsAvailable(false);
+      };
+      
+      audio.play().catch(e => {
+        console.error('Audio play error', e);
+        setIsAvatarSpeaking(false);
+        setTtsAvailable(false);
+      });
+    } catch (e) {
+      console.error('Audio error:', e);
+      setIsAvatarSpeaking(false);
+      setTtsAvailable(false);
+    }
   };
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
   const startInterview = async () => {
     if (coinsAvailable < interviewCost) {
@@ -133,6 +156,9 @@ export default function MockInterview() {
       playAudioBase64(audioBase64);
     } catch (err) {
       console.error("Initial audio error", err);
+      // Fallback: still show the interview with text-only mode
+      setChatHistory([{ role: 'ai', content: "Hello! Welcome to your mock interview. Could you please start by introducing yourself — your name, background, and what you\'ve been studying recently?" }]);
+      setTtsAvailable(false);
     } finally {
       setProcessingAI(false);
     }
@@ -193,10 +219,14 @@ export default function MockInterview() {
       setChatHistory(newHistory);
       setTurnCount(prev => prev + 1);
       
-      playAudioBase64(audioBase64);
+      if (audioBase64) {
+        playAudioBase64(audioBase64);
+      }
     } catch (err) {
       console.error('AI Processing error:', err);
-      alert('Failed to process interview turn. Please try again.');
+      const fallbackMsg = 'I see. Could you tell me more about your experience with that topic?';
+      setChatHistory(prev => [...prev, { role: 'ai', content: fallbackMsg }]);
+      setTtsAvailable(false);
     } finally {
       setProcessingAI(false);
     }
@@ -381,7 +411,7 @@ export default function MockInterview() {
 
   // Active Interview Phase
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-black flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-[calc(100vh-4rem)] bg-black flex flex-col relative overflow-hidden">
       {/* Background Scenery */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 blur-sm scale-105"
@@ -389,47 +419,68 @@ export default function MockInterview() {
       />
       <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
+      {/* TTS unavailable banner */}
+      {!ttsAvailable && (
+        <div className="relative z-20 bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center">
+          <p className="text-xs text-amber-400 font-semibold">🔇 Audio unavailable — running in text-only mode. Read AI responses below.</p>
+        </div>
+      )}
+
       {/* Main Interview UI */}
-      <div className="relative z-10 w-full max-w-2xl flex flex-col items-center justify-center space-y-12 p-4">
+      <div className="relative z-10 flex flex-col md:flex-row h-full">
         
-        {/* Status Indicator & End Button */}
-        <div className="absolute top-4 w-full px-4 flex justify-between items-center max-w-4xl">
-          <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 flex items-center gap-2">
-            {processingAI ? (
-              <>
-                <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-                <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">Thinking</span>
-              </>
-            ) : isAvatarSpeaking ? (
-              <>
-                <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Speaking</span>
-              </>
-            ) : (
-              <>
-                <div className="w-2 h-2 rounded-full bg-green-400" />
-                <span className="text-xs font-semibold text-green-400 uppercase tracking-widest">Listening</span>
-              </>
-            )}
+        {/* Left: Avatar + Controls */}
+        <div className="flex flex-col items-center justify-center flex-1 p-4 space-y-6">
+          {/* Status Indicator & End Button */}
+          <div className="w-full max-w-sm flex justify-between items-center">
+            <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 flex items-center gap-2">
+              {processingAI ? (
+                <>
+                  <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
+                  <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">Thinking</span>
+                </>
+              ) : isAvatarSpeaking ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Speaking</span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-green-400" />
+                  <span className="text-xs font-semibold text-green-400 uppercase tracking-widest">Your Turn</span>
+                </>
+              )}
+            </div>
+            
+            <button 
+              onClick={finishInterview}
+              className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-widest">End</span>
+            </button>
           </div>
-          
-          <button 
-            onClick={finishInterview}
-            className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
-          >
-            <XCircle className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-widest">End</span>
-          </button>
-        </div>
 
-        {/* Central Avatar Focus */}
-        <div className="flex flex-col items-center gap-8 mt-16">
-          <Avatar2D isSpeaking={isAvatarSpeaking} size={280} gender={voice.includes('asteria') ? 'female' : 'male'} />
-        </div>
+          {/* Avatar */}
+          <Avatar2D isSpeaking={isAvatarSpeaking} size={200} gender={voice.includes('asteria') ? 'female' : 'male'} />
 
-        {/* Action Controls */}
-        <div className="w-full max-w-sm flex flex-col items-center gap-4">
-          <div className="flex flex-col items-center gap-3 w-full">
+          {/* Latest AI message bubble */}
+          {chatHistory.length > 0 && (
+            <div className="w-full max-w-sm bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-2xl p-4">
+              <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mb-1">Interviewer says:</p>
+              <p className="text-sm text-white leading-relaxed">
+                {chatHistory.filter(m => m.role === 'ai').slice(-1)[0]?.content || ''}
+              </p>
+            </div>
+          )}
+
+          {/* Mic Button */}
+          <div className="w-full max-w-sm flex flex-col items-center gap-3">
+            {!isAvatarSpeaking && !processingAI && (
+              <p className="text-xs text-zinc-400 text-center">
+                👇 Hold the button while speaking, release to send
+              </p>
+            )}
             <button
               onMouseDown={startRecording}
               onMouseUp={stopRecording}
@@ -437,28 +488,71 @@ export default function MockInterview() {
               onTouchStart={startRecording}
               onTouchEnd={stopRecording}
               disabled={isAvatarSpeaking || processingAI}
-              className={`w-full h-20 rounded-full font-bold text-lg flex items-center justify-center gap-3 transition-all select-none ${
+              className={`w-full h-16 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all select-none ${
                 isAvatarSpeaking || processingAI
                   ? 'bg-zinc-800/80 backdrop-blur-md text-zinc-500 cursor-not-allowed border border-zinc-700'
                   : isRecording
-                  ? 'bg-red-500/20 text-red-500 border border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.4)] scale-95'
-                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-xl shadow-purple-500/30 active:scale-95 border border-purple-400/30'
+                  ? 'bg-red-500/20 text-red-500 border-2 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.4)] scale-[0.98]'
+                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-xl shadow-purple-500/30 active:scale-[0.98] border border-purple-400/30'
               }`}
             >
-              {isRecording ? (
-                <>
-                  <Mic className="w-6 h-6 animate-pulse" /> Release to Send
-                </>
+              {processingAI ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
+              ) : isRecording ? (
+                <><Mic className="w-5 h-5 animate-pulse" /> 🔴 Release to Send</>
+              ) : isAvatarSpeaking ? (
+                <><Mic className="w-5 h-5" /> Wait for interviewer...</>
               ) : (
-                <>
-                  <Mic className="w-6 h-6" /> Hold to Speak
-                </>
+                <><Mic className="w-5 h-5" /> Hold to Speak</>  
               )}
             </button>
-            <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">
-              {isAvatarSpeaking || processingAI ? "Please wait..." : "Your Turn"}
+            <p className="text-xs text-zinc-500 text-center">
+              Turn {turnCount} of 10
             </p>
           </div>
+        </div>
+
+        {/* Right: Chat Transcript Panel */}
+        <div className="w-full md:w-80 lg:w-96 bg-zinc-900/95 border-t md:border-t-0 md:border-l border-zinc-800 flex flex-col">
+          <button
+            className="flex items-center justify-between p-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors md:cursor-default"
+            onClick={() => setShowTranscript(prev => !prev)}
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-zinc-400" />
+              <span className="text-sm font-bold text-zinc-300">Interview Transcript</span>
+              <span className="text-xs bg-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded-full">{chatHistory.length} messages</span>
+            </div>
+            <span className="md:hidden">{showTranscript ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}</span>
+          </button>
+          
+          {(showTranscript) && (
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-64 md:max-h-none">
+              {chatHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-zinc-500 text-sm">Interview starting...</p>
+                </div>
+              ) : (
+                chatHistory.map((msg, i) => (
+                  <div key={i} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      msg.role === 'ai' ? 'text-purple-400' : 'text-cyan-400'
+                    }`}>
+                      {msg.role === 'ai' ? '🤖 Interviewer' : '👤 You'}
+                    </span>
+                    <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                      msg.role === 'ai'
+                        ? 'bg-zinc-800 text-white rounded-tl-none'
+                        : 'bg-purple-600/30 text-purple-100 rounded-tr-none border border-purple-500/30'
+                    }`}>
+                      {msg.content}
+                    </div>
+                  </div>
+                ))
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          )}
         </div>
       </div>
     </div>
