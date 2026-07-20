@@ -35,25 +35,11 @@ export function TaskAppSidebar({ currentView, onViewChange, projects, onNewProje
         {/* Core Views */}
         <div className="space-y-1">
           <button 
-            onClick={() => onViewChange('home')}
-            className={getButtonClass(currentView === 'home')}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            Home
-          </button>
-          <button 
             onClick={() => onViewChange('my-tasks')}
             className={getButtonClass(currentView === 'my-tasks')}
           >
             <CheckCircle2 className="w-4 h-4" />
             My Tasks
-          </button>
-          <button 
-            onClick={() => onViewChange('inbox')}
-            className={getButtonClass(currentView === 'inbox')}
-          >
-            <Inbox className="w-4 h-4" />
-            Inbox
           </button>
           
           {['Manager', 'CEO', 'Admin'].includes(getCurrentUser()?.role || '') && (
@@ -63,14 +49,14 @@ export function TaskAppSidebar({ currentView, onViewChange, projects, onNewProje
                 className={getButtonClass(currentView === 'delegated')}
               >
                 <FolderOpen className="w-4 h-4" />
-                Delegated
+                Assigned by Me
               </button>
               <button 
                 onClick={() => onViewChange('all-tasks')}
                 className={getButtonClass(currentView === 'all-tasks')}
               >
                 <Hash className="w-4 h-4" />
-                All Tasks
+                Team Tasks
               </button>
             </>
           )}

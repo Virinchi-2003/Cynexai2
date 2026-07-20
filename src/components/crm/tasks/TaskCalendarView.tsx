@@ -29,20 +29,43 @@ const PRIORITY_COLORS: Record<string, string> = {
 
 export const TaskCalendarView: React.FC<Props> = ({ tasks, onTaskClick }) => {
   const events = useMemo(() => {
-    return tasks
-      .filter(t => t.due_date)
-      .map(task => {
+    const allEvents: any[] = [];
+    const today = new Date();
+    
+    tasks.forEach(task => {
+      if (!task.due_date && task.task_type !== 'Daily') return;
+      
+      if (task.task_type === 'Daily') {
+        const daysToRecur = task.recurrence_rule ? task.recurrence_rule.split(',').map(Number) : [1,2,3,4,5];
+        // Generate events for 60 days back and 60 days forward
+        for (let i = -60; i <= 60; i++) {
+          const d = new Date(today);
+          d.setDate(d.getDate() + i);
+          if (daysToRecur.includes(d.getDay())) {
+            allEvents.push({
+              id: `${task.id}_${i}`,
+              title: task.title,
+              start: new Date(d),
+              end: new Date(d),
+              resource: task,
+              allDay: true,
+            });
+          }
+        }
+      } else if (task.due_date) {
         const dueDate = new Date(task.due_date);
         const start = task.start_date ? new Date(task.start_date) : dueDate;
-        return {
+        allEvents.push({
           id: task.id,
           title: task.title,
           start,
           end: dueDate,
           resource: task,
           allDay: true,
-        };
-      });
+        });
+      }
+    });
+    return allEvents;
   }, [tasks]);
 
   const eventStyleGetter = (event: any) => {

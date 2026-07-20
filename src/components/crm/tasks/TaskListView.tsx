@@ -51,7 +51,7 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
           <tr>
             <th className="p-3 w-10 text-center"></th>
             <th className="p-3">Task Name</th>
-            <th className="p-3 w-32">Assignee</th>
+            <th className="p-3 w-40">Assigned</th>
             <th className="p-3 w-32">Due Date</th>
             <th className="p-3 w-32">Priority</th>
             <th className="p-3 w-32">Status</th>
@@ -61,6 +61,7 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
         <tbody className="divide-y divide-erp-border">
           {tasks.map(task => {
             const assigneeName = getUserName(task.assignee_id);
+            const creatorName = task.created_by ? getUserName(task.created_by) : assigneeName;
             return (
             <tr 
               key={task.id} 
@@ -92,11 +93,17 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
                 </div>
               </td>
               <td className="p-3">
-                <div className="flex items-center gap-2" title={assigneeName}>
-                  <div className="w-6 h-6 rounded-full bg-erp-primary/10 text-erp-primary flex items-center justify-center text-[10px] font-bold uppercase overflow-hidden border border-erp-primary/20">
-                    {assigneeName.slice(0,2)}
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-1 text-[9px] font-bold text-erp-text/40 uppercase">
+                    <span title={creatorName}>{creatorName.split(' ')[0]}</span>
+                    <span className="text-[7px]">▶</span>
                   </div>
-                  <span className="text-xs text-erp-text/70 truncate max-w-[80px]">{assigneeName}</span>
+                  <div className="flex items-center gap-2" title={assigneeName}>
+                    <div className="w-5 h-5 rounded-full bg-erp-primary/10 text-erp-primary flex items-center justify-center text-[9px] font-bold uppercase overflow-hidden border border-erp-primary/20 shrink-0">
+                      {assigneeName.slice(0,2)}
+                    </div>
+                    <span className="text-xs text-erp-text/80 font-medium truncate max-w-[80px]">{assigneeName}</span>
+                  </div>
                 </div>
               </td>
               <td className="p-3">
@@ -126,7 +133,7 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
                   {task.status}
                 </span>
               </td>
-              <td className="p-3 text-right">
+              <td className="p-3 text-right flex items-center justify-end gap-1">
                 <button className="opacity-0 group-hover:opacity-100 p-1 text-erp-text/40 hover:text-erp-text transition-all rounded hover:bg-erp-surface">
                   <MoreVertical className="w-4 h-4" />
                 </button>

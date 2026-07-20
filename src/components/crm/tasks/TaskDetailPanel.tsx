@@ -66,6 +66,7 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
       target_number: editedTask.target_number,
       current_number: editedTask.current_number,
       project_id: editedTask.project_id,
+      recurrence_rule: editedTask.task_type === 'Daily' ? editedTask.recurrence_rule || '1,2,3,4,5' : null,
     });
     setIsSaving(false);
     onUpdate();
@@ -244,6 +245,33 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
               <option value="Number">Number Track</option>
             </select>
           </div>
+
+          {editedTask.task_type === 'Daily' && (
+            <>
+              <div className="col-span-4 text-erp-text/60 flex items-center gap-2 font-medium">
+                <Calendar className="w-4 h-4" /> Recurrence
+              </div>
+              <div className="col-span-8 flex gap-1 items-center bg-transparent px-1 py-1 -mx-1">
+                {['S','M','T','W','T','F','S'].map((d, i) => {
+                  const days = editedTask.recurrence_rule ? editedTask.recurrence_rule.split(',').map(Number) : [1,2,3,4,5];
+                  const isActive = days.includes(i);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        const newDays = isActive ? days.filter(x => x !== i) : [...days, i];
+                        handleChange('recurrence_rule', newDays.join(','));
+                      }}
+                      className={`w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center transition-colors ${isActive ? 'bg-erp-primary text-white' : 'hover:bg-erp-surface text-erp-text/50 border border-erp-border'}`}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
 
           {editedTask.task_type === 'Number' && (
             <>

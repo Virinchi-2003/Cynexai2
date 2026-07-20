@@ -174,9 +174,22 @@ export const TaskBoardView: React.FC<Props> = ({ tasks, users, onTaskClick, onUp
 
                               {/* Footer: due date + assignee avatar */}
                               <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
-                                <div className="flex items-center gap-2" title={getUserName(task.assignee_id)}>
-                                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[9px] font-bold uppercase border border-indigo-200">
-                                    {getUserName(task.assignee_id).slice(0, 2)}
+                                <div className="flex items-center gap-1.5 bg-gray-50 rounded-full pr-2 pl-1 py-1 border border-gray-100">
+                                  {task.created_by && task.created_by !== task.assignee_id && (
+                                    <>
+                                      <span className="text-[9px] font-bold text-gray-400 uppercase truncate max-w-[40px]" title={getUserName(task.created_by)}>
+                                        {getUserName(task.created_by).split(' ')[0]}
+                                      </span>
+                                      <span className="text-[7px] text-gray-300">▶</span>
+                                    </>
+                                  )}
+                                  <div className="flex items-center gap-1" title={getUserName(task.assignee_id)}>
+                                    <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[8px] font-bold uppercase border border-indigo-200 shrink-0">
+                                      {getUserName(task.assignee_id).slice(0, 2)}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-gray-600 truncate max-w-[50px]">
+                                      {getUserName(task.assignee_id).split(' ')[0]}
+                                    </span>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">

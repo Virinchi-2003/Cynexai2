@@ -38,7 +38,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 // ── Stats Bar ─────────────────────────────────────────────────────────────────
-function StatsBar({ tasks, isManagerOrAbove }: { tasks: Task[]; isManagerOrAbove: boolean }) {
+function StatsBar({ tasks, isManagerOrAbove, onStatClick, activeFilter }: { tasks: Task[]; isManagerOrAbove: boolean; onStatClick?: (f: string) => void; activeFilter?: string }) {
   const total = tasks.length;
   const done = tasks.filter(t => t.status === 'Done').length;
   const inProgress = tasks.filter(t => t.status === 'In Progress').length;
@@ -50,16 +50,20 @@ function StatsBar({ tasks, isManagerOrAbove }: { tasks: Task[]; isManagerOrAbove
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
       {[
-        { label: 'Total', value: total, icon: <Target className="w-3.5 h-3.5" />, color: 'text-slate-600 bg-slate-50 border-slate-200' },
-        { label: 'Done', value: `${done} (${pct}%)`, icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-        { label: 'In Progress', value: inProgress, icon: <Circle className="w-3.5 h-3.5" />, color: 'text-blue-600 bg-blue-50 border-blue-200' },
-        { label: 'Overdue', value: overdue, icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200' : 'text-slate-400 bg-slate-50 border-slate-100' },
-        { label: 'Urgent', value: urgent, icon: <Zap className="w-3.5 h-3.5" />, color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-slate-400 bg-slate-50 border-slate-100' },
+        { id: 'total', label: 'Total', value: total, icon: <Target className="w-3.5 h-3.5" />, color: 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100' },
+        { id: 'done', label: 'Done', value: `${done} (${pct}%)`, icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+        { id: 'in-progress', label: 'In Progress', value: inProgress, icon: <Circle className="w-3.5 h-3.5" />, color: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100' },
+        { id: 'overdue', label: 'Overdue', value: overdue, icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 border-slate-100' },
+        { id: 'urgent', label: 'Urgent', value: urgent, icon: <Zap className="w-3.5 h-3.5" />, color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' : 'text-slate-400 bg-slate-50 border-slate-100' },
       ].map(s => (
-        <div key={s.label} className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold ${s.color}`}>
+        <button
+          key={s.label}
+          onClick={() => onStatClick?.(s.id)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-colors ${s.color} ${activeFilter === s.id ? 'ring-2 ring-erp-primary' : ''}`}
+        >
           {s.icon}
           <span className="truncate">{s.label}: {s.value}</span>
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -86,6 +90,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
   const [targetNum, setTargetNum] = useState('');
   const [description, setDescription] = useState('');
   const [tags, setTags] = useState('');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>([1,2,3,4,5]); // Default Mon-Fri
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -104,6 +109,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
       target_number: taskType === 'Number' ? Number(targetNum) : undefined,
       current_number: 0,
       tags: tags || null,
+      recurrence_rule: taskType === 'Daily' ? recurrenceDays.join(',') : null,
     });
     setSubmitting(false);
     onCreated();
@@ -186,6 +192,22 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
           />
         )}
 
+        {/* Recurrence Days (for Daily type) */}
+        {taskType === 'Daily' && (
+          <div className="flex gap-1 items-center bg-white border border-erp-border rounded-lg px-1.5 py-1">
+            {['S','M','T','W','T','F','S'].map((d, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setRecurrenceDays(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                className={`w-5 h-5 rounded text-[10px] font-bold flex items-center justify-center transition-colors ${recurrenceDays.includes(i) ? 'bg-erp-primary text-white' : 'hover:bg-erp-surface text-erp-text/50'}`}
+              >
+                {d}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Project */}
         <select
           value={projectId}
@@ -232,6 +254,7 @@ export default function AsanaTaskApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [customFilter, setCustomFilter] = useState('');
   const [activeTimeLog, setActiveTimeLog] = useState<any>(null);
   const [showHierarchyForProject, setShowHierarchyForProject] = useState<Project | null>(null);
 
@@ -281,10 +304,39 @@ export default function AsanaTaskApp() {
 
   const currentProject = projects.find(p => p.id === currentProjectId) || null;
 
-  const filteredTasks = tasks
+  let filteredTasks = tasks
     .filter(t => !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .filter(t => !filterPriority || t.priority === filterPriority)
     .filter(t => !filterStatus || t.status === filterStatus);
+
+  if (customFilter) {
+    const today = new Date().toISOString().split('T')[0];
+    if (customFilter === 'done') filteredTasks = filteredTasks.filter(t => t.status === 'Done');
+    else if (customFilter === 'in-progress') filteredTasks = filteredTasks.filter(t => t.status === 'In Progress');
+    else if (customFilter === 'overdue') filteredTasks = filteredTasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done');
+    else if (customFilter === 'urgent') filteredTasks = filteredTasks.filter(t => t.priority === 'Urgent' && t.status !== 'Done');
+  }
+
+  // Sorting: Overdue first, then Urgent, then due_date
+  filteredTasks.sort((a, b) => {
+    const today = new Date().toISOString().split('T')[0];
+    const aOverdue = a.due_date && a.due_date < today && a.status !== 'Done';
+    const bOverdue = b.due_date && b.due_date < today && b.status !== 'Done';
+    
+    if (aOverdue && !bOverdue) return -1;
+    if (!aOverdue && bOverdue) return 1;
+
+    const aUrgent = a.priority === 'Urgent' && a.status !== 'Done';
+    const bUrgent = b.priority === 'Urgent' && b.status !== 'Done';
+
+    if (aUrgent && !bUrgent) return -1;
+    if (!aUrgent && bUrgent) return 1;
+
+    if (!a.due_date && b.due_date) return 1;
+    if (a.due_date && !b.due_date) return -1;
+    if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
+    return 0;
+  });
 
   const viewTitle = () => {
     if (currentProject) return currentProject.name;
@@ -421,7 +473,12 @@ export default function AsanaTaskApp() {
         )}
 
         {/* Stats Bar */}
-        <StatsBar tasks={filteredTasks} isManagerOrAbove={isManagerOrAbove} />
+        <StatsBar 
+          tasks={tasks} // Pass raw tasks so stats don't shrink when filtered
+          isManagerOrAbove={isManagerOrAbove} 
+          activeFilter={customFilter}
+          onStatClick={(f) => setCustomFilter(prev => prev === f ? '' : f)} 
+        />
 
         {/* New Task Form */}
         {showNewTask && (

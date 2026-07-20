@@ -17,6 +17,7 @@ export interface Task {
   current_number?: number;
   start_date?: string;
   tags?: string;
+  recurrence_rule?: string | null;
   created_at?: string;
   updated_at?: string;
   lead_id?: string | null;
@@ -33,8 +34,8 @@ export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
     try {
       await initTursoDB(); // Ensure tables are initialized and updated
       await client.execute({
-        sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, project_id, related_entity, task_type, target_number, current_number, start_date, tags, created_by, lead_id, student_id, created_at, updated_at) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, project_id, related_entity, task_type, target_number, current_number, start_date, tags, recurrence_rule, created_by, lead_id, student_id, created_at, updated_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         args: [
           id, 
           task.title, 
@@ -50,6 +51,7 @@ export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
           task.current_number || 0,
           task.start_date || null,
           task.tags || null,
+          task.recurrence_rule || null,
           task.created_by || null,
           task.lead_id || null,
           task.student_id || null,
