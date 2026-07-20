@@ -432,148 +432,83 @@ export default function MockInterview() {
 
   // Active Interview Phase
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-black flex flex-col relative overflow-hidden">
-      {/* Background Scenery */}
+    <div className="h-[calc(100vh-4rem)] bg-black flex flex-col relative overflow-hidden page-container">
+      {/* Background Scenery (subtle) */}
       <div 
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-40 blur-sm scale-105"
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat opacity-20 blur-2xl scale-110"
         style={{ backgroundImage: 'url(/interview-bg.png)' }}
       />
-      <div className="absolute inset-0 z-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-
+      
       {/* TTS unavailable banner */}
       {!ttsAvailable && (
-        <div className="relative z-20 bg-amber-500/20 border-b border-amber-500/30 px-4 py-2 text-center">
-          <p className="text-xs text-amber-400 font-semibold">🔇 Audio unavailable — running in text-only mode. Read AI responses below.</p>
+        <div className="absolute top-0 left-0 w-full z-50 bg-amber-500/90 backdrop-blur-md text-black px-4 py-2 text-center text-sm font-bold shadow-lg">
+          🔇 Audio unavailable — running in text-only mode. Read AI responses below.
         </div>
       )}
 
-      {/* Main Interview UI */}
-      <div className="relative z-10 flex flex-col md:flex-row h-full">
+      {/* Main Avatar Area */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full h-full pb-32 px-4">
+        <div className={`transition-all duration-500 ease-in-out ${isAvatarSpeaking ? 'scale-110 drop-shadow-[0_0_40px_rgba(168,85,247,0.3)]' : 'scale-100'}`}>
+          <Avatar2D isSpeaking={isAvatarSpeaking} size={280} gender={voice.includes('asteria') ? 'female' : 'male'} />
+        </div>
         
-        {/* Left: Avatar + Controls */}
-        <div className="flex flex-col items-center justify-center flex-1 p-4 space-y-6">
-          {/* Status Indicator & End Button */}
-          <div className="w-full max-w-sm flex justify-between items-center">
-            <div className="bg-zinc-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-zinc-800 flex items-center gap-2">
-              {processingAI ? (
-                <>
-                  <Loader2 className="w-4 h-4 text-purple-400 animate-spin" />
-                  <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">Thinking</span>
-                </>
-              ) : isAvatarSpeaking ? (
-                <>
-                  <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                  <span className="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Speaking</span>
-                </>
-              ) : (
-                <>
-                  <div className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-xs font-semibold text-green-400 uppercase tracking-widest">Your Turn</span>
-                </>
-              )}
-            </div>
-            
-            <button 
-              onClick={finishInterview}
-              className="bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 px-4 py-2 rounded-full flex items-center gap-2 transition-colors"
-            >
-              <XCircle className="w-4 h-4" />
-              <span className="text-xs font-semibold uppercase tracking-widest">End</span>
-            </button>
-          </div>
-
-          {/* Avatar */}
-          <Avatar2D isSpeaking={isAvatarSpeaking} size={200} gender={voice.includes('asteria') ? 'female' : 'male'} />
-
-          {/* Latest AI message bubble */}
-          {chatHistory.length > 0 && (
-            <div className="w-full max-w-sm bg-zinc-900/90 backdrop-blur-md border border-zinc-700 rounded-2xl p-4">
-              <p className="text-xs text-purple-400 font-bold uppercase tracking-wider mb-1">Interviewer says:</p>
-              <p className="text-sm text-white leading-relaxed">
-                {chatHistory.filter(m => m.role === 'ai').slice(-1)[0]?.content || ''}
-              </p>
-            </div>
+        {/* Status Indicator (Thinking/Speaking) */}
+        <div className="mt-8 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest bg-zinc-900/80 backdrop-blur-md px-5 py-2.5 rounded-full border border-zinc-800 shadow-xl">
+          {processingAI ? (
+            <><Loader2 className="w-4 h-4 text-purple-400 animate-spin" /><span className="text-purple-400">Thinking...</span></>
+          ) : isAvatarSpeaking ? (
+            <><div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" /><span className="text-cyan-400">Interviewer Speaking</span></>
+          ) : (
+            <><div className="w-2 h-2 rounded-full bg-green-400" /><span className="text-green-400">Your Turn (Hold Mic to Speak)</span></>
           )}
+        </div>
+      </div>
 
-          {/* Mic Button */}
-          <div className="w-full max-w-sm flex flex-col items-center gap-3">
-            {!isAvatarSpeaking && !processingAI && (
-              <p className="text-xs text-zinc-400 text-center">
-                👇 Hold the button while speaking, release to send
-              </p>
-            )}
-            <button
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
-              onMouseLeave={stopRecording}
-              onTouchStart={startRecording}
-              onTouchEnd={stopRecording}
-              disabled={isAvatarSpeaking || processingAI}
-              className={`w-full h-16 rounded-2xl font-bold text-base flex items-center justify-center gap-3 transition-all select-none ${
-                isAvatarSpeaking || processingAI
-                  ? 'bg-zinc-800/80 backdrop-blur-md text-zinc-500 cursor-not-allowed border border-zinc-700'
-                  : isRecording
-                  ? 'bg-red-500/20 text-red-500 border-2 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.4)] scale-[0.98]'
-                  : 'bg-purple-600 hover:bg-purple-500 text-white shadow-xl shadow-purple-500/30 active:scale-[0.98] border border-purple-400/30'
-              }`}
-            >
-              {processingAI ? (
-                <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</>
-              ) : isRecording ? (
-                <><Mic className="w-5 h-5 animate-pulse" /> 🔴 Release to Send</>
-              ) : isAvatarSpeaking ? (
-                <><Mic className="w-5 h-5" /> Wait for interviewer...</>
-              ) : (
-                <><Mic className="w-5 h-5" /> Hold to Speak</>  
-              )}
-            </button>
-            <p className="text-xs text-zinc-500 text-center">
-              Question {turnCount} — End anytime using the End button
+      {/* Captions / Subtitles Overlay */}
+      {chatHistory.length > 0 && (
+        <div className="absolute bottom-28 left-0 w-full px-4 z-20 flex justify-center pointer-events-none">
+          <div className="max-w-3xl w-full bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 text-center shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+            <p className="text-[10px] md:text-xs text-purple-400 font-bold uppercase tracking-widest mb-2 opacity-80">Interviewer says:</p>
+            <p className="text-base md:text-xl lg:text-2xl text-white font-medium leading-relaxed tracking-wide">
+              {chatHistory.filter(m => m.role === 'ai').slice(-1)[0]?.content || ''}
             </p>
           </div>
         </div>
+      )}
 
-        {/* Right: Chat Transcript Panel */}
-        <div className="w-full md:w-80 lg:w-96 bg-zinc-900/95 border-t md:border-t-0 md:border-l border-zinc-800 flex flex-col">
+      {/* Google Meet Style Control Bar */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-zinc-900/90 backdrop-blur-2xl px-6 py-4 rounded-full border border-zinc-700/50 shadow-2xl">
+        <div className="flex items-center justify-center gap-4">
           <button
-            className="flex items-center justify-between p-4 border-b border-zinc-800 hover:bg-zinc-800/50 transition-colors md:cursor-default"
-            onClick={() => setShowTranscript(prev => !prev)}
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            onMouseLeave={stopRecording}
+            onTouchStart={startRecording}
+            onTouchEnd={stopRecording}
+            disabled={isAvatarSpeaking || processingAI}
+            className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all select-none group ${
+              isAvatarSpeaking || processingAI
+                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                : isRecording
+                ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.6)] scale-95'
+                : 'bg-zinc-700 hover:bg-zinc-600 text-white active:scale-95'
+            }`}
+            title="Hold to Speak"
           >
-            <div className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4 text-zinc-400" />
-              <span className="text-sm font-bold text-zinc-300">Interview Transcript</span>
-              <span className="text-xs bg-purple-500/20 text-purple-400 font-bold px-2 py-0.5 rounded-full">{chatHistory.length} messages</span>
-            </div>
-            <span className="md:hidden">{showTranscript ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}</span>
+            {processingAI ? (
+              <Loader2 className="w-6 h-6 md:w-7 md:h-7 animate-spin" />
+            ) : (
+              <Mic className={`w-6 h-6 md:w-7 md:h-7 ${isRecording ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
+            )}
           </button>
           
-          {(showTranscript) && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-64 md:max-h-none">
-              {chatHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-zinc-500 text-sm">Interview starting...</p>
-                </div>
-              ) : (
-                chatHistory.map((msg, i) => (
-                  <div key={i} className={`flex flex-col gap-1 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
-                      msg.role === 'ai' ? 'text-purple-400' : 'text-cyan-400'
-                    }`}>
-                      {msg.role === 'ai' ? '🤖 Interviewer' : '👤 You'}
-                    </span>
-                    <div className={`max-w-[90%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                      msg.role === 'ai'
-                        ? 'bg-zinc-800 text-white rounded-tl-none'
-                        : 'bg-purple-600/30 text-purple-100 rounded-tr-none border border-purple-500/30'
-                    }`}>
-                      {msg.content}
-                    </div>
-                  </div>
-                ))
-              )}
-              <div ref={chatEndRef} />
-            </div>
-          )}
+          <button 
+            onClick={finishInterview}
+            className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-red-600 hover:bg-red-500 text-white flex items-center justify-center transition-all shadow-lg active:scale-95 group"
+            title="End Interview"
+          >
+            <XCircle className="w-6 h-6 md:w-7 md:h-7 group-hover:scale-110 transition-transform" />
+          </button>
         </div>
       </div>
     </div>
