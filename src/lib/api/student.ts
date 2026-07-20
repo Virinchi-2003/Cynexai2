@@ -687,11 +687,11 @@ Rules:
 - Be encouraging but maintain professional evaluation tone
 - NEVER end the interview yourself — only the candidate ends it`;
 
-export async function getInitialInterviewAudio(context: string, voice: string): Promise<{ aiResponse: string, audioBase64: string }> {
+export async function getInitialInterviewAudio(context: string, voice: string, targetRole: string = 'General'): Promise<{ aiResponse: string, audioBase64: string }> {
   try {
     const messages = [
       { role: 'system', content: INDIAN_HR_SYSTEM_PROMPT },
-      { role: 'user', content: `[CONTEXT: ${context}] The candidate has just entered the interview room. Start the interview with a warm professional greeting and ask them to introduce themselves. Keep it to 2 sentences maximum.` }
+      { role: 'user', content: `[CANDIDATE COURSE PROGRESS: ${context}]\n[TARGET JOB ROLE: ${targetRole}]\nThe candidate has just entered the interview room. You MUST interview them specifically for the "${targetRole}" role, asking technical questions tailored to that job, while strictly keeping in mind their current course progress and quiz answers (if they are a beginner, adapt accordingly). Start the interview with a warm professional greeting and ask them to introduce themselves. Keep it to 2 sentences maximum.` }
     ];
     
     const aiResponse = await generateChatResponse(messages);
@@ -704,7 +704,7 @@ export async function getInitialInterviewAudio(context: string, voice: string): 
   }
 }
 
-export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[], context: string, turnCount: number, voice: string = 'aura-asteria-en'): Promise<{ transcript: string, aiResponse: string, audioBase64: string }> {
+export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[], context: string, turnCount: number, voice: string = 'aura-asteria-en', targetRole: string = 'General'): Promise<{ transcript: string, aiResponse: string, audioBase64: string }> {
   try {
     // 1. STT
     const transcript = await speechToText(audioBlob);
@@ -716,7 +716,7 @@ export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[],
     const messages = [
       { 
         role: 'system', 
-        content: `${INDIAN_HR_SYSTEM_PROMPT}\n\n[CONTEXT: ${context}]\n[Current turn: ${turnCount}. Guide the interview naturally based on the turn number and conversation flow.]` 
+        content: `${INDIAN_HR_SYSTEM_PROMPT}\n\n[CANDIDATE COURSE PROGRESS: ${context}]\n[TARGET JOB ROLE: ${targetRole}]\n[Current turn: ${turnCount}. Guide the interview naturally based on the turn number and conversation flow. Make sure to ask questions highly relevant to a ${targetRole} position, evaluating their technical or domain knowledge based on their course progress.]` 
       },
       ...chatHistory.map(h => ({ 
         role: h.role === 'user' ? 'user' : 'assistant', 

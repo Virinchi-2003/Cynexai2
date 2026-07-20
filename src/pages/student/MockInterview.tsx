@@ -39,6 +39,7 @@ export default function MockInterview() {
   
   // Context
   const [studentContext, setStudentContext] = useState<string>('Student in training');
+  const [targetJobRole, setTargetJobRole] = useState<string>('');
   
   // Settings
   const [voice, setVoice] = useState(VOICES[0].id);
@@ -163,7 +164,7 @@ export default function MockInterview() {
     setTtsAvailable(true); // reset on new session
     
     try {
-      const { aiResponse, audioBase64 } = await getInitialInterviewAudio(studentContext, voice);
+      const { aiResponse, audioBase64 } = await getInitialInterviewAudio(studentContext, voice, targetJobRole);
       setChatHistory([{ role: 'ai', content: aiResponse }]);
       playAudioBase64(audioBase64);
     } catch (err) {
@@ -220,7 +221,8 @@ export default function MockInterview() {
         chatHistory, 
         studentContext, 
         turnCount,
-        voice
+        voice,
+        targetJobRole
       );
       
       const newHistory = [
@@ -377,13 +379,27 @@ export default function MockInterview() {
               </div>
             </div>
 
+            <div className="space-y-4">
+              <label className="flex items-center gap-2 text-sm font-semibold text-zinc-300 uppercase tracking-wider">
+                Target Job Role
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Data Scientist, Frontend Developer, HR Manager..."
+                value={targetJobRole}
+                onChange={(e) => setTargetJobRole(e.target.value)}
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-2xl px-4 py-3 text-white placeholder:text-zinc-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+              />
+              <p className="text-xs text-zinc-500">The AI will adapt its questions for this specific role based on your course progress.</p>
+            </div>
+
             <button
               onClick={startInterview}
-              disabled={coinsAvailable < interviewCost}
+              disabled={coinsAvailable < interviewCost || targetJobRole.trim() === ''}
               className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-bold text-lg shadow-lg hover:shadow-purple-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="w-5 h-5 fill-current" /> 
-              {coinsAvailable >= interviewCost ? 'Spend Coins & Enter Room' : 'Not Enough Coins'}
+              {coinsAvailable < interviewCost ? 'Not Enough Coins' : targetJobRole.trim() === '' ? 'Enter Job Role to Start' : 'Spend Coins & Enter Room'}
             </button>
           </div>
         </div>
@@ -445,6 +461,32 @@ export default function MockInterview() {
           🔇 Audio unavailable — running in text-only mode. Read AI responses below.
         </div>
       )}
+
+      {/* Top Left Header (Google Meet style) */}
+      <div className="absolute top-4 left-4 z-40 bg-zinc-900/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full overflow-hidden bg-purple-500/20 flex items-center justify-center border border-purple-500/30">
+          <Avatar2D isSpeaking={false} size={32} gender={voice.includes('asteria') ? 'female' : 'male'} />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-white leading-tight">Mock Interview</p>
+          <p className="text-xs text-zinc-400">{targetJobRole || 'General Role'}</p>
+        </div>
+      </div>
+
+      {/* Self View PiP (Google Meet style) */}
+      <div className="absolute bottom-28 right-4 md:right-8 z-40 w-28 h-40 md:w-48 md:h-64 bg-zinc-900 rounded-xl overflow-hidden border border-zinc-700 shadow-2xl flex items-center justify-center">
+        {/* Simulate webcam view with a placeholder */}
+        <div className="absolute inset-0 bg-zinc-800 flex flex-col items-center justify-center text-zinc-500">
+          <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center mb-2">
+            <span className="text-xl">👤</span>
+          </div>
+          <span className="text-xs font-semibold">You</span>
+        </div>
+        {/* Small mic indicator in PiP */}
+        <div className="absolute top-2 right-2 bg-black/60 p-1.5 rounded-md backdrop-blur-sm">
+          {isRecording ? <Mic className="w-3 h-3 text-red-500 animate-pulse" /> : <Mic className="w-3 h-3 text-zinc-400" />}
+        </div>
+      </div>
 
       {/* Main Avatar Area */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full h-full pb-32 px-4">

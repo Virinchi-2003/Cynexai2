@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap } from 'lucide-react';
+import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap, TrendingUp } from 'lucide-react';
 import { getCurrentUser, logout } from '../../lib/auth';
 import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
@@ -39,6 +39,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
       { to: '/sales/history', icon: DollarSign, label: 'Sales History', section: 'Manager' },
       { to: '/manager/timetable', icon: Calendar, label: 'Timetable', section: 'Manager' },
       { to: '/manager/students', icon: GraduationCap, label: 'Students', section: 'Manager' },
+      { to: '/manager/student-progress', icon: TrendingUp, label: 'Student Progress', section: 'Manager' },
       { to: '/manager/users', icon: Users, label: 'Staff Mgmt', section: 'Manager' },
       { to: '/manager/student-settings', icon: Settings, label: 'Student Portal', section: 'Manager' },
       { to: '/manager/gamification', icon: Zap, label: 'Game Config', section: 'Manager' },
@@ -82,6 +83,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
       { to: '/ceo/tasks', icon: CheckSquare, label: 'Tasks', section: 'CEO' },
       { to: '/ceo/users', icon: Users, label: 'User Admin', section: 'CEO' },
       { to: '/ceo/students', icon: GraduationCap, label: 'Students', section: 'CEO' },
+      { to: '/ceo/student-progress', icon: TrendingUp, label: 'Student Progress', section: 'CEO' },
       { to: '/ceo/courses', icon: BookOpen, label: 'Course CMS', section: 'CEO' },
       { to: '/ceo/timetable', icon: Calendar, label: 'Timetable', section: 'CEO' },
       { to: '/ceo/sales-dashboard', icon: DollarSign, label: 'Sales Hub', section: 'CEO' },

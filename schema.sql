@@ -194,3 +194,14 @@ CREATE TABLE IF NOT EXISTS crm_stage_history (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (lead_id) REFERENCES crm_leads(id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS student_progress (
+    id TEXT PRIMARY KEY,
+    student_id TEXT NOT NULL REFERENCES erp_users(id) ON DELETE CASCADE,
+    attendance_score REAL DEFAULT 0,
+    course_progress_percentage REAL DEFAULT 0,
+    quiz_scores TEXT DEFAULT '[]',
+    coins_spent INTEGER DEFAULT 0,
+    leaderboard_rank INTEGER,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+);
