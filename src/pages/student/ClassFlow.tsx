@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import ReactPlayer from 'react-player';
+import ReactPlayer from 'react-player/lazy';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
 
 interface Question {
