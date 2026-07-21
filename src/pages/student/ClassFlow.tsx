@@ -312,6 +312,29 @@ export default function ClassFlow() {
           </div>
         )}
 
+        {/* ── External Class Notes / Document ── */}
+        {classData.doc_url && (
+          <div className="bg-surface border border-border rounded-2xl p-5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-blue-500" />
+              </div>
+              <div>
+                <h3 className="font-bold text-foreground">Class Document / Notes</h3>
+                <p className="text-sm text-muted-foreground">External study materials attached by the instructor.</p>
+              </div>
+            </div>
+            <a 
+              href={classData.doc_url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 font-bold text-sm rounded-lg transition-colors whitespace-nowrap"
+            >
+              Open Document
+            </a>
+          </div>
+        )}
+
         {/* ── AI Materials (inline for all class types) ── */}
         {aiMaterials && (
           <div className="bg-surface border border-border rounded-2xl overflow-hidden">
