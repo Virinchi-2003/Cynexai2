@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import ReactPlayer from 'react-player';
 
 interface Question {
   id: string;
@@ -223,9 +224,9 @@ export default function ClassFlow() {
               <>
                 {classData.youtube_video_id ? (
                   <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
-                    <div className="relative aspect-video bg-black">
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${(() => {
+                    <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
+                      <ReactPlayer
+                        url={`https://www.youtube.com/watch?v=${(() => {
                           try {
                             const url = (classData.youtube_video_id || '').trim();
                             if (url.length === 11 && !url.includes('/')) return url;
@@ -241,11 +242,21 @@ export default function ClassFlow() {
                           } catch(e) {
                             return classData.youtube_video_id;
                           }
-                        })()}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        title={classData.title}
+                        })()}`}
+                        width="100%"
+                        height="100%"
+                        controls={true}
+                        playing={true}
+                        config={{
+                          youtube: {
+                            playerVars: {
+                              modestbranding: 1,
+                              rel: 0,
+                              showinfo: 0,
+                              fs: 1
+                            }
+                          }
+                        }}
                       />
                     </div>
                     <div className="p-4 bg-surface border-t border-border flex justify-between items-center">
