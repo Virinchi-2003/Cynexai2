@@ -77,6 +77,18 @@ export interface MockInterview {
   created_at: string;
 }
 
+export async function getStudentMode(studentId: string): Promise<string> {
+  try {
+    const res = await executeWithRetry(
+      `SELECT preferred_mode FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1`,
+      [studentId, studentId]
+    );
+    return res.rows.length > 0 ? (res.rows[0].preferred_mode as string) || 'Online' : 'Online';
+  } catch (e) {
+    return 'Online';
+  }
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function getStudentDashboardData(studentId: string): Promise<StudentDashboardData> {
