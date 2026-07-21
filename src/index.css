@@ -316,3 +316,66 @@ button, [role="button"] {
 [data-theme="dark"] .card-hover:hover {
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }
+
+/* ── Candy Crush UI (Student Portal) ─────────────────────────────────────── */
+.candy-btn {
+  @apply relative inline-flex items-center justify-center font-bold text-white transition-transform active:scale-95;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #ff71ce 0%, #ff1493 100%);
+  box-shadow: 
+    0 6px 0 #c4006c,
+    0 10px 15px rgba(0,0,0,0.2),
+    inset 0 -2px 10px rgba(0,0,0,0.2),
+    inset 0 2px 10px rgba(255,255,255,0.4);
+  text-shadow: 0 2px 0 rgba(0,0,0,0.2);
+  border: 2px solid #ff9ce6;
+}
+.candy-btn:hover {
+  background: linear-gradient(180deg, #ff8cdc 0%, #ff2b9f 100%);
+}
+.candy-btn-blue {
+  background: linear-gradient(180deg, #01cdfe 0%, #0096ff 100%);
+  box-shadow: 
+    0 6px 0 #0060a3,
+    0 10px 15px rgba(0,0,0,0.2),
+    inset 0 -2px 10px rgba(0,0,0,0.2),
+    inset 0 2px 10px rgba(255,255,255,0.4);
+  border: 2px solid #6be2ff;
+}
+.candy-btn-blue:hover {
+  background: linear-gradient(180deg, #2dd6ff 0%, #1ca3ff 100%);
+}
+.candy-btn-green {
+  background: linear-gradient(180deg, #05ffa1 0%, #00c77a 100%);
+  box-shadow: 
+    0 6px 0 #008753,
+    0 10px 15px rgba(0,0,0,0.2),
+    inset 0 -2px 10px rgba(0,0,0,0.2),
+    inset 0 2px 10px rgba(255,255,255,0.4);
+  border: 2px solid #75ffd1;
+}
+.candy-btn-green:hover {
+  background: linear-gradient(180deg, #33ffb3 0%, #1ad98d 100%);
+}
+
+.candy-panel {
+  @apply relative overflow-hidden rounded-3xl border-4 bg-white/90 backdrop-blur-md;
+  border-color: #ff71ce;
+  box-shadow: 
+    0 10px 25px rgba(0,0,0,0.1),
+    inset 0 0 20px rgba(255, 113, 206, 0.2);
+}
+[data-theme="dark"] .candy-panel {
+  @apply bg-black/80;
+  border-color: #ff1493;
+  box-shadow: 
+    0 10px 25px rgba(0,0,0,0.5),
+    inset 0 0 20px rgba(255, 20, 147, 0.3);
+}
+
+.candy-map-bg {
+  background-image: url('/src/assets/candy-ui/background.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}

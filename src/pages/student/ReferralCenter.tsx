@@ -6,6 +6,10 @@ import {
   Gift, Trophy, Users, Share2, Download, FileText,
   CheckCircle2, Clock, Star, ChevronRight
 } from 'lucide-react';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // Reward tiers — in future these can be loaded from DB via portal_settings
 const REWARD_TIERS = [
@@ -50,16 +54,15 @@ function MaterialCard({ mat }: { mat: any }) {
 
   return (
     <div
-      className="rounded-2xl p-4 flex items-start gap-3 transition-all hover:scale-[1.01]"
-      style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="candy-panel p-4 flex items-start gap-3 transition-all hover:scale-[1.02] bg-white/70 dark:bg-black/50 !border-2 material-card"
     >
       <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#6366f115', border: '1px solid #6366f130' }}>
-        <FileText className="w-5 h-5 text-indigo-400" />
+        <FileText className="w-5 h-5 text-indigo-500" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-white font-semibold text-sm truncate">{mat.title}</p>
-        {mat.description && <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{mat.description}</p>}
-        <span className="inline-block mt-1 text-[10px] font-bold uppercase tracking-wider text-indigo-400/60">{mat.material_type || 'Document'}</span>
+        <p className="text-slate-900 dark:text-white font-black text-sm truncate">{mat.title}</p>
+        {mat.description && <p className="text-slate-600 dark:text-white/60 font-bold text-xs mt-0.5 line-clamp-1">{mat.description}</p>}
+        <span className="inline-block mt-1 text-[10px] font-black uppercase tracking-wider text-indigo-500/80">{mat.material_type || 'Document'}</span>
       </div>
       <div className="flex gap-2 flex-shrink-0">
         {mat.file_url && (
@@ -90,6 +93,25 @@ export default function ReferralCenter() {
   const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'rewards' | 'materials'>('rewards');
+  const container = React.useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (tab === 'rewards') {
+      gsap.fromTo('.reward-tier', 
+        { scale: 0.9, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }
+      );
+      gsap.fromTo('.ref-item',
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
+      );
+    } else if (tab === 'materials') {
+      gsap.fromTo('.material-card',
+        { scale: 0.95, opacity: 0, y: 15 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' }
+      );
+    }
+  }, { scope: container, dependencies: [tab, referrals, materials, loading] });
 
   useEffect(() => {
     if (!user) return;
@@ -113,8 +135,8 @@ export default function ReferralCenter() {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center" style={{ background: '#0d0d1a' }}>
-        <div className="flex flex-col items-center gap-3">
+      <div className="flex min-h-screen candy-map-bg items-center justify-center">
+        <div className="flex flex-col items-center gap-3 candy-panel p-8 !border-2">
           <div className="w-10 h-10 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin" />
           <p className="text-white/40 text-sm font-medium">Loading…</p>
         </div>
@@ -123,11 +145,11 @@ export default function ReferralCenter() {
   }
 
   return (
-    <div className="min-h-full text-white" style={{ background: 'linear-gradient(180deg, #0d0d1a 0%, #111128 100%)' }}>
+    <div className="min-h-screen candy-map-bg" ref={container}>
       <div className="max-w-2xl mx-auto px-4 py-6 pb-28 space-y-5">
 
         {/* ── Header ── */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 candy-panel p-4 bg-white/70 dark:bg-black/50 !border-2">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg"
             style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }}
@@ -135,13 +157,13 @@ export default function ReferralCenter() {
             <Gift className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-white">Rewards & Materials</h1>
-            <p className="text-white/40 text-sm">Earn rewards when friends you refer join CynexAI</p>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Rewards & Materials</h1>
+            <p className="text-slate-600 dark:text-white/60 text-sm font-bold mt-1">Earn rewards when friends you refer join CynexAI</p>
           </div>
         </div>
 
         {/* ── Tabs ── */}
-        <div className="flex gap-2 p-1 rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex gap-2 p-1 rounded-2xl candy-panel bg-white/50 dark:bg-black/30 !border-2">
           {[
             { key: 'rewards', label: '🏆 Rewards', icon: Trophy },
             { key: 'materials', label: '📁 Share Materials', icon: FileText },
@@ -165,7 +187,7 @@ export default function ReferralCenter() {
         {tab === 'rewards' && (
           <>
             {/* Progress Summary */}
-            <div className="rounded-3xl p-5 space-y-4" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+            <div className="candy-panel p-5 space-y-4 bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800">
               <div className="flex items-center gap-4">
                 <div
                   className="w-16 h-16 rounded-2xl flex flex-col items-center justify-center"
@@ -179,16 +201,16 @@ export default function ReferralCenter() {
                     <p className="text-emerald-400 font-black text-base">🎉 Champion! All tiers unlocked!</p>
                   ) : nextTier ? (
                     <>
-                      <p className="text-white font-semibold text-sm">
+                      <p className="text-slate-800 dark:text-white font-black text-sm">
                         {nextTier.tier.count - completedCount} more for {nextTier.tier.emoji} {nextTier.tier.label}
                       </p>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                      <div className="h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-white/10">
                         <div
                           className="h-full rounded-full transition-all duration-1000"
                           style={{ width: `${nextTier.progress}%`, background: 'linear-gradient(90deg, #10b981, #34d399)' }}
                         />
                       </div>
-                      <p className="text-white/30 text-xs">{Math.round(nextTier.progress)}% to next reward</p>
+                      <p className="text-slate-500 dark:text-white/40 text-xs font-bold">{Math.round(nextTier.progress)}% to next reward</p>
                     </>
                   ) : null}
                 </div>
@@ -197,17 +219,17 @@ export default function ReferralCenter() {
 
             {/* Reward Tiers Grid */}
             <div>
-              <p className="text-white/40 text-xs font-black uppercase tracking-widest mb-3">Reward Milestones</p>
+              <p className="text-slate-500 dark:text-white/40 text-xs font-black uppercase tracking-widest mb-3">Reward Milestones</p>
               <div className="grid grid-cols-2 gap-3">
                 {REWARD_TIERS.map(tier => {
                   const achieved = completedCount >= tier.count;
                   return (
                     <div
                       key={tier.count}
-                      className="rounded-2xl p-4 text-center relative overflow-hidden transition-all"
+                      className="candy-panel p-4 text-center relative overflow-hidden transition-all !border-2 reward-tier"
                       style={{
-                        background: achieved ? tier.bg : 'rgba(255,255,255,0.02)',
-                        border: `1px solid ${achieved ? tier.color + '40' : 'rgba(255,255,255,0.05)'}`,
+                        background: achieved ? tier.bg : 'var(--color-surface)',
+                        border: achieved ? `2px solid ${tier.color}` : undefined,
                       }}
                     >
                       {achieved && (
@@ -216,10 +238,10 @@ export default function ReferralCenter() {
                         </div>
                       )}
                       <div className="text-3xl mb-2">{tier.emoji}</div>
-                      <div className="font-black text-sm mb-0.5" style={{ color: achieved ? tier.color : 'rgba(255,255,255,0.3)' }}>
+                      <div className="font-black text-sm mb-0.5" style={{ color: achieved ? tier.color : 'inherit' }}>
                         {tier.label}
                       </div>
-                      <div className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      <div className="text-xs font-bold text-slate-500 dark:text-white/40">
                         {tier.count} {tier.count === 1 ? 'referral' : 'referrals'}
                       </div>
                       {achieved && (
@@ -235,8 +257,8 @@ export default function ReferralCenter() {
             </div>
 
             {/* How it works */}
-            <div className="rounded-2xl p-4 space-y-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p className="text-white/40 text-xs font-black uppercase tracking-widest">How Rewards Work</p>
+            <div className="candy-panel p-4 space-y-3 bg-white/70 dark:bg-black/50 !border-2">
+              <p className="text-slate-500 dark:text-white/40 text-xs font-black uppercase tracking-widest">How Rewards Work</p>
               {[
                 'A staff member refers someone you know to CynexAI',
                 'When they mention your name, it gets linked to you',
@@ -247,33 +269,33 @@ export default function ReferralCenter() {
                   <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5" style={{ background: '#6366f120', color: '#818cf8', border: '1px solid #6366f140' }}>
                     {i + 1}
                   </span>
-                  <p className="text-white/50 text-sm">{step}</p>
+                  <p className="text-slate-600 dark:text-white/70 font-bold text-sm">{step}</p>
                 </div>
               ))}
             </div>
 
             {/* Referrals List */}
-            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
-              <div className="flex items-center gap-2 px-5 py-4" style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <Users className="w-4 h-4 text-white/40" />
-                <span className="text-sm font-bold text-white">My Referrals</span>
-                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)' }}>
+            <div className="candy-panel overflow-hidden !border-2 bg-white/70 dark:bg-black/50">
+              <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/30">
+                <Users className="w-4 h-4 text-slate-500 dark:text-white/40" />
+                <span className="text-sm font-black text-slate-900 dark:text-white">My Referrals</span>
+                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/60">
                   {referrals.length} total
                 </span>
               </div>
 
               {referrals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.03)' }}>
-                    <Gift className="w-7 h-7 text-white/20" />
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                    <Gift className="w-7 h-7 text-slate-400 dark:text-white/30" />
                   </div>
-                  <p className="text-white/60 font-semibold">No referrals yet</p>
-                  <p className="text-white/30 text-sm max-w-xs">Ask your sales coordinator to link referrals to you when someone you know enrolls.</p>
+                  <p className="text-slate-600 dark:text-white/60 font-black">No referrals yet</p>
+                  <p className="text-slate-500 dark:text-white/40 font-bold text-sm max-w-xs">Ask your sales coordinator to link referrals to you when someone you know enrolls.</p>
                 </div>
               ) : (
-                <div className="divide-y" style={{ '--tw-divide-opacity': 1, borderColor: 'rgba(255,255,255,0.04)' } as any}>
+                <div className="divide-y divide-slate-200 dark:divide-white/10">
                   {referrals.map(ref => (
-                    <div key={ref.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
+                    <div key={ref.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors ref-item">
                       <div
                         className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                         style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
@@ -281,8 +303,8 @@ export default function ReferralCenter() {
                         {(ref.lead_name || 'U').charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-white truncate">{ref.lead_name || 'Unknown'}</p>
-                        <p className="text-xs text-white/30">{formatDate(ref.created_at)}</p>
+                        <p className="text-sm font-black text-slate-900 dark:text-white truncate">{ref.lead_name || 'Unknown'}</p>
+                        <p className="text-xs font-bold text-slate-500 dark:text-white/40">{formatDate(ref.created_at)}</p>
                       </div>
                       <StatusBadge status={ref.status} />
                     </div>
@@ -297,15 +319,15 @@ export default function ReferralCenter() {
         {tab === 'materials' && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 px-1">
-              <p className="text-white/40 text-xs font-black uppercase tracking-widest flex-1">Course Materials to Share</p>
-              <span className="text-[10px] text-white/30">{materials.length} items</span>
+              <p className="text-slate-500 dark:text-white/40 text-xs font-black uppercase tracking-widest flex-1">Course Materials to Share</p>
+              <span className="text-[10px] font-bold text-slate-400 dark:text-white/30">{materials.length} items</span>
             </div>
 
             {materials.length === 0 ? (
-              <div className="rounded-2xl flex flex-col items-center justify-center py-16 px-6 text-center gap-3" style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.06)' }}>
-                <FileText className="w-10 h-10 text-white/15" />
-                <p className="text-white/40 font-semibold">No materials yet</p>
-                <p className="text-white/25 text-sm">Your coordinator will upload shareable materials here</p>
+              <div className="candy-panel flex flex-col items-center justify-center py-16 px-6 text-center gap-3 bg-white/50 dark:bg-black/30 !border-2 border-dashed">
+                <FileText className="w-10 h-10 text-slate-400 dark:text-white/20" />
+                <p className="text-slate-600 dark:text-white/60 font-black">No materials yet</p>
+                <p className="text-slate-500 dark:text-white/40 font-bold text-sm">Your coordinator will upload shareable materials here</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -316,16 +338,15 @@ export default function ReferralCenter() {
             )}
 
             {/* Share CynexAI */}
-            <div className="rounded-2xl p-5 text-center space-y-3" style={{ background: 'rgba(37,211,102,0.05)', border: '1px solid rgba(37,211,102,0.15)' }}>
-              <p className="text-emerald-400 font-bold text-sm">Share CynexAI with your network</p>
-              <p className="text-white/30 text-xs">Help others discover great learning opportunities</p>
+            <div className="candy-panel p-5 text-center space-y-3 bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 !border-2">
+              <p className="text-emerald-600 dark:text-emerald-400 font-black text-sm">Share CynexAI with your network</p>
+              <p className="text-slate-500 dark:text-white/40 font-bold text-xs">Help others discover great learning opportunities</p>
               <button
                 onClick={() => {
                   const msg = encodeURIComponent(`I'm learning at CynexAI - amazing tech courses! Check it out: https://cynexai.in`);
                   window.open(`https://wa.me/?text=${msg}`, '_blank');
                 }}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-white text-sm shadow-lg transition-all hover:scale-105"
-                style={{ background: '#25D366' }}
+                className="candy-btn-green px-5 py-3 text-sm inline-flex items-center gap-2"
               >
                 <Share2 className="w-4 h-4" />
                 Share via WhatsApp

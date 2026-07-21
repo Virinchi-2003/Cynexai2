@@ -29,6 +29,10 @@ import {
   StudentDashboardData,
   Announcement,
 } from '../../lib/api/student';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -114,7 +118,7 @@ function AnnouncementsBanner({ announcements }: { announcements: Announcement[] 
   const text = announcements.map((a) => a.title).join('   •   ');
 
   return (
-    <div className="flex items-center overflow-hidden rounded-xl bg-cyan-50 dark:bg-gradient-to-r dark:from-cyan-600/[0.12] dark:to-violet-600/[0.08] border border-cyan-200 dark:border-cyan-500/20 px-4 py-2.5 gap-3 shadow-sm dark:shadow-none">
+    <div className="flex items-center overflow-hidden candy-panel px-4 py-2.5 gap-3">
       <div className="flex-shrink-0 flex items-center gap-1.5">
         <Bell className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" strokeWidth={2.5} />
         <span className="text-cyan-600 dark:text-cyan-400 font-bold text-[10px] uppercase tracking-widest">
@@ -141,7 +145,7 @@ function ReschedulePopup({ announcements, onDismiss }: { announcements: Announce
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 pointer-events-none">
-      <div className="pointer-events-auto w-full max-w-md bg-white dark:bg-zinc-900 border-2 border-orange-300 dark:border-orange-500/40 rounded-2xl shadow-2xl overflow-hidden animate-slide-down">
+      <div className="pointer-events-auto w-full max-w-md candy-panel overflow-hidden animate-slide-down">
         <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-200 dark:border-orange-500/20">
           <AlarmClock className="w-5 h-5 text-orange-500 flex-shrink-0" />
           <span className="flex-1 font-bold text-orange-700 dark:text-orange-400 text-sm">{ann.title}</span>
@@ -176,7 +180,7 @@ function CourseHeroCard({ course, modules }: { course: any; modules: any[] }) {
   const overallPct = totalClasses > 0 ? Math.round((completedClasses / totalClasses) * 100) : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-gradient-to-br dark:from-cyan-600/20 dark:via-violet-600/10 dark:to-transparent border border-slate-200 dark:border-cyan-500/20 p-5 shadow-sm dark:shadow-[0_0_30px_rgba(6,182,212,0.08)]">
+    <div className="relative overflow-hidden candy-panel p-5">
       {/* Decorative blobs */}
       <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-cyan-100 dark:bg-cyan-500/[0.07] blur-3xl pointer-events-none" />
       <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-violet-100 dark:bg-violet-500/[0.07] blur-3xl pointer-events-none" />
@@ -246,7 +250,7 @@ function StatCard({
   borderColor: string;
 }) {
   return (
-    <div className={`relative overflow-hidden rounded-2xl bg-white dark:bg-white/[0.03] border ${borderColor} p-4 shadow-sm dark:shadow-none`}>
+    <div className={`relative overflow-hidden candy-panel p-4 stat-card`}>
       <div className={`absolute inset-0 ${bgGrad} pointer-events-none rounded-2xl opacity-50 dark:opacity-100`} />
       <div className="relative flex items-center gap-3">
         <div
@@ -283,7 +287,7 @@ function UpcomingClassCard({ cls }: { cls: any }) {
   };
 
   return (
-    <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.07] p-4 shadow-sm dark:shadow-none">
+    <div className="candy-panel p-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/25 flex items-center justify-center flex-shrink-0">
@@ -319,10 +323,10 @@ function UpcomingClassCard({ cls }: { cls: any }) {
 
         <button
           onClick={handleJoin}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-xl text-white text-xs font-bold shadow-lg transition-opacity duration-150 hover:opacity-90 ${
+          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold transition-opacity duration-150 ${
             isLive
-              ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-red-500/25'
-              : 'bg-gradient-to-r from-cyan-500 to-cyan-600 shadow-cyan-500/25'
+              ? 'candy-btn'
+              : 'candy-btn-blue'
           }`}
         >
           {isLive ? (
@@ -363,10 +367,10 @@ function ModuleCard({ mod, index }: { mod: any; index: number }) {
   return (
     <button
       onClick={() => navigate(`/student/module/${mod.id}`)}
-      className="w-full text-left group"
+      className="w-full text-left group module-card"
     >
       <div
-        className={`relative rounded-2xl bg-white dark:bg-white/[0.03] border ${c.border} p-4 transition-all duration-200 hover:bg-slate-50 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none hover:shadow-md dark:hover:shadow-[0_0_20px_rgba(6,182,212,0.08)] hover:-translate-y-0.5`}
+        className={`relative candy-panel p-4 transition-all duration-200 hover:-translate-y-1 hover:brightness-110 cursor-pointer`}
       >
         {/* Subtle gradient overlay */}
         <div className={`absolute inset-0 bg-gradient-to-br ${c.lightFrom} ${c.lightTo} ${c.from} ${c.to} rounded-2xl pointer-events-none opacity-50 dark:opacity-100`} />
@@ -458,7 +462,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
       <p className="text-slate-600 dark:text-[#94a3b8] text-sm mb-5">Could not fetch your dashboard data.</p>
       <button
         onClick={onRetry}
-        className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-500/25 hover:opacity-90 transition-opacity"
+        className="px-5 py-2.5 candy-btn-blue text-sm"
       >
         Retry
       </button>
@@ -492,6 +496,20 @@ export default function StudentPortal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [dismissedAnnIds, setDismissedAnnIds] = useState<Set<string>>(new Set());
+  const portalContainer = React.useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!loading && !error && dashData?.course) {
+      gsap.fromTo('.module-card', 
+        { scale: 0.9, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.5)', stagger: 0.1 }
+      );
+      gsap.fromTo('.stat-card', 
+        { scale: 0.9, opacity: 0, x: 20 },
+        { scale: 1, opacity: 1, x: 0, duration: 0.5, ease: 'back.out(1.5)', stagger: 0.1 }
+      );
+    }
+  }, { scope: portalContainer, dependencies: [loading, dashData] });
 
   const handleDismiss = (id: string) => setDismissedAnnIds(prev => new Set([...prev, id]));
 
@@ -554,7 +572,7 @@ export default function StudentPortal() {
 
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 candy-map-bg min-h-screen" ref={portalContainer}>
       {/* ── Reschedule Popup Notifications ── */}
       <ReschedulePopup
         announcements={announcements.filter(a => !dismissedAnnIds.has(a.id))}
@@ -590,21 +608,21 @@ export default function StudentPortal() {
 
           {/* Gamification stats (mobile: visible here; desktop: shown in right col) */}
           <div className="md:hidden grid grid-cols-3 gap-3">
-            <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-orange-200 dark:border-orange-500/20 p-3 flex flex-col items-center gap-1 bg-orange-50 dark:bg-gradient-to-br dark:from-orange-500/10 dark:to-transparent shadow-sm dark:shadow-none">
+            <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" strokeWidth={2.5} />
               <span className="text-orange-500 dark:text-orange-400 text-xl font-black leading-none">
                 {gamification.streak}
               </span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Streak</span>
             </div>
-            <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-amber-200 dark:border-amber-500/20 p-3 flex flex-col items-center gap-1 bg-amber-50 dark:bg-gradient-to-br dark:from-amber-500/10 dark:to-transparent shadow-sm dark:shadow-none">
+            <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Coins className="w-5 h-5 text-amber-500 dark:text-amber-400" strokeWidth={2.5} />
               <span className="text-amber-500 dark:text-amber-400 text-xl font-black leading-none">
                 {gamification.coins}
               </span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Coins</span>
             </div>
-            <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-violet-200 dark:border-violet-500/20 p-3 flex flex-col items-center gap-1 bg-violet-50 dark:bg-gradient-to-br dark:from-violet-500/10 dark:to-transparent shadow-sm dark:shadow-none">
+            <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Trophy className="w-5 h-5 text-violet-500 dark:text-violet-400" strokeWidth={2.5} />
               <span className="text-violet-500 dark:text-violet-400 text-xl font-black leading-none">0</span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Trophies</span>
@@ -626,7 +644,7 @@ export default function StudentPortal() {
               </div>
             </section>
           ) : (
-            <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.07] p-6 text-center shadow-sm dark:shadow-none">
+            <div className="candy-panel p-6 text-center">
               <Trophy className="w-8 h-8 text-slate-400 dark:text-[#475569] mx-auto mb-2" />
               <p className="text-slate-600 dark:text-[#94a3b8] text-sm">No modules have been added to your course yet.</p>
             </div>
@@ -680,7 +698,7 @@ export default function StudentPortal() {
           {announcements.length > 0 && (
             <div className="hidden md:block">
               <SectionHeading icon={Bell} title="Announcements" meta={`${announcements.length}`} />
-              <div className="rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.07] divide-y divide-slate-100 dark:divide-white/[0.05] overflow-hidden shadow-sm dark:shadow-none">
+              <div className="candy-panel divide-y divide-slate-100 dark:divide-white/[0.05]">
                 {announcements.slice(0, 4).map((ann, i) => (
                   <div key={ann.id ?? i} className="px-4 py-3">
                     <div className="flex items-start gap-2.5">
@@ -696,7 +714,7 @@ export default function StudentPortal() {
           )}
 
           {/* Quick tip card */}
-          <div className="hidden md:flex items-start gap-3 rounded-2xl bg-violet-50 dark:bg-gradient-to-br dark:from-violet-500/10 dark:to-transparent border border-violet-200 dark:border-violet-500/20 p-4 shadow-sm dark:shadow-none">
+          <div className="hidden md:flex items-start gap-3 candy-panel p-4">
             <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-200 dark:border-violet-500/25 flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" strokeWidth={2} />
             </div>

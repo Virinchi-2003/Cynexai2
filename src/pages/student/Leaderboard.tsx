@@ -2,6 +2,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Trophy, Gift, Star } from 'lucide-react';
 import { getLeaderboardData, LeaderboardEntry } from '../../lib/api/student';
 import { getCurrentUser } from '../../lib/auth';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // ── Reward tier definitions ────────────────────────────────────────────────────
 const REWARD_TIERS = [
@@ -84,7 +88,7 @@ function NewsBanner({ entries }: { entries: LeaderboardEntry[] }) {
     .join('   ·   ');
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600/20 via-purple-600/20 to-pink-600/20 border border-indigo-500/30 rounded-2xl mb-5 py-2.5 px-4">
+    <div className="relative overflow-hidden candy-panel mb-5 py-2.5 px-4 !border-2">
       <div className="flex items-center gap-3">
         <span className="text-[11px] font-extrabold uppercase tracking-widest text-indigo-400 flex-shrink-0 flex items-center gap-1.5">
           <Star className="w-3 h-3 fill-indigo-400" /> Live
@@ -111,6 +115,20 @@ export default function Leaderboard() {
   const user = getCurrentUser();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (!loading && entries.length > 0) {
+      gsap.fromTo('.leaderboard-row', 
+        { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
+      );
+    }
+    gsap.fromTo('.reward-tier', 
+      { scale: 0.9, opacity: 0, y: 20 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)', delay: 0.2 }
+    );
+  }, { scope: container, dependencies: [loading, entries] });
 
   useEffect(() => {
     let cancelled = false;
@@ -125,10 +143,10 @@ export default function Leaderboard() {
   const currentUserIdx = entries.findIndex((e) => e.student_id === user?.id);
 
   return (
-    <div className="min-h-full bg-background text-foreground p-4 md:p-6 space-y-6">
+    <div className="min-h-screen candy-map-bg p-4 md:p-6 space-y-6" ref={container}>
 
       {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 shadow-xl shadow-purple-500/20">
+      <div className="relative overflow-hidden candy-panel p-6 bg-gradient-to-br from-indigo-500/80 to-purple-600/80 !border-white text-white">
         {/* decorative circles */}
         <div className="pointer-events-none absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute bottom-0 left-1/2 w-32 h-32 rounded-full bg-white/5" />
@@ -138,8 +156,8 @@ export default function Leaderboard() {
             <Trophy className="w-7 h-7 text-yellow-300 fill-yellow-300/30" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight">Leaderboard</h1>
-            <p className="text-white/70 text-sm font-medium mt-0.5">Top referrers win amazing rewards 🚀</p>
+            <h1 className="text-2xl font-black text-white tracking-tight">Leaderboard</h1>
+            <p className="text-white/90 text-sm font-bold mt-0.5">Top referrers win amazing rewards 🚀</p>
           </div>
         </div>
 
@@ -156,9 +174,9 @@ export default function Leaderboard() {
       {!loading && entries.length > 0 && <NewsBanner entries={entries} />}
 
       {/* ── Leaderboard Table ────────────────────────────────────────────── */}
-      <div className="bg-surface rounded-3xl border border-border overflow-hidden shadow-sm">
+      <div className="candy-panel overflow-hidden">
         {/* Table header */}
-        <div className="px-4 py-3 border-b border-border bg-foreground/3 flex items-center gap-3">
+        <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-black/30 flex items-center gap-3">
           <Trophy className="w-4 h-4 text-yellow-400" />
           <span className="text-sm font-bold text-foreground">Rankings</span>
           {!loading && (
@@ -172,9 +190,9 @@ export default function Leaderboard() {
           </div>
         ) : entries.length === 0 ? (
           /* ── Empty state ── */
-          <div className="py-16 px-6 flex flex-col items-center text-center gap-4">
-            <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/20 flex items-center justify-center">
-              <Trophy className="w-10 h-10 text-indigo-400" />
+            <div className="py-16 px-6 flex flex-col items-center text-center gap-4">
+            <div className="w-20 h-20 rounded-3xl candy-panel flex items-center justify-center !border-2">
+              <Trophy className="w-10 h-10 text-indigo-500" />
             </div>
             <div>
               <p className="text-foreground font-bold text-lg">No referrers yet!</p>
@@ -198,7 +216,7 @@ export default function Leaderboard() {
               return (
                 <div
                   key={entry.student_id}
-                  className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/3 ${rowClass}`}
+                  className={`flex items-center gap-3 px-4 py-3 transition-colors hover:bg-foreground/3 leaderboard-row ${rowClass}`}
                 >
                   {/* Rank */}
                   <div className="w-8 flex-shrink-0 text-center">
@@ -255,8 +273,8 @@ export default function Leaderboard() {
       {/* ── Reward Tiers ─────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-3">
-          <Gift className="w-4 h-4 text-pink-400" />
-          <h2 className="text-sm font-extrabold text-foreground uppercase tracking-wider">Reward Tiers</h2>
+          <Gift className="w-4 h-4 text-pink-500" />
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Reward Tiers</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {REWARD_TIERS.map((tier) => {
@@ -268,7 +286,7 @@ export default function Leaderboard() {
             return (
               <div
                 key={tier.referrals}
-                className={`relative overflow-hidden rounded-2xl border ${tier.border} ${tier.bg} p-4 shadow-sm`}
+                className={`relative overflow-hidden candy-panel p-4 bg-white/70 dark:bg-black/70 !border-2 reward-tier`}
               >
                 {/* Shimmer stripe for unlocked */}
                 {unlocked && (
@@ -313,7 +331,7 @@ export default function Leaderboard() {
       </div>
 
       {/* ── How it works note ────────────────────────────────────────────── */}
-      <div className="rounded-2xl bg-surface border border-border p-4 flex items-start gap-3">
+      <div className="candy-panel p-4 flex items-start gap-3 bg-white/70 dark:bg-black/70 !border-2">
         <div className="w-8 h-8 flex-shrink-0 rounded-xl bg-indigo-500/15 flex items-center justify-center">
           <Star className="w-4 h-4 text-indigo-400 fill-indigo-400/30" />
         </div>

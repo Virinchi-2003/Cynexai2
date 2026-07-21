@@ -5,6 +5,10 @@ import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttenda
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 interface Question {
   id: string;
@@ -50,6 +54,14 @@ export default function ClassFlow() {
   const liveStartRef = useRef<number | null>(null);
   const [liveSeconds, setLiveSeconds] = useState(0);
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const container = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    gsap.fromTo('.flow-panel',
+      { scale: 0.95, opacity: 0, y: 15 },
+      { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }
+    );
+  }, { scope: container, dependencies: [currentStep, classData, hasAnswered, qaComplete, stepQuestions, currentQIdx] });
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -185,18 +197,18 @@ export default function ClassFlow() {
   const aiMaterials = classData.ai_script || classData.ai_ppt_markdown || null;
 
   return (
-    <div className="min-h-full bg-background p-4 md:p-8">
+    <div className="min-h-screen candy-map-bg p-4 md:p-8" ref={container}>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl bg-surface border border-border flex items-center justify-center hover:bg-foreground/5 transition-colors"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/10 transition-all candy-panel !border-2 !p-0 shadow-none"
         >
-          <ArrowLeft className="w-4 h-4 text-foreground" />
+          <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Class</p>
-          <h1 className="text-xl font-bold text-foreground">{classData.title}</h1>
+          <p className="text-xs text-slate-800 dark:text-white/80 font-bold uppercase tracking-wider">Class</p>
+          <h1 className="text-xl font-black text-slate-900 dark:text-white">{classData.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
           {/* Class type badge */}
@@ -224,7 +236,7 @@ export default function ClassFlow() {
             {isRecordedClass && (
               <>
                 {classData.youtube_video_id ? (
-                  <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
+                  <div className="candy-panel overflow-hidden mb-6 flow-panel">
                     <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
                       {(() => {
                         const rawUrl = classData.youtube_video_id || '';
@@ -255,12 +267,12 @@ export default function ClassFlow() {
                         }
                       })()}
                     </div>
-                    <div className="p-4 bg-surface border-t border-border flex justify-between items-center">
-                      <p className="text-sm text-muted-foreground">Finished watching?</p>
+                    <div className="p-4 bg-slate-50/70 dark:bg-black/50 border-t border-slate-200 dark:border-white/20 flex justify-between items-center">
+                      <p className="text-sm font-bold text-slate-800 dark:text-white">Finished watching?</p>
                       <button
                         onClick={handleMarkVideoCompleted}
-                        className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${
-                          hasWatched ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        className={`px-6 py-2 text-sm transition-all ${
+                          hasWatched ? 'bg-green-500/10 text-green-500 border border-green-500/20 font-bold rounded-xl' : 'candy-btn'
                         }`}
                         disabled={hasWatched}
                       >
@@ -269,10 +281,10 @@ export default function ClassFlow() {
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center">
+                  <div className="candy-panel bg-amber-50/90 dark:bg-amber-900/40 p-6 text-center border-amber-400 flow-panel">
                     <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                    <h3 className="font-bold text-amber-800 text-lg mb-1">Video Not Available Yet</h3>
-                    <p className="text-amber-700 text-sm">The recording for this class hasn't been uploaded. Please check back later or contact your instructor.</p>
+                    <h3 className="font-black text-amber-800 dark:text-amber-400 text-lg mb-1">Video Not Available Yet</h3>
+                    <p className="text-amber-700 dark:text-amber-200 text-sm font-bold">The recording for this class hasn't been uploaded. Please check back later or contact your instructor.</p>
                   </div>
                 )}
               </>
@@ -280,38 +292,38 @@ export default function ClassFlow() {
 
             {/* ── LIVE CLASS: Join Flow + Attendance Timer ── */}
             {isLiveClass && (
-          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
+          <div className="candy-panel overflow-hidden mb-6 flow-panel">
             {/* Live join area */}
             {classData.meet_link ? (
-              <div className="p-6 text-center border-b border-border">
-                <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+              <div className="p-6 text-center border-b border-slate-200 dark:border-white/20 bg-white/50 dark:bg-black/30">
+                <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                   <Wifi className="w-8 h-8 text-red-500 animate-pulse" />
                 </div>
-                <h3 className="font-bold text-foreground text-lg mb-1">Live Class in Session</h3>
-                <p className="text-muted-foreground text-sm mb-4">Stay on this page for 15 minutes to mark your attendance automatically.</p>
+                <h3 className="font-black text-slate-900 dark:text-white text-lg mb-1">Live Class in Session</h3>
+                <p className="text-slate-600 dark:text-white/60 text-sm mb-4 font-bold">Stay on this page for 15 minutes to mark your attendance automatically.</p>
                 <a
                   href={classData.meet_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white font-bold text-sm hover:opacity-90 transition-opacity shadow-lg"
+                  className="candy-btn px-6 py-3 text-sm"
                 >
                   <Play className="w-4 h-4 fill-white" /> Join Live Class
                 </a>
               </div>
             ) : (
-              <div className="p-6 text-center border-b border-border">
-                <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
+              <div className="p-6 text-center border-b border-slate-200 dark:border-white/20 bg-white/50 dark:bg-black/30">
+                <div className="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4 border border-orange-500/20">
                   <Clock className="w-8 h-8 text-orange-500" />
                 </div>
-                <h3 className="font-bold text-foreground text-lg mb-1">Live Class Scheduled</h3>
-                <p className="text-muted-foreground text-sm">The live link will be available when the class starts.</p>
+                <h3 className="font-black text-slate-900 dark:text-white text-lg mb-1">Live Class Scheduled</h3>
+                <p className="text-slate-600 dark:text-white/60 text-sm font-bold">The live link will be available when the class starts.</p>
               </div>
             )}
 
             {/* 15-min attendance timer */}
-            <div className="p-4 bg-surface">
+            <div className="p-4 bg-slate-50/70 dark:bg-black/50">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
+                <span className="text-sm font-black text-slate-700 dark:text-white/70 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> Attendance Progress
                 </span>
                 {attendanceMarked ? (
@@ -330,7 +342,7 @@ export default function ClassFlow() {
                   style={{ width: `${attendanceMarked ? 100 : livePct}%` }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
+              <p className="text-xs text-slate-600 dark:text-white/60 font-bold mt-2">
                 {attendanceMarked
                   ? '✅ Attendance marked! Great job attending this live class.'
                   : 'Stay on this page for 15 minutes to automatically mark attendance.'}
@@ -341,21 +353,21 @@ export default function ClassFlow() {
 
         {/* ── External Class Notes / Document ── */}
         {classData.doc_url && (
-          <div className="bg-surface border border-border rounded-2xl p-5 flex items-center justify-between shadow-sm">
+          <div className="candy-panel p-5 flex items-center justify-between mb-6 flow-panel">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
                 <FileText className="w-5 h-5 text-blue-500" />
               </div>
               <div>
-                <h3 className="font-bold text-foreground">Class Document / Notes</h3>
-                <p className="text-sm text-muted-foreground">External study materials attached by the instructor.</p>
+                <h3 className="font-black text-slate-900 dark:text-white">Class Document / Notes</h3>
+                <p className="text-sm text-slate-600 dark:text-white/60 font-bold">External study materials attached by the instructor.</p>
               </div>
             </div>
             <a 
               href={classData.doc_url} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="px-4 py-2 bg-primary/10 text-primary hover:bg-primary/20 font-bold text-sm rounded-lg transition-colors whitespace-nowrap"
+              className="candy-btn-blue px-4 py-2"
             >
               Open Document
             </a>
@@ -364,32 +376,31 @@ export default function ClassFlow() {
 
         {/* ── AI Materials (inline for all class types) ── */}
         {aiMaterials && (
-          <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+          <div className="candy-panel overflow-hidden mb-6 flow-panel">
             <button
               onClick={() => setShowMaterials(prev => !prev)}
-              className="w-full p-5 flex items-center justify-between hover:bg-foreground/[0.02] transition-colors"
+              className="w-full p-5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-white/10 transition-colors bg-slate-50/50 dark:bg-black/30"
             >
-              <h2 className="font-bold text-foreground flex items-center gap-2">
+              <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-4 h-4 text-indigo-500" />
                 Class Notes & Topics
               </h2>
               {showMaterials ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
             </button>
             {showMaterials && (
-              <div className="px-5 pb-5 border-t border-border">
-                <div className="mt-4 bg-background rounded-xl p-4 border border-border">
-                  <pre className="text-sm text-foreground/80 whitespace-pre-wrap font-sans leading-relaxed">{aiMaterials}</pre>
+              <div className="px-5 pb-5 border-t border-slate-200 dark:border-white/20 bg-white/70 dark:bg-black/50">
+                <div className="mt-4 bg-white dark:bg-zinc-900 rounded-xl p-4 border border-slate-200 dark:border-zinc-700">
+                  <pre className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed font-bold">{aiMaterials}</pre>
                 </div>
               </div>
             )}
           </div>
         )}
 
-            {/* ── AI Summary ── */}
             {classData.ai_summary && (
-              <div className="bg-surface border border-border rounded-2xl p-5 mt-6">
-                <h2 className="font-bold text-foreground flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
-                <p className="text-sm text-muted-foreground leading-relaxed">{classData.ai_summary}</p>
+              <div className="candy-panel p-5 mt-6 mb-6 flow-panel">
+                <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-bold">{classData.ai_summary}</p>
               </div>
             )}
           </>
@@ -398,9 +409,9 @@ export default function ClassFlow() {
         {/* ── Q&A / CODING STEP ── */}
         {(currentStep === 'qa' || currentStep === 'coding') && (
           stepQuestions.length > 0 ? (
-            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
-              <div className="p-5 border-b border-border bg-foreground/[0.02]">
-                <h2 className="font-bold text-foreground flex items-center gap-2">
+            <div className="candy-panel overflow-hidden flow-panel">
+              <div className="p-5 border-b border-slate-200 dark:border-white/20 bg-slate-50/50 dark:bg-black/30">
+                <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <Star className="w-4 h-4 text-yellow-500" />
                   {currentStep === 'qa' ? 'Post-Class Q&A' : 'Coding Challenge'}
                   <span className="ml-auto text-xs bg-primary/10 text-primary font-bold px-2 py-1 rounded-full">
@@ -417,19 +428,19 @@ export default function ClassFlow() {
                 </div>
               ) : qaComplete ? (
                 <div className="p-6 text-center">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg border-4 border-yellow-200">
                     <Star className="w-8 h-8 text-white fill-white" />
                   </div>
-                  <h3 className="font-bold text-foreground text-xl mb-1">Section Complete!</h3>
-                  <p className="text-muted-foreground text-sm mb-3">You scored {score} out of {stepQuestions.length}</p>
-                  <p className="text-yellow-500 font-bold">+{score * 5} coins earned! 🪙</p>
-                  <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-surface border border-border rounded-xl font-bold hover:bg-foreground/5 transition-colors">
+                  <h3 className="font-black text-slate-900 dark:text-white text-xl mb-1">Section Complete!</h3>
+                  <p className="text-slate-600 dark:text-white/60 text-sm mb-3 font-bold">You scored {score} out of {stepQuestions.length}</p>
+                  <p className="text-yellow-500 font-black text-lg">+{score * 5} coins earned! 🪙</p>
+                  <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 candy-btn-blue text-sm">
                     Return to Quest Map
                   </button>
                 </div>
               ) : currentQ ? (
-                <div className="p-5">
-                  <p className="font-bold text-foreground text-base mb-4">{currentQIdx + 1}. {currentQ.question_text}</p>
+                <div className="p-5 bg-white/70 dark:bg-black/50">
+                  <p className="font-black text-slate-900 dark:text-white text-base mb-4">{currentQIdx + 1}. {currentQ.question_text}</p>
 
                   {currentQ.type === 'mcq' && parsedOptions.length > 0 ? (
                     <div className="space-y-2 mb-4">
@@ -474,7 +485,7 @@ export default function ClassFlow() {
                   <button
                     onClick={() => handleSubmitAnswer(currentQ)}
                     disabled={submittedAnswers[currentQ.id] !== undefined}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full py-3 candy-btn text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submittedAnswers[currentQ.id] !== undefined ? 'Submitted ✓' : 'Submit Answer'}
                   </button>
@@ -482,13 +493,13 @@ export default function ClassFlow() {
               ) : null}
             </div>
           ) : (
-            <div className="bg-surface border border-border rounded-2xl p-8 text-center shadow-lg mt-6">
-              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="font-bold text-foreground text-lg mb-1">No Questions Available</h3>
-              <p className="text-muted-foreground text-sm mb-6">There are no {currentStep === 'qa' ? 'Q&A' : 'coding'} questions generated for this class yet.</p>
+            <div className="candy-panel p-8 text-center mt-6 flow-panel">
+              <AlertCircle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4 opacity-50" />
+              <h3 className="font-black text-slate-900 dark:text-white text-lg mb-1">No Questions Available</h3>
+              <p className="text-slate-600 dark:text-white/60 text-sm mb-6 font-bold">There are no {currentStep === 'qa' ? 'Q&A' : 'coding'} questions generated for this class yet.</p>
               <button 
                 onClick={() => navigate(-1)} 
-                className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-md"
+                className="candy-btn-blue px-6 py-2"
               >
                 Return to Quest Map
               </button>

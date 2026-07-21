@@ -2,6 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getModuleMapData } from '../../lib/api/student';
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
+gsap.registerPlugin(useGSAP);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -137,12 +141,11 @@ function NodePopup({
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl"
-        style={{ background: 'var(--color-surface, #1a1a2e)', border: '1px solid rgba(255,255,255,0.1)' }}
+        className="relative w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl candy-panel border-4 border-white"
         onClick={e => e.stopPropagation()}
       >
         {/* Top accent bar */}
-        <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${cfg.color}, ${cfg.color}80)` }} />
+        {/* Top accent bar */}
 
         <div className="p-6">
           {/* Header */}
@@ -163,13 +166,13 @@ function NodePopup({
               >
                 {cfg.label}
               </span>
-              <h3 className="text-white font-bold text-base leading-tight line-clamp-2">{node.title}</h3>
+              <h3 className="text-slate-900 dark:text-white font-bold text-base leading-tight line-clamp-2">{node.title}</h3>
             </div>
           </div>
 
           {/* Meta */}
           {dateStr && (
-            <div className="flex items-center gap-2 mb-4 text-sm text-white/50">
+            <div className="flex items-center gap-2 mb-4 text-sm text-slate-500 dark:text-white/70">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -183,7 +186,7 @@ function NodePopup({
           {/* Status badge */}
           <div className="mb-5">
             {state === 'completed' && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20">
                 <NodeIcons.check size={14} /> Completed
               </span>
             )}
@@ -194,7 +197,7 @@ function NodePopup({
               </span>
             )}
             {state === 'locked' && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-white/30">
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 dark:text-white/30">
                 <NodeIcons.lock size={14} /> Complete previous classes to unlock
               </span>
             )}
@@ -204,15 +207,16 @@ function NodePopup({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-2xl text-sm font-bold text-white/60 border border-white/10 hover:bg-white/5 transition-colors"
+              className="flex-1 py-3 rounded-2xl text-sm font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors dark:text-white/60 dark:border-white/10 dark:hover:bg-white/5"
             >
               Close
             </button>
             <button
               onClick={onGo}
               disabled={!isClickable}
-              className="flex-1 py-3 rounded-2xl text-sm font-black text-white shadow-lg transition-all hover:opacity-90 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ background: isClickable ? `linear-gradient(135deg, ${cfg.color}, ${cfg.color}cc)` : '#333' }}
+              className={`flex-1 py-3 rounded-full text-sm font-black text-white shadow-lg transition-all hover:opacity-90 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed ${
+                isClickable ? 'candy-btn-blue' : 'bg-slate-300 dark:bg-zinc-700 text-slate-500 dark:text-zinc-500 shadow-none border-none'
+              }`}
             >
               {state === 'completed' ? 'Review' : state === 'current' ? 'Start ▶' : 'Locked'}
             </button>
@@ -265,7 +269,7 @@ function MapNode({
   };
 
   return (
-    <div className="flex flex-col items-center" style={{ marginLeft: `${offset * 60}px` }}>
+    <div className="flex flex-col items-center map-node" style={{ marginLeft: `${offset * 60}px` }}>
       {/* Node button */}
       <div className="relative flex flex-col items-center">
         <button
@@ -275,30 +279,13 @@ function MapNode({
             ${sizes[state]} rounded-full flex items-center justify-center
             transition-all duration-300 relative select-none
             ${state !== 'locked' ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-default opacity-50'}
+            ${state === 'completed' ? 'candy-btn-green' : state === 'current' ? 'candy-btn border-4' : 'bg-slate-300 border-4 border-slate-400 dark:bg-zinc-700 dark:border-zinc-800'}
           `}
-          style={{
-            background: state === 'locked'
-              ? '#1e1e2e'
-              : state === 'completed'
-              ? `radial-gradient(circle at 30% 30%, #34d39950, #10b981)`
-              : `radial-gradient(circle at 30% 30%, ${cfg.color}dd, ${cfg.color})`,
-            border: state === 'locked'
-              ? '3px solid #2a2a3e'
-              : state === 'completed'
-              ? '3px solid #10b981'
-              : `3px solid ${cfg.color}`,
-            boxShadow: state === 'current'
-              ? `0 0 0 8px ${cfg.color}25, 0 8px 32px ${cfg.color}40`
-              : state === 'completed'
-              ? '0 4px 20px #10b98140'
-              : 'none',
-          }}
         >
           {/* Pulsing ring for current */}
           {state === 'current' && (
             <span
-              className="absolute inset-0 rounded-full animate-ping opacity-30"
-              style={{ border: `3px solid ${cfg.color}` }}
+              className="absolute -inset-2 rounded-full animate-ping opacity-30 border-4 border-[#ff71ce]"
             />
           )}
 
@@ -326,16 +313,15 @@ function MapNode({
         </button>
 
         {/* Label below node */}
-        <div className="mt-2 text-center max-w-[100px]">
+        <div className="mt-2 text-center max-w-[110px] candy-panel !rounded-xl !p-2 !border-2">
           <p
-            className="text-[11px] font-black uppercase tracking-wide mb-0.5"
+            className="text-[10px] font-black uppercase tracking-wide mb-0.5"
             style={{ color: state === 'locked' ? '#555' : cfg.labelColor }}
           >
             {cfg.label}
           </p>
           <p
-            className="text-[12px] font-semibold leading-tight line-clamp-2"
-            style={{ color: state === 'locked' ? '#444' : 'rgba(255,255,255,0.8)' }}
+            className="text-[11px] font-bold leading-tight line-clamp-2 text-slate-800 dark:text-slate-200"
           >
             {node.title}
           </p>
@@ -373,6 +359,16 @@ export default function ModuleMap() {
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<VirtualNode | null>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
+  const mapContainer = useRef<HTMLDivElement>(null);
+
+  useGSAP(() => {
+    if (virtualNodes.length > 0) {
+      gsap.fromTo('.map-node', 
+        { scale: 0, opacity: 0, y: 50 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out(1.5)', stagger: 0.05 }
+      );
+    }
+  }, { scope: mapContainer, dependencies: [virtualNodes] });
 
   useEffect(() => {
     if (!moduleId) return;
@@ -468,24 +464,23 @@ export default function ModuleMap() {
   }
 
   return (
-    <div className="min-h-screen text-white" style={{ background: 'linear-gradient(180deg, #0d0d1a 0%, #111128 100%)' }}>
+    <div className="min-h-screen candy-map-bg">
       {/* ── Sticky Header ── */}
       <div
-        className="sticky top-0 z-30 backdrop-blur-xl border-b px-4 py-3"
-        style={{ background: 'rgba(13,13,26,0.85)', borderColor: 'rgba(255,255,255,0.06)' }}
+        className="sticky top-0 z-30 px-4 py-3 bg-white/70 dark:bg-black/70 backdrop-blur-md border-b border-white/20 shadow-sm"
       >
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/student')}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/10 transition-all candy-panel !border-2 !p-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="15,18 9,12 15,6" />
             </svg>
           </button>
           <div className="flex-1 min-w-0">
-            <h1 className="font-black text-base text-white truncate">{moduleData?.title ?? 'Module'}</h1>
-            <p className="text-white/40 text-[11px] font-medium">{completedCount}/{virtualNodes.length} steps · {pct}% complete</p>
+            <h1 className="font-black text-base text-slate-900 dark:text-white truncate">{moduleData?.title ?? 'Module'}</h1>
+            <p className="text-slate-600 dark:text-white/60 text-[11px] font-medium">{completedCount}/{virtualNodes.length} steps · {pct}% complete</p>
           </div>
           {/* Progress pill */}
           <div
@@ -512,10 +507,7 @@ export default function ModuleMap() {
       {/* ── Module Description ── */}
       {moduleData?.description && (
         <div className="max-w-lg mx-auto px-4 pt-5">
-          <div
-            className="rounded-2xl p-4 text-sm text-white/50 leading-relaxed"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-          >
+          <div className="candy-panel p-4 text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
             {moduleData.description}
           </div>
         </div>
@@ -553,7 +545,7 @@ export default function ModuleMap() {
 
       {/* ── Candy Crush Map ── */}
       {virtualNodes.length > 0 && (
-        <div className="max-w-lg mx-auto px-4 pt-6 pb-32">
+        <div className="max-w-lg mx-auto px-4 pt-6 pb-32" ref={mapContainer}>
           {/* Start Banner */}
           <div
             className="text-center mb-8 py-4 rounded-2xl"
