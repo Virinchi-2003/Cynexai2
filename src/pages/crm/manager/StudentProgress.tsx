@@ -20,10 +20,10 @@ export default function StudentProgress() {
       const res = await client.execute(`
         SELECT 
           sp.*,
-          u.name as student_name,
-          u.email as student_email
+          COALESCE(s.name, (SELECT name FROM users u WHERE u.email = s.portal_login_email)) as student_name,
+          s.portal_login_email as student_email
         FROM manager_student_progress sp
-        JOIN erp_users u ON sp.student_id = u.id
+        JOIN students s ON sp.student_id = s.id
         ORDER BY sp.course_progress_percentage DESC
       `);
       setProgressData(res.rows);
