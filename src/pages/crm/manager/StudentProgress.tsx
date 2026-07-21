@@ -22,7 +22,7 @@ export default function StudentProgress() {
           sp.*,
           u.name as student_name,
           u.email as student_email
-        FROM student_progress sp
+        FROM manager_student_progress sp
         JOIN erp_users u ON sp.student_id = u.id
         ORDER BY sp.course_progress_percentage DESC
       `);
@@ -54,13 +54,14 @@ export default function StudentProgress() {
     setIsSaving(true);
     try {
       await client.execute({
-        sql: `UPDATE student_progress SET 
+        sql: `UPDATE manager_student_progress SET 
           course_progress_percentage = ?,
           attendance_score = ?,
           coins_spent = ?,
           leaderboard_rank = ?,
           last_updated = CURRENT_TIMESTAMP
           WHERE id = ?`,
+
         args: [
           Number(editForm.course_progress_percentage),
           Number(editForm.attendance_score),
