@@ -174,7 +174,7 @@ export default function ClassFlow() {
     );
   }
 
-  const isLiveClass = classData.type === 'live' || (!classData.youtube_video_id && classData.meet_link);
+  const isLiveClass = !classData.youtube_video_id && (classData.type === 'live' || classData.meet_link);
   const isRecordedClass = !isLiveClass;
   const livePct = Math.min(100, (liveSeconds / REQUIRED_WATCH_SECONDS) * 100);
   const liveMinLeft = Math.max(0, Math.ceil((REQUIRED_WATCH_SECONDS - liveSeconds) / 60));
