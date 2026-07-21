@@ -60,6 +60,11 @@ export default function LiveStreamDashboard() {
   const [ytUrl, setYtUrl] = useState('');
   const [showEndModal, setShowEndModal] = useState(false);
   
+  // Recording State
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [panelMode, setPanelMode] = useState<'slides' | 'code'>('slides');
@@ -147,6 +152,39 @@ export default function LiveStreamDashboard() {
 
   const handleStartClass = async () => {
     if (!classData) return;
+    
+    // Auto-start screen recording
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'browser' },
+        audio: true
+      });
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          recordedChunksRef.current.push(e.data);
+        }
+      };
+      
+      mediaRecorder.start(1000); // collect data every second
+      setIsRecording(true);
+      
+      // If user stops sharing manually via browser UI
+      stream.getVideoTracks()[0].onended = () => {
+        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+          mediaRecorderRef.current.stop();
+        }
+        setIsRecording(false);
+      };
+    } catch (e) {
+      console.error("Screen recording permission denied or failed:", e);
+      // We continue with the class even if recording fails/denied
+    }
+
     await updateClassStatus(classData.id, 'in_progress', 'live');
     localStorage.setItem('cynexai_live_class_id', classData.id);
     localStorage.setItem('cynexai_live_slide', '1');
@@ -157,6 +195,29 @@ export default function LiveStreamDashboard() {
   const handleEndClass = async () => {
     if (!classData) return;
     setEnding(true);
+    
+    // Stop recording and download automatically
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      
+      // Create a small delay to ensure final chunks are processed
+      setTimeout(() => {
+        if (recordedChunksRef.current.length > 0) {
+          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `CynexAI_Class_${classData.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.webm`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          recordedChunksRef.current = [];
+        }
+      }, 500);
+      setIsRecording(false);
+    }
+
     try {
       const summary = await generatePostClassSummary(classData.title, classData.ai_keypoints || '');
       await completeClassWithSummary(classData.id, summary, ytUrl || null);
@@ -239,35 +300,29 @@ export default function LiveStreamDashboard() {
                 <div className="flex items-center gap-3">
                   <Radio className="w-4 h-4 text-red-400 animate-pulse" />
                   <span className="text-red-400 font-bold text-sm">LIVE NOW</span>
+                  {isRecording && <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold ml-2 animate-pulse">● REC</span>}
                 </div>
                 <div className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs font-bold">{attendance.length} Joined</div>
               </div>
             )}
 
             <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-4">
-              <div className="mb-8">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" /> Slide {slide} Keypoints
-                </h3>
-                {slides.length === 0 ? (
-                  <p className="text-sm text-slate-500 italic">No keypoints available...</p>
-                ) : (
-                  <ul className="space-y-4">
-                    {currentKeypoints.map((kp: string, i: number) => (
-                      <li key={i} className="flex items-start gap-3 text-base text-slate-200 leading-relaxed bg-white/5 p-3 rounded-lg border border-white/5">
-                        <ArrowRight className="w-4 h-4 text-green-400 mt-1 shrink-0" />
-                        <ReactMarkdown>{kp}</ReactMarkdown>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              {/* Jitsi iframe moved here (Teacher's Pic & Broadcast) */}
+              {isLive && hasAI && (
+                <div className="mb-6 rounded-xl overflow-hidden border border-white/10 bg-black aspect-video relative">
+                  <iframe
+                    src={`https://meet.element.io/CynexAIClass${classData.id.replace(/[^a-zA-Z0-9]/g, '')}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`}
+                    allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
+                    className="absolute inset-0 w-full h-full border-0"
+                  />
+                </div>
+              )}
 
               {/* Attendance */}
               {isLive && (
                 <div>
                   <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <UsersIcon className="w-3.5 h-3.5" /> Students ({attendance.length})
+                    <UsersIcon className="w-3.5 h-3.5" /> Students Joined ({attendance.length})
                   </h3>
                   <div className="space-y-2">
                     {attendance.map((a, i) => (
@@ -329,18 +384,6 @@ export default function LiveStreamDashboard() {
         )}
       </AnimatePresence>
 
-      {/* ── Persistent Jitsi Iframe ── */}
-      {isLive && hasAI && (
-        <div className={`fixed z-[100] transition-all duration-300 shadow-2xl rounded-xl overflow-hidden border border-white/10 ${sidebarOpen ? 'w-[380px] h-[280px]' : 'w-[320px] h-[240px]'}`} style={{ right: '20px', bottom: '20px' }}>
-          <div className="bg-black w-full h-full relative rounded-xl overflow-hidden">
-            <iframe
-              src={`https://meet.element.io/CynexAIClass${classData.id.replace(/[^a-zA-Z0-9]/g, '')}#config.prejoinPageEnabled=false&config.disableDeepLinking=true`}
-              allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write"
-              className="absolute inset-0 w-full h-full border-0"
-            />
-          </div>
-        </div>
-      )}
 
       {/* ── Main Stage ── */}
       <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-[#0B0B1A]">
@@ -498,6 +541,41 @@ export default function LiveStreamDashboard() {
           )}
         </div>
       </div>
+
+      {/* ── Right Sidebar: Keypoints ── */}
+      <AnimatePresence>
+        {sidebarOpen && hasAI && (
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 380, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            className="h-full bg-[#111118] border-l border-white/5 flex flex-col shrink-0 overflow-hidden"
+          >
+            <div className="p-5 border-b border-white/5">
+              <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-violet-400" /> Teaching Guide
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-5">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" /> Slide {slide} Keypoints
+              </h3>
+              {slides.length === 0 ? (
+                <p className="text-sm text-slate-500 italic">No keypoints available...</p>
+              ) : (
+                <ul className="space-y-4">
+                  {currentKeypoints.map((kp: string, i: number) => (
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-200 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5">
+                      <ArrowRight className="w-4 h-4 text-green-400 mt-1 shrink-0" />
+                      <ReactMarkdown>{kp}</ReactMarkdown>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Edit Class Modal ── */}
       {showEditModal && (
