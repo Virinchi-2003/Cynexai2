@@ -39,6 +39,9 @@ export default function StudentProgress() {
     setEditForm({
       course_progress_percentage: row.course_progress_percentage || 0,
       attendance_score: row.attendance_score || 0,
+      quiz_score: row.quiz_score || 0,
+      interview_score: row.interview_score || 0,
+      coding_test_score: row.coding_test_score || 0,
       coins_spent: row.coins_spent || 0,
       leaderboard_rank: row.leaderboard_rank || 0,
     });
@@ -57,6 +60,9 @@ export default function StudentProgress() {
         sql: `UPDATE manager_student_progress SET 
           course_progress_percentage = ?,
           attendance_score = ?,
+          quiz_score = ?,
+          interview_score = ?,
+          coding_test_score = ?,
           coins_spent = ?,
           leaderboard_rank = ?,
           last_updated = CURRENT_TIMESTAMP
@@ -65,6 +71,9 @@ export default function StudentProgress() {
         args: [
           Number(editForm.course_progress_percentage),
           Number(editForm.attendance_score),
+          Number(editForm.quiz_score),
+          Number(editForm.interview_score),
+          Number(editForm.coding_test_score),
           Number(editForm.coins_spent),
           Number(editForm.leaderboard_rank),
           id
@@ -133,6 +142,9 @@ export default function StudentProgress() {
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Student Name</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Course Progress (%)</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Attendance (%)</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Quiz (%)</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Interview (%)</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Coding (%)</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Coins Spent</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Rank</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Last Updated</th>
@@ -142,7 +154,7 @@ export default function StudentProgress() {
             <tbody>
               {progressData.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-zinc-500">No progress data recorded yet.</td>
+                  <td colSpan={10} className="p-8 text-center text-zinc-500">No progress data recorded yet.</td>
                 </tr>
               ) : (
                 progressData.map((row: any) => {
@@ -186,6 +198,45 @@ export default function StudentProgress() {
                           />
                         ) : (
                           `${row.attendance_score || 0}%`
+                        )}
+                      </td>
+
+                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                        {isEditing ? (
+                          <input 
+                            type="number" 
+                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
+                            value={editForm.quiz_score}
+                            onChange={(e) => setEditForm({...editForm, quiz_score: e.target.value})}
+                          />
+                        ) : (
+                          `${row.quiz_score || 0}%`
+                        )}
+                      </td>
+
+                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                        {isEditing ? (
+                          <input 
+                            type="number" 
+                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
+                            value={editForm.interview_score}
+                            onChange={(e) => setEditForm({...editForm, interview_score: e.target.value})}
+                          />
+                        ) : (
+                          `${row.interview_score || 0}%`
+                        )}
+                      </td>
+
+                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
+                        {isEditing ? (
+                          <input 
+                            type="number" 
+                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
+                            value={editForm.coding_test_score}
+                            onChange={(e) => setEditForm({...editForm, coding_test_score: e.target.value})}
+                          />
+                        ) : (
+                          `${row.coding_test_score || 0}%`
                         )}
                       </td>
                       
