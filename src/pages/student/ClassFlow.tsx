@@ -226,23 +226,16 @@ export default function ClassFlow() {
                   <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
                     <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
                       <ReactPlayer
-                        url={`https://www.youtube.com/watch?v=${(() => {
-                          try {
-                            const url = (classData.youtube_video_id || '').trim();
-                            if (url.length === 11 && !url.includes('/')) return url;
-                            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
-                            const match = url.match(regExp);
-                            if (match && match[2].length === 11) return match[2];
-                            try {
-                              const urlObj = new URL(url);
-                              const v = urlObj.searchParams.get('v');
-                              if (v && v.length === 11) return v;
-                            } catch(e) {}
-                            return url;
-                          } catch(e) {
-                            return classData.youtube_video_id;
+                        url={(() => {
+                          const raw = (classData.youtube_video_id || '').trim();
+                          if (!raw) return '';
+                          // If it looks like just an ID (no slashes, typical length)
+                          if (!raw.includes('/') && !raw.includes('youtube.com') && !raw.includes('youtu.be')) {
+                            return `https://www.youtube.com/watch?v=${raw}`;
                           }
-                        })()}`}
+                          // Otherwise, it's already a URL, so just let ReactPlayer handle it
+                          return raw;
+                        })()}
                         width="100%"
                         height="100%"
                         controls={true}
