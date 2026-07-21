@@ -217,10 +217,21 @@ export default function ClassFlow() {
                 <div className="relative aspect-video bg-black">
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${(() => {
-                      const url = classData.youtube_video_id;
-                      const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
-                      const match = url.match(regExp);
-                      return (match && match[2].length === 11) ? match[2] : url;
+                      try {
+                        const url = (classData.youtube_video_id || '').trim();
+                        if (url.length === 11 && !url.includes('/')) return url;
+                        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+                        const match = url.match(regExp);
+                        if (match && match[2].length === 11) return match[2];
+                        try {
+                          const urlObj = new URL(url);
+                          const v = urlObj.searchParams.get('v');
+                          if (v && v.length === 11) return v;
+                        } catch(e) {}
+                        return url;
+                      } catch(e) {
+                        return classData.youtube_video_id;
+                      }
                     })()}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
