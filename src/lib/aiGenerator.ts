@@ -48,13 +48,13 @@ Class title: "{{title}}"
 CRITICAL: Output EXACTLY 3 sections separated by "---SPLIT---" (use this separator NOWHERE else).
 
 SECTION 1 - PRESENTATION SLIDES (Markdown):
-- Generate EXACTLY 12 slides about the topic: "{{title}}"
+- Generate EXACTLY 12 slides strictly covering the topics outlined in the Additional context/description.
 - DO NOT include any images, photos, or ![] markdown whatsoever
 - Each slide MUST be separated by exactly "---" on its own line
 - Slide 1: Title slide with just # Title and a one-line tagline as a paragraph
 - Slides 2-11: Use # for slide title, then 4-5 bullet points using "-"
 - Slide 12: Summary/Key Takeaways slide
-- Content MUST be directly about the class topic. Do not mix unrelated subjects.
+- Content MUST be directly about the class topic and the specific topics requested in the description.
 - Keep bullet points SHORT — max 12 words each
 - No sub-headings (##) needed
 
@@ -122,7 +122,6 @@ Generate a well-formatted Markdown summary document for the students to review. 
 2. ## Important Concepts (with brief explanations)
 3. ## Real-World Applications (2-3 examples)
 4. ## Practice Suggestions (2-3 actionable exercises)
-5. ## Resources (suggest 2-3 generic resources like documentation sites, YouTube channels)
 
 Keep it concise but thorough. Use **bold** for key terms. Use inline code for any code/syntax.`;
 
@@ -133,7 +132,7 @@ Keep it concise but thorough. Use **bold** for key terms. Use inline code for an
     if (error?.message?.includes('429') || error?.message?.includes('quota') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
       throw new Error('QUOTA_EXCEEDED');
     }
-    return `## What We Learned\n\n- Core concepts of **${title}**\n- Practical applications in real-world scenarios\n- Key syntax and usage patterns\n\n## Practice Suggestions\n\n1. Build a small project using today's concepts\n2. Review the code examples from the session\n3. Try the coding challenge in the LMS\n\n## Resources\n\n- Search YouTube for "${title} tutorial" for visual learners\n- Practice on [HackerRank](https://hackerrank.com)`;
+    return `## What We Learned\n\n- Core concepts of **${title}**\n- Practical applications in real-world scenarios\n- Key syntax and usage patterns\n\n## Practice Suggestions\n\n1. Build a small project using today's concepts\n2. Review the code examples from the session\n3. Try the coding challenge in the LMS`;
   }
 }
 
@@ -141,7 +140,7 @@ Keep it concise but thorough. Use **bold** for key terms. Use inline code for an
  * Generates MCQ + coding Q&A questions for a class lesson.
  * Returns array of { type, question_text, options, correct_answer_idx, boilerplate, test_cases }
  */
-export async function generateAIQuestions(title: string, hasCoding: boolean = true): Promise<Array<{
+export async function generateAIQuestions(title: string, description: string, keypoints: string, hasCoding: boolean = true): Promise<Array<{
   type: 'mcq' | 'coding';
   question_text: string;
   options?: string[];
@@ -181,8 +180,13 @@ Output EXACTLY this JSON array (no markdown fences, no explanation, just raw JSO
   }${codingExample}
 ]
 
-Generate exactly 3 MCQ questions${hasCoding ? ' and 1 coding question' : ''} related to: ${title}.
-The questions must be relevant to the class topic and appropriate for beginners.
+Generate exactly 3 MCQ questions${hasCoding ? ' and 1 coding question' : ''} specifically testing the knowledge from this class:
+TITLE: ${title}
+DESCRIPTION: ${description}
+KEY POINTS TAUGHT:
+${keypoints}
+
+The questions MUST STRICTLY be derived from the KEY POINTS TAUGHT above. Do not invent unrelated questions.
 Output ONLY valid JSON. No text before or after.`;
 
   try {

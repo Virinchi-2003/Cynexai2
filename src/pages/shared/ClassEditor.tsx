@@ -17,6 +17,7 @@ export default function ClassEditor() {
   const [classData, setClassData] = useState<any>(null);
   const [moduleData, setModuleData] = useState<any>(null);
   const [classTitle, setClassTitle] = useState('');
+  const [classDescription, setClassDescription] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [meetLink, setMeetLink] = useState('');
   
@@ -25,6 +26,7 @@ export default function ClassEditor() {
   const [generatingQA, setGeneratingQA] = useState(false);
   const [aiStatus, setAiStatus] = useState({ ppt: false, script: false });
   const [docUrl, setDocUrl] = useState('');
+  const [aiKeypoints, setAiKeypoints] = useState('');
 
 
   // Class Questions state
@@ -48,9 +50,11 @@ export default function ClassEditor() {
       if (data) {
         setClassData(data);
         setClassTitle(data.title as string);
+        setClassDescription(data.description as string || '');
         setYoutubeLink(data.youtube_video_id as string || '');
         setMeetLink(data.meet_link as string || '');
         setDocUrl(data.doc_url as string || '');
+        setAiKeypoints(data.ai_keypoints as string || '');
 
         
         setAiStatus({
@@ -81,8 +85,16 @@ export default function ClassEditor() {
 
   const handleSave = async () => {
     if (!classId) return;
+    if (!classDescription.trim()) {
+      alert('Class Description is mandatory. Please provide a description before saving.');
+      return;
+    }
     try {
-      await updateClassMetadata(classId as string, classTitle, youtubeLink, meetLink, docUrl);
+      await updateClassMetadata(classId as string, classTitle, classDescription, youtubeLink, meetLink, docUrl);
+      if (aiKeypoints !== classData?.ai_keypoints) {
+        await updateClassAiMaterials(classId as string, classData?.ai_ppt_markdown || '', aiKeypoints, classData?.ai_script || '');
+        setClassData({ ...classData, ai_keypoints: aiKeypoints });
+      }
       alert('Class saved successfully!');
       navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`);
     } catch (e) {
@@ -93,11 +105,17 @@ export default function ClassEditor() {
 
 
   const handleGenerateAI = async () => {
+    if (!classDescription.trim()) {
+      alert('Please add and save a class description first.');
+      return;
+    }
     setGenerating(true);
     try {
-      const { ppt, keypoints, script } = await generateAIMaterials(classTitle);
+      const { ppt, keypoints, script } = await generateAIMaterials(classTitle, classDescription);
       await updateClassAiMaterials(classId as string, ppt, keypoints, script);
       setAiStatus({ ppt: true, script: true });
+      setAiKeypoints(keypoints);
+      setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints });
       alert('AI Materials generated and saved successfully!');
     } catch (error) {
       console.error(error);
@@ -108,11 +126,12 @@ export default function ClassEditor() {
   };
 
   const handleGenerateAIQuestions = async () => {
-    if (!classId || !classTitle) { alert('Please enter a class title first.'); return; }
+    if (!classId || !classTitle || !classDescription) { alert('Please enter a class title and description first.'); return; }
+    if (!aiStatus.ppt || !aiKeypoints) { alert('Please generate AI Materials (Slides & Keypoints) first so the Q&A can be based on the exact topics taught.'); return; }
     setGeneratingQA(true);
     try {
       const hasCoding = moduleData ? moduleData.is_it_module === 1 : true;
-      const qs = await generateAIQuestions(classTitle, hasCoding);
+      const qs = await generateAIQuestions(classTitle, classDescription, aiKeypoints, hasCoding);
       for (const q of qs) {
         const qId = 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
         await createClassQuestion(
@@ -198,6 +217,10 @@ export default function ClassEditor() {
               <div>
                 <label className="block text-sm font-bold text-erp-text/70 mb-1">Class Title</label>
                 <input type="text" value={classTitle} onChange={e => setClassTitle(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-erp-text/70 mb-1">Class Description / Topics (Mandatory)</label>
+                <textarea rows={3} value={classDescription} onChange={e => setClassDescription(e.target.value)} placeholder="Describe what will be taught. AI uses this to generate slides." className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-indigo-500 resize-none" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-erp-text/70 mb-1 flex items-center gap-2">
@@ -342,6 +365,17 @@ export default function ClassEditor() {
                   {aiStatus.script ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}
                 </div>
                 <p className="text-xs text-indigo-200 mb-3">{aiStatus.script ? 'Full teleprompter script + regional examples (Hyderabad).' : 'Pending generation.'}</p>
+                {aiKeypoints && (
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <label className="block text-xs font-bold text-white mb-2">Edit Keypoints (Used for Q&A Generation)</label>
+                    <textarea 
+                      rows={6}
+                      value={aiKeypoints}
+                      onChange={e => setAiKeypoints(e.target.value)}
+                      className="w-full bg-black/30 border border-white/10 rounded-lg p-3 text-white text-xs focus:outline-none focus:border-indigo-400 resize-none custom-scrollbar"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
