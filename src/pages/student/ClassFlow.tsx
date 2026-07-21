@@ -4,6 +4,7 @@ import { getCurrentUser } from '../../lib/auth';
 import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactPlayer from 'react-player';
+import { formatYoutubeUrl } from '../../lib/videoUtils';
 
 interface Question {
   id: string;
@@ -226,16 +227,7 @@ export default function ClassFlow() {
                   <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
                     <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
                       <ReactPlayer
-                        url={(() => {
-                          const raw = (classData.youtube_video_id || '').trim();
-                          if (!raw) return '';
-                          // If it looks like just an ID (no slashes, typical length)
-                          if (!raw.includes('/') && !raw.includes('youtube.com') && !raw.includes('youtu.be')) {
-                            return `https://www.youtube.com/watch?v=${raw}`;
-                          }
-                          // Otherwise, it's already a URL, so just let ReactPlayer handle it
-                          return raw;
-                        })()}
+                        url={formatYoutubeUrl(classData.youtube_video_id || '')}
                         width="100%"
                         height="100%"
                         controls={true}
