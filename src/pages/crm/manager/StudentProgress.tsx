@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { client } from '../../../lib/turso';
-import { Users, TrendingUp, Award, BookOpen, Edit2, Save, X } from 'lucide-react';
+import { TrendingUp, Users, BookOpen, Award, Edit2, Save, X } from 'lucide-react';
 
 export default function StudentProgress() {
   const [progressData, setProgressData] = useState<any[]>([]);
@@ -37,11 +37,16 @@ export default function StudentProgress() {
   const handleEditClick = (row: any) => {
     setEditingId(row.id);
     setEditForm({
-      course_progress_percentage: row.course_progress_percentage || 0,
-      attendance_score: row.attendance_score || 0,
-      quiz_score: row.quiz_score || 0,
-      interview_score: row.interview_score || 0,
-      coding_test_score: row.coding_test_score || 0,
+      course_progress_num: row.course_progress_num || 0,
+      course_progress_den: row.course_progress_den || 0,
+      attendance_num: row.attendance_num || 0,
+      attendance_den: row.attendance_den || 0,
+      quiz_num: row.quiz_num || 0,
+      quiz_den: row.quiz_den || 0,
+      interview_num: row.interview_num || 0,
+      interview_den: row.interview_den || 0,
+      coding_num: row.coding_num || 0,
+      coding_den: row.coding_den || 0,
       coins_spent: row.coins_spent || 0,
       leaderboard_rank: row.leaderboard_rank || 0,
     });
@@ -55,27 +60,33 @@ export default function StudentProgress() {
   const handleSave = async (id: string) => {
     if (!client) return;
     setIsSaving(true);
+    
+    // Auto calculate percentages based on nums/dens
+    const course_perc = editForm.course_progress_den > 0 ? Math.round((editForm.course_progress_num / editForm.course_progress_den) * 100) : 0;
+    const att_perc = editForm.attendance_den > 0 ? Math.round((editForm.attendance_num / editForm.attendance_den) * 100) : 0;
+    const quiz_perc = editForm.quiz_den > 0 ? Math.round((editForm.quiz_num / editForm.quiz_den) * 100) : 0;
+    const int_perc = editForm.interview_den > 0 ? Math.round((editForm.interview_num / editForm.interview_den) * 100) : 0;
+    const cod_perc = editForm.coding_den > 0 ? Math.round((editForm.coding_num / editForm.coding_den) * 100) : 0;
+
     try {
       await client.execute({
         sql: `UPDATE manager_student_progress SET 
-          course_progress_percentage = ?,
-          attendance_score = ?,
-          quiz_score = ?,
-          interview_score = ?,
-          coding_test_score = ?,
-          coins_spent = ?,
-          leaderboard_rank = ?,
+          course_progress_num = ?, course_progress_den = ?, course_progress_percentage = ?,
+          attendance_num = ?, attendance_den = ?, attendance_score = ?,
+          quiz_num = ?, quiz_den = ?, quiz_score = ?,
+          interview_num = ?, interview_den = ?, interview_score = ?,
+          coding_num = ?, coding_den = ?, coding_test_score = ?,
+          coins_spent = ?, leaderboard_rank = ?,
           last_updated = CURRENT_TIMESTAMP
           WHERE id = ?`,
 
         args: [
-          Number(editForm.course_progress_percentage),
-          Number(editForm.attendance_score),
-          Number(editForm.quiz_score),
-          Number(editForm.interview_score),
-          Number(editForm.coding_test_score),
-          Number(editForm.coins_spent),
-          Number(editForm.leaderboard_rank),
+          Number(editForm.course_progress_num), Number(editForm.course_progress_den), course_perc,
+          Number(editForm.attendance_num), Number(editForm.attendance_den), att_perc,
+          Number(editForm.quiz_num), Number(editForm.quiz_den), quiz_perc,
+          Number(editForm.interview_num), Number(editForm.interview_den), int_perc,
+          Number(editForm.coding_num), Number(editForm.coding_den), cod_perc,
+          Number(editForm.coins_spent), Number(editForm.leaderboard_rank),
           id
         ]
       });
@@ -87,6 +98,39 @@ export default function StudentProgress() {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const renderRatioCell = (numKey: string, denKey: string, percKey: string, row: any, isEditing: boolean) => {
+    if (isEditing) {
+      return (
+        <div className="flex items-center gap-1">
+          <input 
+            type="number" 
+            className="w-16 px-1 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white text-center"
+            value={editForm[numKey]}
+            onChange={(e) => setEditForm({...editForm, [numKey]: e.target.value})}
+          />
+          <span className="text-zinc-500">/</span>
+          <input 
+            type="number" 
+            className="w-16 px-1 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white text-center"
+            value={editForm[denKey]}
+            onChange={(e) => setEditForm({...editForm, [denKey]: e.target.value})}
+          />
+        </div>
+      );
+    }
+    
+    const num = row[numKey] || 0;
+    const den = row[denKey] || 0;
+    const perc = den > 0 ? Math.round((num / den) * 100) : 0;
+    
+    return (
+      <div className="flex flex-col">
+        <span className="font-bold text-zinc-800 dark:text-zinc-200">{num} / {den}</span>
+        <span className="text-xs text-zinc-500">({perc}%)</span>
+      </div>
+    );
   };
 
   if (loading) {
@@ -104,7 +148,7 @@ export default function StudentProgress() {
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 text-purple-500 mb-2">
             <Users className="w-5 h-5" />
-            <h3 className="font-bold text-zinc-600 dark:text-zinc-400">Total Students Tracked</h3>
+            <h3 className="font-bold text-zinc-600 dark:text-zinc-400">Total Students</h3>
           </div>
           <p className="text-3xl font-black text-zinc-800 dark:text-white">{progressData.length}</p>
         </div>
@@ -140,21 +184,20 @@ export default function StudentProgress() {
             <thead>
               <tr className="bg-zinc-50 dark:bg-zinc-800/50 border-b border-zinc-200 dark:border-zinc-700">
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Student Name</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Course Progress (%)</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Attendance (%)</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Quiz (%)</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Interview (%)</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Coding (%)</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Course Progress</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Attendance</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Quiz</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Interview</th>
+                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Coding</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Coins Spent</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Rank</th>
-                <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300">Last Updated</th>
                 <th className="p-4 font-bold text-zinc-700 dark:text-zinc-300 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {progressData.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-zinc-500">No progress data recorded yet.</td>
+                  <td colSpan={9} className="p-8 text-center text-zinc-500">No progress data recorded yet.</td>
                 </tr>
               ) : (
                 progressData.map((row: any) => {
@@ -168,76 +211,23 @@ export default function StudentProgress() {
                       </td>
                       
                       <td className="p-4">
-                        {isEditing ? (
-                          <input 
-                            type="number" 
-                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
-                            value={editForm.course_progress_percentage}
-                            onChange={(e) => setEditForm({...editForm, course_progress_percentage: e.target.value})}
-                          />
-                        ) : (
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden w-24">
-                              <div 
-                                className="h-full bg-purple-500 rounded-full" 
-                                style={{ width: `${row.course_progress_percentage || 0}%` }}
-                              />
-                            </div>
-                            <span className="text-sm font-bold w-10 text-right text-zinc-700 dark:text-zinc-300">{row.course_progress_percentage || 0}%</span>
-                          </div>
-                        )}
+                        {renderRatioCell('course_progress_num', 'course_progress_den', 'course_progress_percentage', row, isEditing)}
                       </td>
                       
-                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
-                        {isEditing ? (
-                          <input 
-                            type="number" 
-                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
-                            value={editForm.attendance_score}
-                            onChange={(e) => setEditForm({...editForm, attendance_score: e.target.value})}
-                          />
-                        ) : (
-                          `${row.attendance_score || 0}%`
-                        )}
+                      <td className="p-4">
+                        {renderRatioCell('attendance_num', 'attendance_den', 'attendance_score', row, isEditing)}
                       </td>
 
-                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
-                        {isEditing ? (
-                          <input 
-                            type="number" 
-                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
-                            value={editForm.quiz_score}
-                            onChange={(e) => setEditForm({...editForm, quiz_score: e.target.value})}
-                          />
-                        ) : (
-                          `${row.quiz_score || 0}%`
-                        )}
+                      <td className="p-4">
+                        {renderRatioCell('quiz_num', 'quiz_den', 'quiz_score', row, isEditing)}
                       </td>
 
-                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
-                        {isEditing ? (
-                          <input 
-                            type="number" 
-                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
-                            value={editForm.interview_score}
-                            onChange={(e) => setEditForm({...editForm, interview_score: e.target.value})}
-                          />
-                        ) : (
-                          `${row.interview_score || 0}%`
-                        )}
+                      <td className="p-4">
+                        {renderRatioCell('interview_num', 'interview_den', 'interview_score', row, isEditing)}
                       </td>
 
-                      <td className="p-4 font-semibold text-zinc-700 dark:text-zinc-300">
-                        {isEditing ? (
-                          <input 
-                            type="number" 
-                            className="w-20 px-2 py-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-600 rounded text-zinc-800 dark:text-white"
-                            value={editForm.coding_test_score}
-                            onChange={(e) => setEditForm({...editForm, coding_test_score: e.target.value})}
-                          />
-                        ) : (
-                          `${row.coding_test_score || 0}%`
-                        )}
+                      <td className="p-4">
+                        {renderRatioCell('coding_num', 'coding_den', 'coding_test_score', row, isEditing)}
                       </td>
                       
                       <td className="p-4 font-semibold text-yellow-600 dark:text-yellow-500">
@@ -266,10 +256,6 @@ export default function StudentProgress() {
                         ) : (
                           `#${row.leaderboard_rank || '-'}`
                         )}
-                      </td>
-                      
-                      <td className="p-4 text-sm text-zinc-500">
-                        {new Date(row.last_updated).toLocaleDateString()}
                       </td>
                       
                       <td className="p-4 text-right">
