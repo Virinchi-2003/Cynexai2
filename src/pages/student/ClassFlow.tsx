@@ -389,92 +389,104 @@ export default function ClassFlow() {
         )}
 
         {/* ── Q&A / CODING STEP ── */}
-        {(currentStep === 'qa' || currentStep === 'coding') && stepQuestions.length > 0 && (
-          <div className="bg-surface border border-border rounded-2xl overflow-hidden">
-            <div className="p-5 border-b border-border bg-foreground/[0.02]">
-              <h2 className="font-bold text-foreground flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                {currentStep === 'qa' ? 'Post-Class Q&A' : 'Coding Challenge'}
-                {stepQuestions.length > 0 && (
+        {(currentStep === 'qa' || currentStep === 'coding') && (
+          stepQuestions.length > 0 ? (
+            <div className="bg-surface border border-border rounded-2xl overflow-hidden">
+              <div className="p-5 border-b border-border bg-foreground/[0.02]">
+                <h2 className="font-bold text-foreground flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  {currentStep === 'qa' ? 'Post-Class Q&A' : 'Coding Challenge'}
                   <span className="ml-auto text-xs bg-primary/10 text-primary font-bold px-2 py-1 rounded-full">
                     {qaComplete ? `${score}/${stepQuestions.length} correct` : `${currentQIdx + 1} of ${stepQuestions.length}`}
                   </span>
-                )}
-              </h2>
-            </div>
-
-            {hasAnswered && !qaComplete ? (
-              <div className="p-6 text-center">
-                <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
-                <p className="font-bold text-foreground">You've already completed this section!</p>
-                <p className="text-muted-foreground text-sm mt-1">+5 coins per correct answer were awarded.</p>
+                </h2>
               </div>
-            ) : qaComplete ? (
-              <div className="p-6 text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                  <Star className="w-8 h-8 text-white fill-white" />
+
+              {hasAnswered && !qaComplete ? (
+                <div className="p-6 text-center">
+                  <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
+                  <p className="font-bold text-foreground">You've already completed this section!</p>
+                  <p className="text-muted-foreground text-sm mt-1">+5 coins per correct answer were awarded.</p>
                 </div>
-                <h3 className="font-bold text-foreground text-xl mb-1">Section Complete!</h3>
-                <p className="text-muted-foreground text-sm mb-3">You scored {score} out of {stepQuestions.length}</p>
-                <p className="text-yellow-500 font-bold">+{score * 5} coins earned! 🪙</p>
-                <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-surface border border-border rounded-xl font-bold hover:bg-foreground/5 transition-colors">
-                  Return to Quest Map
-                </button>
-              </div>
-            ) : currentQ ? (
-              <div className="p-5">
-                <p className="font-bold text-foreground text-base mb-4">{currentQIdx + 1}. {currentQ.question_text}</p>
-
-                {currentQ.type === 'mcq' && parsedOptions.length > 0 ? (
-                  <div className="space-y-2 mb-4">
-                    {parsedOptions.map((opt: string, idx: number) => {
-                      const isSelected = selectedAnswers[currentQ.id] === idx;
-                      const isSubmitted = submittedAnswers[currentQ.id] !== undefined;
-                      const isCorrect = idx === currentQ.correct_answer_idx;
-                      let btnClass = 'border-border text-foreground';
-                      if (isSubmitted) {
-                        if (isCorrect) btnClass = 'border-green-500 bg-green-500/10 text-green-400';
-                        else if (isSelected) btnClass = 'border-red-500 bg-red-500/10 text-red-400';
-                      } else if (isSelected) {
-                        btnClass = 'border-primary bg-primary/10 text-primary';
-                      }
-                      return (
-                        <button
-                          key={idx}
-                          onClick={() => handleSelectAnswer(currentQ.id, idx)}
-                          className={`w-full text-left p-3 rounded-xl border-2 font-medium text-sm transition-all ${btnClass} hover:border-primary/50`}
-                        >
-                          <span className="font-bold mr-2">{String.fromCharCode(65 + idx)}.</span> {opt}
-                        </button>
-                      );
-                    })}
+              ) : qaComplete ? (
+                <div className="p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <Star className="w-8 h-8 text-white fill-white" />
                   </div>
-                ) : (currentQ.type === 'code' || currentQ.type === 'coding') ? (
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Code2 className="w-4 h-4 text-primary" />
-                      <span className="text-sm font-bold text-foreground">Write your code answer:</span>
+                  <h3 className="font-bold text-foreground text-xl mb-1">Section Complete!</h3>
+                  <p className="text-muted-foreground text-sm mb-3">You scored {score} out of {stepQuestions.length}</p>
+                  <p className="text-yellow-500 font-bold">+{score * 5} coins earned! 🪙</p>
+                  <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-surface border border-border rounded-xl font-bold hover:bg-foreground/5 transition-colors">
+                    Return to Quest Map
+                  </button>
+                </div>
+              ) : currentQ ? (
+                <div className="p-5">
+                  <p className="font-bold text-foreground text-base mb-4">{currentQIdx + 1}. {currentQ.question_text}</p>
+
+                  {currentQ.type === 'mcq' && parsedOptions.length > 0 ? (
+                    <div className="space-y-2 mb-4">
+                      {parsedOptions.map((opt: string, idx: number) => {
+                        const isSelected = selectedAnswers[currentQ.id] === idx;
+                        const isSubmitted = submittedAnswers[currentQ.id] !== undefined;
+                        const isCorrect = idx === currentQ.correct_answer_idx;
+                        let btnClass = 'border-border text-foreground';
+                        if (isSubmitted) {
+                          if (isCorrect) btnClass = 'border-green-500 bg-green-500/10 text-green-400';
+                          else if (isSelected) btnClass = 'border-red-500 bg-red-500/10 text-red-400';
+                        } else if (isSelected) {
+                          btnClass = 'border-primary bg-primary/10 text-primary';
+                        }
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => handleSelectAnswer(currentQ.id, idx)}
+                            className={`w-full text-left p-3 rounded-xl border-2 font-medium text-sm transition-all ${btnClass} hover:border-primary/50`}
+                          >
+                            <span className="font-bold mr-2">{String.fromCharCode(65 + idx)}.</span> {opt}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <textarea
-                      value={codeAnswer}
-                      onChange={e => setCodeAnswer(e.target.value)}
-                      rows={8}
-                      className="w-full bg-background border border-border rounded-xl p-4 text-sm font-mono text-foreground focus:outline-none focus:border-primary resize-y"
-                      placeholder="// Write your solution here..."
-                    />
-                  </div>
-                ) : null}
+                  ) : (currentQ.type === 'code' || currentQ.type === 'coding') ? (
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Code2 className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-bold text-foreground">Write your code answer:</span>
+                      </div>
+                      <textarea
+                        value={codeAnswer}
+                        onChange={e => setCodeAnswer(e.target.value)}
+                        rows={8}
+                        className="w-full bg-background border border-border rounded-xl p-4 text-sm font-mono text-foreground focus:outline-none focus:border-primary resize-y"
+                        placeholder="// Write your solution here..."
+                      />
+                    </div>
+                  ) : null}
 
-                <button
-                  onClick={() => handleSubmitAnswer(currentQ)}
-                  disabled={submittedAnswers[currentQ.id] !== undefined}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submittedAnswers[currentQ.id] !== undefined ? 'Submitted ✓' : 'Submit Answer'}
-                </button>
-              </div>
-            ) : null}
-          </div>
+                  <button
+                    onClick={() => handleSubmitAnswer(currentQ)}
+                    disabled={submittedAnswers[currentQ.id] !== undefined}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submittedAnswers[currentQ.id] !== undefined ? 'Submitted ✓' : 'Submit Answer'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="bg-surface border border-border rounded-2xl p-8 text-center shadow-lg mt-6">
+              <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <h3 className="font-bold text-foreground text-lg mb-1">No Questions Available</h3>
+              <p className="text-muted-foreground text-sm mb-6">There are no {currentStep === 'qa' ? 'Q&A' : 'coding'} questions generated for this class yet.</p>
+              <button 
+                onClick={() => navigate(-1)} 
+                className="px-6 py-2 bg-primary text-primary-foreground font-bold rounded-xl hover:bg-primary/90 transition-colors shadow-md"
+              >
+                Return to Quest Map
+              </button>
+            </div>
+          )
         )}
       </div>
     </div>
