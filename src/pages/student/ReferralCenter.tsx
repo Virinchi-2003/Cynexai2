@@ -6,10 +6,7 @@ import {
   Gift, Trophy, Users, Share2, Download, FileText,
   CheckCircle2, Clock, Star, ChevronRight
 } from 'lucide-react';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(useGSAP);
 
 // Reward tiers — in future these can be loaded from DB via portal_settings
 const REWARD_TIERS = [
@@ -95,24 +92,6 @@ export default function ReferralCenter() {
   const [tab, setTab] = useState<'rewards' | 'materials'>('rewards');
   const container = React.useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    if (tab === 'rewards') {
-      gsap.fromTo('.reward-tier', 
-        { scale: 0.9, opacity: 0, y: 20 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }
-      );
-      gsap.fromTo('.ref-item',
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
-      );
-    } else if (tab === 'materials') {
-      gsap.fromTo('.material-card',
-        { scale: 0.95, opacity: 0, y: 15 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' }
-      );
-    }
-  }, { scope: container, dependencies: [tab, referrals, materials, loading] });
-
   useEffect(() => {
     if (!user) return;
     Promise.all([
@@ -171,7 +150,7 @@ export default function ReferralCenter() {
             <button
               key={t.key}
               onClick={() => setTab(t.key as 'rewards' | 'materials')}
-              className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all"
+              className="flex-1 py-2.5 min-h-[44px] rounded-xl text-sm font-bold transition-all"
               style={{
                 background: tab === t.key ? 'rgba(99,102,241,0.2)' : 'transparent',
                 color: tab === t.key ? '#818cf8' : 'rgba(255,255,255,0.4)',

@@ -1,10 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Briefcase, MapPin, Calendar, ExternalLink, Search, Share2, FileText, Linkedin, Download, Sparkles, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { getJobListings, JobListing } from '../../lib/api/student';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(useGSAP);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -118,15 +115,6 @@ function JobBoard() {
   const [locationQuery, setLocationQuery] = useState('');
   const container = React.useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    if (!loading && jobs.length > 0) {
-      gsap.fromTo('.job-card', 
-        { scale: 0.95, opacity: 0, y: 15 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.4, stagger: 0.05, ease: 'back.out(1.5)' }
-      );
-    }
-  }, { scope: container, dependencies: [loading, jobs] });
-
   useEffect(() => {
     getJobListings().then(setJobs).finally(() => setLoading(false));
   }, []);
@@ -187,13 +175,6 @@ function ResumeBuilder() {
 
   const handlePrint = () => window.print();
   const container = React.useRef<HTMLDivElement>(null);
-
-  useGSAP(() => {
-    gsap.fromTo('.resume-section',
-      { opacity: 0, x: -20 },
-      { opacity: 1, x: 0, duration: 0.4, stagger: 0.1, ease: 'power2.out' }
-    );
-  }, { scope: container });
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start" ref={container}>
@@ -272,13 +253,6 @@ function LinkedInOptimizer() {
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const container = React.useRef<HTMLDivElement>(null);
-
-  useGSAP(() => {
-    gsap.fromTo('.tip-card',
-      { scale: 0.9, opacity: 0, y: 15 },
-      { scale: 1, opacity: 1, y: 0, duration: 0.4, stagger: 0.1, ease: 'back.out(1.5)' }
-    );
-  }, { scope: container });
 
   const analyze = () => {
     if (!headline) return;
@@ -372,13 +346,13 @@ export default function CareerCenter() {
           </div>
           
           <div className="flex gap-2 p-1.5 candy-panel !border-2 bg-slate-100/50 dark:bg-black/30 overflow-x-auto shadow-none">
-            <button onClick={() => setTab('jobs')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'jobs' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('jobs')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'jobs' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
               <Briefcase className="w-4 h-4" /> Jobs
             </button>
-            <button onClick={() => setTab('resume')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'resume' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('resume')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'resume' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
               <FileText className="w-4 h-4" /> Resume Builder
             </button>
-            <button onClick={() => setTab('linkedin')} className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'linkedin' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('linkedin')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'linkedin' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
               <Linkedin className="w-4 h-4" /> LinkedIn Optimizer
             </button>
           </div>

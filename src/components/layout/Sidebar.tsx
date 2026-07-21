@@ -140,10 +140,10 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
                   to={item.to}
                   onClick={onNavClick}
                   className={({ isActive }) => 
-                    `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold ${
+                    `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black min-h-[44px] ${
                       isActive 
-                        ? 'bg-erp-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]' 
-                        : 'text-erp-text/70 hover:bg-erp-background hover:text-erp-text'
+                        ? 'candy-btn-blue shadow-md' 
+                        : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
                     }`
                   }
                 >
@@ -164,10 +164,10 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
           to="/profile"
           onClick={onNavClick}
           className={({ isActive }) => 
-            `flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold ${
+            `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black min-h-[44px] ${
               isActive 
-                ? 'bg-erp-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)]' 
-                : 'text-erp-text/70 hover:bg-erp-background hover:text-erp-text'
+                ? 'candy-btn-blue shadow-md' 
+                : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
             }`
           }
         >
@@ -176,7 +176,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
         </NavLink>
         <button
           onClick={() => { logout(); onNavClick?.(); }}
-          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 active:scale-95 min-h-[44px]"
         >
           <LogOut className="w-5 h-5" strokeWidth={2.5} />
           Log Out

@@ -2,27 +2,22 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getModuleMapData } from '../../lib/api/student';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
-
-gsap.registerPlugin(useGSAP);
 
 const NODE_SPACING = 140;
 const AMPLITUDE = 90;
 
 function calculatePath(nodesLength: number) {
   if (nodesLength === 0) return '';
-  let d = `M 0,80 `;
+  const startY = (nodesLength - 1) * NODE_SPACING + 80;
+  let d = `M 0,${startY} `;
   for (let i = 1; i < nodesLength; i++) {
-    const prevY = (i - 1) * NODE_SPACING + 80;
+    const prevY = (nodesLength - i) * NODE_SPACING + 80;
     const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
-    const currY = i * NODE_SPACING + 80;
+    const currY = (nodesLength - 1 - i) * NODE_SPACING + 80;
     const currX = Math.sin(i * 0.8) * AMPLITUDE;
-    const cp1y = prevY + NODE_SPACING / 2;
-    const cp2y = currY - NODE_SPACING / 2;
+    const cp1y = prevY - NODE_SPACING / 2;
+    const cp2y = currY + NODE_SPACING / 2;
     d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
   }
   return d;
@@ -30,15 +25,16 @@ function calculatePath(nodesLength: number) {
 
 function calculateCompletedPath(nodesLength: number, currentLevel: number) {
   if (nodesLength === 0 || currentLevel <= 0) return '';
-  let d = `M 0,80 `;
+  const startY = (nodesLength - 1) * NODE_SPACING + 80;
+  let d = `M 0,${startY} `;
   const drawUntil = Math.min(currentLevel, nodesLength - 1);
   for (let i = 1; i <= drawUntil; i++) {
-    const prevY = (i - 1) * NODE_SPACING + 80;
+    const prevY = (nodesLength - i) * NODE_SPACING + 80;
     const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
-    const currY = i * NODE_SPACING + 80;
+    const currY = (nodesLength - 1 - i) * NODE_SPACING + 80;
     const currX = Math.sin(i * 0.8) * AMPLITUDE;
-    const cp1y = prevY + NODE_SPACING / 2;
-    const cp2y = currY - NODE_SPACING / 2;
+    const cp1y = prevY - NODE_SPACING / 2;
+    const cp2y = currY + NODE_SPACING / 2;
     d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
   }
   return d;
@@ -376,15 +372,6 @@ export default function ModuleMap() {
   const currentNodeRef = useRef<HTMLDivElement>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    if (virtualNodes.length > 0) {
-      gsap.fromTo('.map-node', 
-        { scale: 0, opacity: 0, y: 50 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.6, ease: 'back.out(1.5)', stagger: 0.05 }
-      );
-    }
-  }, { scope: mapContainer, dependencies: [virtualNodes] });
-
   useEffect(() => {
     if (!moduleId) return;
     const user = getCurrentUser();
@@ -446,6 +433,17 @@ export default function ModuleMap() {
     setSelectedNode(null);
     navigate(`/student/class-flow?classId=${classId}&step=${stepType}`);
   };
+
+  useEffect(() => {
+    if (!loading && virtualNodes.length > 0) {
+      setTimeout(() => {
+        // Calculate the center point for the current node
+        const targetLevel = Math.min(currentLevel, virtualNodes.length - 1);
+        const y = (virtualNodes.length - 1 - targetLevel) * NODE_SPACING + 80;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }, 500);
+    }
+  }, [loading, virtualNodes.length, currentLevel]);
 
   // ── Loading ──
   if (loading) {
@@ -573,20 +571,47 @@ export default function ModuleMap() {
           <div className="relative w-full mx-auto pb-32" style={{ height: `${(virtualNodes.length - 1) * NODE_SPACING + 160}px` }}>
             {/* SVG Path */}
             <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ left: '50%', overflow: 'visible' }}>
+              
+              {/* Land Environment Base */}
               <path
                 d={calculatePath(virtualNodes.length)}
                 fill="none"
-                stroke="var(--erp-border)"
-                strokeWidth="14"
-                strokeDasharray="0 28"
+                stroke="#0f766e" /* Deep teal base */
+                strokeWidth="160"
                 strokeLinecap="round"
-                className="opacity-40"
+                className="opacity-70 dark:opacity-40"
+              />
+              <path
+                d={calculatePath(virtualNodes.length)}
+                fill="none"
+                stroke="#10b981" /* Green grass */
+                strokeWidth="120"
+                strokeLinecap="round"
+                className="opacity-90 dark:opacity-70"
+              />
+              <path
+                d={calculatePath(virtualNodes.length)}
+                fill="none"
+                stroke="#6ee7b7" /* Lighter path center */
+                strokeWidth="80"
+                strokeLinecap="round"
+                className="opacity-90 dark:opacity-80"
+              />
+
+              {/* Main Dotted Path */}
+              <path
+                d={calculatePath(virtualNodes.length)}
+                fill="none"
+                stroke="rgba(255,255,255,0.8)"
+                strokeWidth="12"
+                strokeDasharray="0 24"
+                strokeLinecap="round"
               />
               <path
                 d={calculateCompletedPath(virtualNodes.length, currentLevel)}
                 fill="none"
                 stroke="#00c77a"
-                strokeWidth="14"
+                strokeWidth="12"
                 strokeLinecap="round"
                 className="opacity-90"
               />
@@ -594,7 +619,7 @@ export default function ModuleMap() {
             
             {virtualNodes.map((node, i) => {
               const x = Math.sin(i * 0.8) * AMPLITUDE;
-              const y = i * NODE_SPACING + 80;
+              const y = (virtualNodes.length - 1 - i) * NODE_SPACING + 80;
               const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'locked';
               return (
                 <div key={node.id} className="absolute map-node z-10" style={{ left: `calc(50% + ${x}px)`, top: `${y}px`, transform: 'translate(-50%, -50%)' }}>

@@ -30,9 +30,6 @@ import {
   Announcement,
 } from '../../lib/api/student';
 import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
-
-gsap.registerPlugin(useGSAP);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -259,7 +256,7 @@ function StatCard({
           <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2.5} />
         </div>
         <div className="min-w-0">
-          <p className={`text-2xl font-black ${iconColor} leading-none`}>{value}</p>
+          <p className={`text-2xl font-black ${iconColor} leading-none tabular-nums`}>{value}</p>
           <p className="text-slate-600 dark:text-[#94a3b8] text-[11px] font-bold uppercase tracking-wide mt-0.5">
             {label}
           </p>
@@ -498,19 +495,6 @@ export default function StudentPortal() {
   const [dismissedAnnIds, setDismissedAnnIds] = useState<Set<string>>(new Set());
   const portalContainer = React.useRef<HTMLDivElement>(null);
 
-  useGSAP(() => {
-    if (!loading && !error && dashData?.course) {
-      gsap.fromTo('.module-card', 
-        { scale: 0.9, opacity: 0, y: 20 },
-        { scale: 1, opacity: 1, y: 0, duration: 0.5, ease: 'back.out(1.5)', stagger: 0.1 }
-      );
-      gsap.fromTo('.stat-card', 
-        { scale: 0.9, opacity: 0, x: 20 },
-        { scale: 1, opacity: 1, x: 0, duration: 0.5, ease: 'back.out(1.5)', stagger: 0.1 }
-      );
-    }
-  }, { scope: portalContainer, dependencies: [loading, dashData] });
-
   const handleDismiss = (id: string) => setDismissedAnnIds(prev => new Set([...prev, id]));
 
   const loadData = async () => {
@@ -610,21 +594,21 @@ export default function StudentPortal() {
           <div className="md:hidden grid grid-cols-3 gap-3">
             <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" strokeWidth={2.5} />
-              <span className="text-orange-500 dark:text-orange-400 text-xl font-black leading-none">
+              <span className="text-orange-500 dark:text-orange-400 text-xl font-black leading-none tabular-nums">
                 {gamification.streak}
               </span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Streak</span>
             </div>
             <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Coins className="w-5 h-5 text-amber-500 dark:text-amber-400" strokeWidth={2.5} />
-              <span className="text-amber-500 dark:text-amber-400 text-xl font-black leading-none">
+              <span className="text-amber-500 dark:text-amber-400 text-xl font-black leading-none tabular-nums">
                 {gamification.coins}
               </span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Coins</span>
             </div>
             <div className="candy-panel p-3 flex flex-col items-center gap-1">
               <Trophy className="w-5 h-5 text-violet-500 dark:text-violet-400" strokeWidth={2.5} />
-              <span className="text-violet-500 dark:text-violet-400 text-xl font-black leading-none">0</span>
+              <span className="text-violet-500 dark:text-violet-400 text-xl font-black leading-none tabular-nums">0</span>
               <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Trophies</span>
             </div>
           </div>

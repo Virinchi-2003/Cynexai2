@@ -51,33 +51,33 @@ export const MobileNavigation: React.FC = () => {
     <>
       {/* Bottom nav bar */}
       <div className="fixed bottom-0 left-0 w-full z-50 md:hidden">
-        {/* Safe area background */}
-        <div className="bg-erp-surface/95 backdrop-blur-xl border-t border-erp-border shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
+        {/* Safe area background with candy-panel style */}
+        <div className="candy-panel !rounded-t-3xl !rounded-b-none !border-b-0 !border-x-0 !shadow-[0_-10px_25px_rgba(0,0,0,0.15)] bg-white dark:bg-black">
           <div
-            className="flex items-center h-16 px-1"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            className="flex items-center h-20 px-2"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}
           >
             {navItems.map(item => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex flex-col items-center justify-center flex-1 h-full py-2 gap-0.5 transition-all duration-200 rounded-xl mx-0.5
+                  `flex flex-col items-center justify-center flex-1 h-full py-2 gap-1 transition-all duration-300 rounded-xl mx-0.5 min-h-[44px]
                   ${isActive
-                    ? 'text-erp-primary'
-                    : 'text-erp-text/40 hover:text-erp-text/70'
+                    ? 'text-white'
+                    : 'text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80 active:scale-95'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <div className={`
-                      w-10 h-7 flex items-center justify-center rounded-lg transition-all duration-200
-                      ${isActive ? 'bg-erp-primary/15' : ''}
+                      w-12 h-10 flex items-center justify-center rounded-2xl transition-all duration-300
+                      ${isActive ? 'candy-btn-blue shadow-lg !min-h-[40px] !border' : ''}
                     `}>
-                      <item.icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
+                      <item.icon className="w-5 h-5" strokeWidth={isActive ? 3 : 2} />
                     </div>
-                    <span className="text-[10px] font-bold leading-none">{item.label}</span>
+                    <span className={`text-[10px] font-black leading-none ${isActive ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -87,12 +87,12 @@ export const MobileNavigation: React.FC = () => {
             <button
               onClick={() => setMenuOpen(true)}
               aria-label="Open menu"
-              className="flex flex-col items-center justify-center flex-1 h-full py-2 gap-0.5 text-erp-text/40 hover:text-erp-text/70 transition-all"
+              className="flex flex-col items-center justify-center flex-1 h-full py-2 gap-1 text-slate-500 hover:text-slate-700 dark:text-white/50 dark:hover:text-white/80 transition-all active:scale-95 min-h-[44px]"
             >
-              <div className="w-10 h-7 flex items-center justify-center rounded-lg">
-                <Menu className="w-5 h-5" />
+              <div className="w-12 h-10 flex items-center justify-center rounded-2xl">
+                <Menu className="w-6 h-6" strokeWidth={2.5} />
               </div>
-              <span className="text-[10px] font-bold leading-none">Menu</span>
+              <span className="text-[10px] font-black leading-none">Menu</span>
             </button>
           </div>
         </div>
@@ -112,14 +112,14 @@ export const MobileNavigation: React.FC = () => {
         
         {/* Drawer */}
         <div 
-          className={`absolute top-0 left-0 bottom-0 w-[80%] max-w-sm bg-erp-surface transform transition-transform duration-300 ease-in-out ${
+          className={`absolute top-0 left-0 bottom-0 w-[80%] max-w-sm candy-panel !rounded-l-none !border-y-0 !border-l-0 transform transition-transform duration-300 ease-in-out ${
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           {/* Close button overlay inside drawer */}
           <button 
             onClick={() => setMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 bg-erp-background border border-erp-border rounded-xl text-erp-text/60 z-50 hover:bg-erp-surface"
+            className="absolute top-4 right-4 p-2 candy-btn !min-h-[40px] z-50 flex items-center justify-center rounded-xl"
           >
             <X className="w-5 h-5" />
           </button>
@@ -131,7 +131,7 @@ export const MobileNavigation: React.FC = () => {
       </div>
 
       {/* Spacer to prevent content being hidden behind fixed nav */}
-      <div className="h-20 md:hidden" aria-hidden="true" />
+      <div className="h-28 md:hidden" aria-hidden="true" />
     </>
   );
 };

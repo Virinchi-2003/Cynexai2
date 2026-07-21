@@ -5,10 +5,7 @@ import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttenda
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(useGSAP);
 
 interface Question {
   id: string;
@@ -55,13 +52,6 @@ export default function ClassFlow() {
   const [liveSeconds, setLiveSeconds] = useState(0);
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const container = useRef<HTMLDivElement>(null);
-
-  useGSAP(() => {
-    gsap.fromTo('.flow-panel',
-      { scale: 0.95, opacity: 0, y: 15 },
-      { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)' }
-    );
-  }, { scope: container, dependencies: [currentStep, classData, hasAnswered, qaComplete, stepQuestions, currentQIdx] });
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -459,7 +449,7 @@ export default function ClassFlow() {
                           <button
                             key={idx}
                             onClick={() => handleSelectAnswer(currentQ.id, idx)}
-                            className={`w-full text-left p-3 rounded-xl border-2 font-medium text-sm transition-all ${btnClass} hover:border-primary/50`}
+                            className={`w-full text-left p-3 min-h-[44px] rounded-xl border-2 font-medium text-sm transition-all ${btnClass} hover:border-primary/50`}
                           >
                             <span className="font-bold mr-2">{String.fromCharCode(65 + idx)}.</span> {opt}
                           </button>

@@ -286,6 +286,10 @@ button, [role="button"] {
   touch-action: manipulation;
 }
 
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Consistent focus ring for all interactive elements */
 :focus-visible {
   outline: 2px solid var(--erp-primary);
@@ -321,6 +325,7 @@ button, [role="button"] {
 .candy-btn {
   @apply relative inline-flex items-center justify-center font-bold text-white transition-transform active:scale-95;
   border-radius: 9999px;
+  min-height: 44px;
   background: linear-gradient(180deg, #01cdfe 0%, #0096ff 100%);
   box-shadow: 
     0 6px 0 #0060a3,
@@ -335,6 +340,7 @@ button, [role="button"] {
 }
 .candy-btn-blue {
   background: linear-gradient(180deg, #01cdfe 0%, #0096ff 100%);
+  min-height: 44px;
   box-shadow: 
     0 6px 0 #0060a3,
     0 10px 15px rgba(0,0,0,0.2),
@@ -347,6 +353,7 @@ button, [role="button"] {
 }
 .candy-btn-green {
   background: linear-gradient(180deg, #05ffa1 0%, #00c77a 100%);
+  min-height: 44px;
   box-shadow: 
     0 6px 0 #008753,
     0 10px 15px rgba(0,0,0,0.2),

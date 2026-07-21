@@ -185,23 +185,22 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 mt-4 space-y-0.5 min-h-0">
-        <p className="text-[9px] font-black uppercase tracking-widest px-3 mb-2"
-          style={{ color: T.navSectionLabel }}>Navigation</p>
+      <nav className="flex-1 px-3 mt-4 space-y-2 min-h-0">
+        <p className="text-[10px] font-black uppercase tracking-widest px-3 mb-3 text-slate-400 dark:text-slate-500">Navigation</p>
         {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
           const active = isActive(to);
           return (
             <button key={to}
               onClick={() => { navigate(to); setMobileMenuOpen(false); }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150"
-              style={{
-                background: active ? T.navActiveBg : 'transparent',
-                color: active ? T.navActive : T.navMuted,
-                borderLeft: `2px solid ${active ? T.navActive : 'transparent'}`,
-              }}>
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all duration-150 min-h-[44px] ${
+                active 
+                  ? 'candy-btn-blue shadow-md text-white' 
+                  : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
+              }`}
+            >
+              <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={active ? 3 : 2} />
               <span className="flex-1 text-left">{label}</span>
-              {active && <ChevronRight className="w-3.5 h-3.5 opacity-60" />}
+              {active && <ChevronRight className="w-4 h-4 opacity-60" />}
             </button>
           );
         })}
@@ -230,8 +229,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <div className="flex h-screen w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-60 flex-shrink-0 flex-col"
-        style={{ background: T.sidebarBg, borderRight: `1px solid ${T.border}` }}>
+      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col candy-panel !rounded-l-none !border-y-0 !border-l-0 bg-white dark:bg-black z-20">
         <SidebarContent />
       </aside>
 
@@ -239,12 +237,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       {mobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <aside className="relative w-72 flex flex-col z-10"
-            style={{ background: T.sidebarBg, borderRight: `1px solid ${T.border}` }}>
+          <aside className="relative w-72 flex flex-col z-10 candy-panel !rounded-l-none !border-y-0 !border-l-0 bg-white dark:bg-black">
             <button onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center z-10"
-              style={{ background: T.closeBtn, color: T.closeBtnTxt }}>
-              <X className="w-4 h-4" />
+              className="absolute top-4 right-4 candy-btn !min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-center z-50 shadow-md">
+              <X className="w-5 h-5 text-white" strokeWidth={3} />
             </button>
             <SidebarContent />
           </aside>
@@ -282,37 +278,33 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
 
         {/* Mobile bottom tab bar */}
-        <div className="md:hidden flex-shrink-0 flex justify-around items-center px-2"
+        <div className="md:hidden flex-shrink-0 flex justify-around items-center px-2 candy-panel !rounded-t-3xl !rounded-b-none !border-b-0 !border-x-0 !shadow-[0_-10px_25px_rgba(0,0,0,0.15)] bg-white dark:bg-black z-30 relative"
           style={{
-            background: T.tabBarBg,
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderTop: `1px solid ${T.border}`,
-            height: '64px',
-            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            height: '80px',
+            paddingBottom: 'env(safe-area-inset-bottom, 12px)',
           }}>
           {BOTTOM_NAV.map(({ to, icon: Icon, short }) => {
             const active = isActive(to);
             return (
               <button key={to} onClick={() => navigate(to)}
-                className="flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl transition-all"
-                style={{ minWidth: '52px', color: active ? '#06b6d4' : T.inactiveTab }}>
-                <div className="w-8 h-6 flex items-center justify-center rounded-lg"
-                  style={{ background: active ? 'rgba(6,182,212,0.12)' : 'transparent' }}>
-                  <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 1.8} />
+                className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all min-h-[44px] mx-0.5
+                  ${active ? 'text-white' : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white active:scale-95'}
+                `}
+              >
+                <div className={`w-12 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 ${active ? 'candy-btn-blue shadow-lg !min-h-[40px] !border' : ''}`}>
+                  <Icon className="w-6 h-6" strokeWidth={active ? 3 : 2} />
                 </div>
-                <span className="text-[9px] font-bold leading-none">{short}</span>
-                {active && <span className="w-1 h-1 rounded-full bg-cyan-400 mt-0.5" />}
+                <span className={`text-[10px] font-black leading-none ${active ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{short}</span>
               </button>
             );
           })}
           <button onClick={() => setMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl"
-            style={{ minWidth: '52px', color: T.inactiveTab }}>
-            <div className="w-8 h-6 flex items-center justify-center">
-              <Menu className="w-5 h-5" strokeWidth={1.8} />
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all active:scale-95 min-h-[44px] mx-0.5 text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
+          >
+            <div className="w-12 h-10 flex items-center justify-center">
+              <Menu className="w-6 h-6" strokeWidth={2.5} />
             </div>
-            <span className="text-[9px] font-bold leading-none">More</span>
+            <span className="text-[10px] font-black leading-none">More</span>
           </button>
         </div>
 

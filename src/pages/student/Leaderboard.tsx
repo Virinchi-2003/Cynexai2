@@ -2,10 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Trophy, Gift, Star } from 'lucide-react';
 import { getLeaderboardData, LeaderboardEntry } from '../../lib/api/student';
 import { getCurrentUser } from '../../lib/auth';
-import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
-gsap.registerPlugin(useGSAP);
 
 // ── Reward tier definitions ────────────────────────────────────────────────────
 const REWARD_TIERS = [
@@ -116,19 +113,6 @@ export default function Leaderboard() {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const container = useRef<HTMLDivElement>(null);
-
-  useGSAP(() => {
-    if (!loading && entries.length > 0) {
-      gsap.fromTo('.leaderboard-row', 
-        { opacity: 0, x: -20 },
-        { opacity: 1, x: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }
-      );
-    }
-    gsap.fromTo('.reward-tier', 
-      { scale: 0.9, opacity: 0, y: 20 },
-      { scale: 1, opacity: 1, y: 0, duration: 0.5, stagger: 0.1, ease: 'back.out(1.5)', delay: 0.2 }
-    );
-  }, { scope: container, dependencies: [loading, entries] });
 
   useEffect(() => {
     let cancelled = false;
