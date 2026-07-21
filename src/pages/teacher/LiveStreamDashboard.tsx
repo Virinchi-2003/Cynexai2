@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../../components/ui/erp/Button';
 import {
   StopCircle, ArrowRight, ArrowLeft, Maximize2, Play,
-  Code, Sparkles, Loader2, Radio, BookOpen, CheckCircle, AlertCircle, Menu, X, Edit, Users as UsersIcon
+  Code, Sparkles, Loader2, Radio, BookOpen, CheckCircle, AlertCircle, Menu, X, Edit, Users as UsersIcon, Video
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
@@ -61,9 +61,8 @@ export default function LiveStreamDashboard() {
   const [showEndModal, setShowEndModal] = useState(false);
   
   // Recording State
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
+  const [youtubeOpened, setYoutubeOpened] = useState(false);
+  const [youtubeConfirmed, setYoutubeConfirmed] = useState(false);
   
   // UI State
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -151,40 +150,8 @@ export default function LiveStreamDashboard() {
   };
 
   const handleStartClass = async () => {
-    if (!classData) return;
+    if (!classData || !youtubeConfirmed) return;
     
-    // Auto-start screen recording
-    try {
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: { displaySurface: 'browser' },
-        audio: true
-      });
-      
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-      mediaRecorderRef.current = mediaRecorder;
-      recordedChunksRef.current = [];
-      
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          recordedChunksRef.current.push(e.data);
-        }
-      };
-      
-      mediaRecorder.start(1000); // collect data every second
-      setIsRecording(true);
-      
-      // If user stops sharing manually via browser UI
-      stream.getVideoTracks()[0].onended = () => {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop();
-        }
-        setIsRecording(false);
-      };
-    } catch (e) {
-      console.error("Screen recording permission denied or failed:", e);
-      // We continue with the class even if recording fails/denied
-    }
-
     await updateClassStatus(classData.id, 'in_progress', 'live');
     localStorage.setItem('cynexai_live_class_id', classData.id);
     localStorage.setItem('cynexai_live_slide', '1');
@@ -196,28 +163,6 @@ export default function LiveStreamDashboard() {
     if (!classData) return;
     setEnding(true);
     
-    // Stop recording and download automatically
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      
-      // Create a small delay to ensure final chunks are processed
-      setTimeout(() => {
-        if (recordedChunksRef.current.length > 0) {
-          const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.style.display = 'none';
-          a.href = url;
-          a.download = `CynexAI_Class_${classData.title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.webm`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          recordedChunksRef.current = [];
-        }
-      }, 500);
-      setIsRecording(false);
-    }
-
     try {
       const summary = await generatePostClassSummary(classData.title, classData.ai_keypoints || '');
       await completeClassWithSummary(classData.id, summary, ytUrl || null);
@@ -300,7 +245,6 @@ export default function LiveStreamDashboard() {
                 <div className="flex items-center gap-3">
                   <Radio className="w-4 h-4 text-red-400 animate-pulse" />
                   <span className="text-red-400 font-bold text-sm">LIVE NOW</span>
-                  {isRecording && <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold ml-2 animate-pulse">● REC</span>}
                 </div>
                 <div className="bg-red-500/20 text-red-400 px-2 py-0.5 rounded text-xs font-bold">{attendance.length} Joined</div>
               </div>
@@ -365,11 +309,40 @@ export default function LiveStreamDashboard() {
                   {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Generate AI Slides
                 </Button>
               ) : !isLive ? (
-                <div className="flex flex-col gap-2">
-                  <Button onClick={handleStartClass} className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 font-bold text-white">
+                <div className="flex flex-col gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Step 1: Start Recording</div>
+                  <Button 
+                    onClick={() => {
+                      window.open('https://studio.youtube.com/channel/UC/livestreaming', '_blank');
+                      setYoutubeOpened(true);
+                    }} 
+                    className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 font-bold text-white py-2"
+                  >
+                    <Video className="w-4 h-4" /> Open YouTube Studio
+                  </Button>
+                  
+                  {youtubeOpened && (
+                    <label className="flex items-center gap-2 cursor-pointer p-2 bg-black/30 rounded-lg border border-white/5 hover:border-white/20 transition-colors">
+                      <input 
+                        type="checkbox" 
+                        checked={youtubeConfirmed} 
+                        onChange={(e) => setYoutubeConfirmed(e.target.checked)}
+                        className="w-4 h-4 accent-red-500 rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-slate-300 font-semibold select-none leading-tight">I confirm the YouTube stream is running</span>
+                    </label>
+                  )}
+
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center mt-2">Step 2: Start Class</div>
+                  <Button 
+                    onClick={handleStartClass} 
+                    disabled={!youtubeConfirmed}
+                    className={`w-full flex items-center justify-center gap-2 font-bold text-white transition-all duration-300 ${youtubeConfirmed ? 'bg-green-600 hover:bg-green-500 shadow-[0_0_15px_rgba(34,197,94,0.4)]' : 'bg-slate-700 opacity-50 cursor-not-allowed'}`}
+                  >
                     <Play className="w-4 h-4" /> Start Live Class
                   </Button>
-                  <button onClick={handleGenerateMaterials} disabled={generating} className="text-xs font-bold text-violet-400 hover:text-violet-300 transition-colors py-2 flex items-center justify-center gap-1.5">
+                  
+                  <button onClick={handleGenerateMaterials} disabled={generating} className="text-[10px] font-bold text-violet-400 hover:text-violet-300 transition-colors py-1 flex items-center justify-center gap-1.5 mt-2 uppercase tracking-wider">
                     {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                     Regenerate AI Slides
                   </button>
