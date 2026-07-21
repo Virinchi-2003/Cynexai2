@@ -141,7 +141,7 @@ Keep it concise but thorough. Use **bold** for key terms. Use inline code for an
  * Generates MCQ + coding Q&A questions for a class lesson.
  * Returns array of { type, question_text, options, correct_answer_idx, boilerplate, test_cases }
  */
-export async function generateAIQuestions(title: string): Promise<Array<{
+export async function generateAIQuestions(title: string, hasCoding: boolean = true): Promise<Array<{
   type: 'mcq' | 'coding';
   question_text: string;
   options?: string[];
@@ -149,6 +149,14 @@ export async function generateAIQuestions(title: string): Promise<Array<{
   boilerplate?: string;
   test_cases?: string;
 }>> {
+  const codingExample = hasCoding ? `,
+  {
+    "type": "coding",
+    "question_text": "Write a Python function to ... [describe a task related to ${title}]",
+    "boilerplate": "def solution():\\n    # Write your code here\\n    pass",
+    "test_cases": "[{\\"input\\": \\"()\\", \\"expected\\": \\"result\\"}]"
+  }` : '';
+
   const prompt = `You are a coding instructor for CynexAI. Generate quiz questions for the class: "${title}".
 
 Output EXACTLY this JSON array (no markdown fences, no explanation, just raw JSON):
@@ -170,16 +178,10 @@ Output EXACTLY this JSON array (no markdown fences, no explanation, just raw JSO
     "question_text": "Third MCQ?",
     "options": ["Option A", "Option B", "Option C", "Option D"],
     "correct_answer_idx": 1
-  },
-  {
-    "type": "coding",
-    "question_text": "Write a Python function to ... [describe a task related to ${title}]",
-    "boilerplate": "def solution():\\n    # Write your code here\\n    pass",
-    "test_cases": "[{\\"input\\": \\"()\\", \\"expected\\": \\"result\\"}]"
-  }
+  }${codingExample}
 ]
 
-Generate exactly 3 MCQ questions and 1 coding question related to: ${title}
+Generate exactly 3 MCQ questions${hasCoding ? ' and 1 coding question' : ''} related to: ${title}.
 The questions must be relevant to the class topic and appropriate for beginners.
 Output ONLY valid JSON. No text before or after.`;
 

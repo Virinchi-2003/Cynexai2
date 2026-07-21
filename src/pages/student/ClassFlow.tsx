@@ -20,9 +20,11 @@ export default function ClassFlow() {
   const navigate = useNavigate();
   const user = getCurrentUser();
   const classId = searchParams.get('classId') || '';
+  const currentStep = searchParams.get('step') || 'video'; // video, qa, coding
 
   const [classData, setClassData] = useState<any>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [stepQuestions, setStepQuestions] = useState<Question[]>([]);
   const [hasWatched, setHasWatched] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,9 +56,14 @@ export default function ClassFlow() {
       setQuestions(data.questions || []);
       setHasWatched(data.hasWatched);
       setHasAnswered(data.hasAnswered);
+      
+      const filteredQs = (data.questions || []).filter((q: Question) => 
+        currentStep === 'coding' ? q.type === 'code' || q.type === 'coding' : q.type === 'mcq'
+      );
+      setStepQuestions(filteredQs);
       setLoading(false);
     });
-  }, [classId, user?.id]);
+  }, [classId, user?.id, currentStep]);
 
   // Start live attendance timer when class is live type and loaded
   useEffect(() => {
@@ -87,30 +94,10 @@ export default function ClassFlow() {
     };
   }, [classData, user?.id, attendanceMarked]);
 
-  // YouTube watch timer
+  // YouTube watch timer - REMOVED 5 MIN REQUIREMENT
   useEffect(() => {
-    if (hasWatched) return;
-    let interval: ReturnType<typeof setInterval>;
-    const handleMessage = (e: MessageEvent) => {
-      if (e.data?.event === 'onStateChange' && e.data.info === 1) {
-        watchStartRef.current = Date.now();
-        interval = setInterval(() => {
-          setWatchedSeconds(prev => {
-            const next = prev + 1;
-            if (next >= REQUIRED_VIDEO_SECONDS && user && !hasWatched) {
-              markClassWatched(user.id, classId).then(() => setHasWatched(true));
-              clearInterval(interval);
-            }
-            return next;
-          });
-        }, 1000);
-      } else if (e.data?.event === 'onStateChange' && (e.data.info === 2 || e.data.info === 0)) {
-        clearInterval(interval);
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => { window.removeEventListener('message', handleMessage); clearInterval(interval); };
-  }, [hasWatched, classId, user?.id]);
+    // We now use a manual "Mark as Completed" button
+  }, []);
 
   const handleSelectAnswer = (questionId: string, idx: number) => {
     if (submittedAnswers[questionId] !== undefined) return;
@@ -137,11 +124,31 @@ export default function ClassFlow() {
       });
     }
 
-    if (currentQIdx < questions.length - 1) {
+    if (currentQIdx < stepQuestions.length - 1) {
       setTimeout(() => setCurrentQIdx(i => i + 1), 800);
     } else {
       setQaComplete(true);
       setHasAnswered(true);
+      
+      // Auto-redirect from QA to Coding if coding step exists
+      if (currentStep === 'qa' && questions.some((q: Question) => q.type === 'code' || q.type === 'coding')) {
+        setTimeout(() => {
+          navigate(`/student/class-flow?classId=${classId}&step=coding`);
+        }, 1500);
+      }
+    }
+  };
+
+  const handleMarkVideoCompleted = async () => {
+    if (!user || !classId) return;
+    await markClassWatched(user.id, classId);
+    setHasWatched(true);
+    // Auto-redirect to QA node
+    if (questions.some((q: Question) => q.type === 'mcq')) {
+      navigate(`/student/class-flow?classId=${classId}&step=qa`);
+    } else {
+      // Return to map if no QA
+      navigate(-1);
     }
   };
 
@@ -167,10 +174,9 @@ export default function ClassFlow() {
 
   const isLiveClass = classData.type === 'live' || (!classData.youtube_video_id && classData.meet_link);
   const isRecordedClass = !isLiveClass;
-  const watchPct = Math.min(100, (watchedSeconds / REQUIRED_VIDEO_SECONDS) * 100);
   const livePct = Math.min(100, (liveSeconds / REQUIRED_WATCH_SECONDS) * 100);
   const liveMinLeft = Math.max(0, Math.ceil((REQUIRED_WATCH_SECONDS - liveSeconds) / 60));
-  const currentQ = questions[currentQIdx];
+  const currentQ = stepQuestions[currentQIdx];
   const parsedOptions = currentQ ? (() => { try { return JSON.parse(currentQ.options_json || '[]'); } catch { return []; } })() : [];
 
   // Parse AI materials from ai_script or ai_ppt_markdown
@@ -209,61 +215,64 @@ export default function ClassFlow() {
 
       <div className="max-w-4xl mx-auto space-y-6">
 
-        {/* ── RECORDED CLASS: YouTube Video ── */}
-        {isRecordedClass && (
+        {/* ── VIDEO STEP ── */}
+        {currentStep === 'video' && (
           <>
-            {classData.youtube_video_id ? (
-              <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
-                <div className="relative aspect-video bg-black">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${(() => {
-                      try {
-                        const url = (classData.youtube_video_id || '').trim();
-                        if (url.length === 11 && !url.includes('/')) return url;
-                        const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
-                        const match = url.match(regExp);
-                        if (match && match[2].length === 11) return match[2];
-                        try {
-                          const urlObj = new URL(url);
-                          const v = urlObj.searchParams.get('v');
-                          if (v && v.length === 11) return v;
-                        } catch(e) {}
-                        return url;
-                      } catch(e) {
-                        return classData.youtube_video_id;
-                      }
-                    })()}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
-                    className="w-full h-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    title={classData.title}
-                  />
-                </div>
-                {!hasWatched && (
-                  <div className="p-4 bg-surface border-t border-border">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Watch Progress</span>
-                      <span className="text-xs font-bold text-primary">{Math.floor(watchedSeconds / 60)}m / 5m required</span>
+            {/* ── RECORDED CLASS: YouTube Video ── */}
+            {isRecordedClass && (
+              <>
+                {classData.youtube_video_id ? (
+                  <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
+                    <div className="relative aspect-video bg-black">
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${(() => {
+                          try {
+                            const url = (classData.youtube_video_id || '').trim();
+                            if (url.length === 11 && !url.includes('/')) return url;
+                            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+                            const match = url.match(regExp);
+                            if (match && match[2].length === 11) return match[2];
+                            try {
+                              const urlObj = new URL(url);
+                              const v = urlObj.searchParams.get('v');
+                              if (v && v.length === 11) return v;
+                            } catch(e) {}
+                            return url;
+                          } catch(e) {
+                            return classData.youtube_video_id;
+                          }
+                        })()}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={classData.title}
+                      />
                     </div>
-                    <div className="h-2 bg-foreground/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-1000" style={{ width: `${watchPct}%` }} />
+                    <div className="p-4 bg-surface border-t border-border flex justify-between items-center">
+                      <p className="text-sm text-muted-foreground">Finished watching?</p>
+                      <button
+                        onClick={handleMarkVideoCompleted}
+                        className={`px-6 py-2 rounded-xl font-bold text-sm transition-all ${
+                          hasWatched ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        }`}
+                        disabled={hasWatched}
+                      >
+                        {hasWatched ? 'Completed ✓' : 'Mark as Completed'}
+                      </button>
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">Watch at least 5 minutes to unlock Q&A and earn coins.</p>
+                  </div>
+                ) : (
+                  <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center">
+                    <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+                    <h3 className="font-bold text-amber-800 text-lg mb-1">Video Not Available Yet</h3>
+                    <p className="text-amber-700 text-sm">The recording for this class hasn't been uploaded. Please check back later or contact your instructor.</p>
                   </div>
                 )}
-              </div>
-            ) : (
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 text-center">
-                <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-                <h3 className="font-bold text-amber-800 text-lg mb-1">Video Not Available Yet</h3>
-                <p className="text-amber-700 text-sm">The recording for this class hasn't been uploaded. Please check back later or contact your instructor.</p>
-              </div>
+              </>
             )}
-          </>
-        )}
 
-        {/* ── LIVE CLASS: Join Flow + Attendance Timer ── */}
-        {isLiveClass && (
+            {/* ── LIVE CLASS: Join Flow + Attendance Timer ── */}
+            {isLiveClass && (
           <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
             {/* Live join area */}
             {classData.meet_link ? (
@@ -369,38 +378,35 @@ export default function ClassFlow() {
           </div>
         )}
 
-        {/* ── AI Summary ── */}
-        {classData.ai_summary && (
-          <div className="bg-surface border border-border rounded-2xl p-5">
-            <h2 className="font-bold text-foreground flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">{classData.ai_summary}</p>
-          </div>
+            {/* ── AI Summary ── */}
+            {classData.ai_summary && (
+              <div className="bg-surface border border-border rounded-2xl p-5 mt-6">
+                <h2 className="font-bold text-foreground flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
+                <p className="text-sm text-muted-foreground leading-relaxed">{classData.ai_summary}</p>
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Q&A Section ── */}
-        {questions.length > 0 && (
+        {/* ── Q&A / CODING STEP ── */}
+        {(currentStep === 'qa' || currentStep === 'coding') && stepQuestions.length > 0 && (
           <div className="bg-surface border border-border rounded-2xl overflow-hidden">
             <div className="p-5 border-b border-border bg-foreground/[0.02]">
               <h2 className="font-bold text-foreground flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
-                Post-Class Q&A
-                {questions.length > 0 && (
+                {currentStep === 'qa' ? 'Post-Class Q&A' : 'Coding Challenge'}
+                {stepQuestions.length > 0 && (
                   <span className="ml-auto text-xs bg-primary/10 text-primary font-bold px-2 py-1 rounded-full">
-                    {qaComplete ? `${score}/${questions.length} correct` : `${currentQIdx + 1} of ${questions.length}`}
+                    {qaComplete ? `${score}/${stepQuestions.length} correct` : `${currentQIdx + 1} of ${stepQuestions.length}`}
                   </span>
                 )}
               </h2>
             </div>
 
-            {!hasWatched && !hasAnswered && isRecordedClass ? (
-              <div className="p-6 text-center">
-                <Lock className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-40" />
-                <p className="text-muted-foreground text-sm font-medium">Watch at least 5 minutes of the class to unlock Q&A.</p>
-              </div>
-            ) : hasAnswered && !qaComplete ? (
+            {hasAnswered && !qaComplete ? (
               <div className="p-6 text-center">
                 <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
-                <p className="font-bold text-foreground">You've already completed the Q&A for this class!</p>
+                <p className="font-bold text-foreground">You've already completed this section!</p>
                 <p className="text-muted-foreground text-sm mt-1">+5 coins per correct answer were awarded.</p>
               </div>
             ) : qaComplete ? (
@@ -408,9 +414,12 @@ export default function ClassFlow() {
                 <div className="w-16 h-16 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg">
                   <Star className="w-8 h-8 text-white fill-white" />
                 </div>
-                <h3 className="font-bold text-foreground text-xl mb-1">Q&A Complete!</h3>
-                <p className="text-muted-foreground text-sm mb-3">You scored {score} out of {questions.length}</p>
+                <h3 className="font-bold text-foreground text-xl mb-1">Section Complete!</h3>
+                <p className="text-muted-foreground text-sm mb-3">You scored {score} out of {stepQuestions.length}</p>
                 <p className="text-yellow-500 font-bold">+{score * 5} coins earned! 🪙</p>
+                <button onClick={() => navigate(-1)} className="mt-4 px-6 py-2 bg-surface border border-border rounded-xl font-bold hover:bg-foreground/5 transition-colors">
+                  Return to Quest Map
+                </button>
               </div>
             ) : currentQ ? (
               <div className="p-5">
@@ -440,7 +449,7 @@ export default function ClassFlow() {
                       );
                     })}
                   </div>
-                ) : currentQ.type === 'code' ? (
+                ) : (currentQ.type === 'code' || currentQ.type === 'coding') ? (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Code2 className="w-4 h-4 text-primary" />

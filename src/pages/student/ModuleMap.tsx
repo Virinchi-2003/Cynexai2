@@ -118,17 +118,20 @@ const KIND_CONFIG = {
 // ─── Popup Card ───────────────────────────────────────────────────────────────
 
 function NodePopup({
-  cls, state, onClose, onGo
+  node, state, onClose, onGo
 }: {
-  cls: ClassItem;
+  node: VirtualNode;
   state: NodeState;
   onClose: () => void;
   onGo: () => void;
 }) {
-  const kind = getNodeKind(cls);
+  let kind: keyof typeof KIND_CONFIG = 'video';
+  if (node.stepType === 'qa') kind = 'quiz';
+  if (node.stepType === 'coding') kind = 'code';
+  
   const cfg = KIND_CONFIG[kind];
   const isClickable = state !== 'locked';
-  const dateStr = formatDate(cls.date, cls.start_time);
+  const dateStr = formatDate(node.classItem.date, node.classItem.start_time);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" onClick={onClose}>
@@ -160,7 +163,7 @@ function NodePopup({
               >
                 {cfg.label}
               </span>
-              <h3 className="text-white font-bold text-base leading-tight line-clamp-2">{cls.title}</h3>
+              <h3 className="text-white font-bold text-base leading-tight line-clamp-2">{node.title}</h3>
             </div>
           </div>
 
@@ -220,20 +223,35 @@ function NodePopup({
   );
 }
 
+// ─── Virtual Node Types ────────────────────────────────────────────────────────
+interface VirtualNode {
+  id: string;
+  classId: string;
+  stepType: 'video' | 'qa' | 'coding';
+  title: string;
+  isCompleted: boolean;
+  classItem: ClassItem;
+}
+
 // ─── Single Node ──────────────────────────────────────────────────────────────
 
 function MapNode({
-  cls, state, index, totalNodes, onClick
+  node, state, index, totalNodes, onClick
 }: {
-  cls: ClassItem;
+  node: VirtualNode;
   state: NodeState;
   index: number;
   totalNodes: number;
   onClick: () => void;
 }) {
-  const kind = getNodeKind(cls);
-  const cfg = KIND_CONFIG[kind];
   const isLast = index === totalNodes - 1;
+
+  // Map stepType to kind config
+  let kind: keyof typeof KIND_CONFIG = 'video';
+  if (node.stepType === 'qa') kind = 'quiz';
+  if (node.stepType === 'coding') kind = 'code';
+  
+  const cfg = KIND_CONFIG[kind];
 
   // Zigzag: alternate left/right columns
   // Pattern: center, right, center, left, center, right...
@@ -319,7 +337,7 @@ function MapNode({
             className="text-[12px] font-semibold leading-tight line-clamp-2"
             style={{ color: state === 'locked' ? '#444' : 'rgba(255,255,255,0.8)' }}
           >
-            {cls.title}
+            {node.title}
           </p>
         </div>
       </div>
@@ -349,12 +367,11 @@ export default function ModuleMap() {
   const { moduleId } = useParams<{ moduleId: string }>();
   const navigate = useNavigate();
 
-  const [moduleData, setModuleData] = useState<ModuleData | null>(null);
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  const [moduleData, setModuleData] = useState<any>(null);
+  const [virtualNodes, setVirtualNodes] = useState<VirtualNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedCls, setSelectedCls] = useState<ClassItem | null>(null);
+  const [selectedNode, setSelectedNode] = useState<VirtualNode | null>(null);
   const currentNodeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -363,24 +380,60 @@ export default function ModuleMap() {
     if (!user) { navigate('/login'); return; }
     setLoading(true);
     getModuleMapData(moduleId, user.id)
-      .then(({ moduleData: md, classes: cls, completedLessonIds }) => {
-        setModuleData(md as ModuleData | null);
-        setClasses(cls as ClassItem[]);
-        setCompletedIds(completedLessonIds as Set<string>);
+      .then((data: any) => {
+        setModuleData(data.moduleData);
+        
+        const isItModule = data.moduleData?.is_it_module === 1;
+        const vNodes: VirtualNode[] = [];
+        
+        data.classes.forEach((c: any) => {
+          vNodes.push({
+            id: `${c.id}-video`,
+            classId: c.id,
+            stepType: 'video',
+            title: c.title,
+            isCompleted: data.completedLessonIds.has(c.id),
+            classItem: c
+          });
+          
+          vNodes.push({
+            id: `${c.id}-qa`,
+            classId: c.id,
+            stepType: 'qa',
+            title: `Q&A: ${c.title}`,
+            isCompleted: data.completedQaIds.has(c.id),
+            classItem: c
+          });
+          
+          if (isItModule) {
+            vNodes.push({
+              id: `${c.id}-coding`,
+              classId: c.id,
+              stepType: 'coding',
+              title: `Coding: ${c.title}`,
+              isCompleted: data.completedCodingIds.has(c.id),
+              classItem: c
+            });
+          }
+        });
+        
+        setVirtualNodes(vNodes);
       })
       .catch(e => { console.error(e); setError('Failed to load module.'); })
       .finally(() => setLoading(false));
   }, [moduleId, navigate]);
 
-  const currentClass = classes.find(c => !completedIds.has(c.id)) ?? null;
-  const completedCount = classes.filter(c => completedIds.has(c.id)).length;
-  const pct = classes.length > 0 ? Math.round((completedCount / classes.length) * 100) : 0;
+  const currentIdx = virtualNodes.findIndex(n => !n.isCompleted);
+  const currentLevel = currentIdx === -1 ? virtualNodes.length : currentIdx;
+  const completedCount = virtualNodes.filter(n => n.isCompleted).length;
+  const pct = virtualNodes.length > 0 ? Math.round((completedCount / virtualNodes.length) * 100) : 0;
 
-  const handleNodeClick = (cls: ClassItem) => setSelectedCls(cls);
+  const handleNodeClick = (node: VirtualNode) => setSelectedNode(node);
   const handleGo = () => {
-    if (!selectedCls) return;
-    setSelectedCls(null);
-    navigate(`/student/class-flow?classId=${selectedCls.id}`);
+    if (!selectedNode) return;
+    const { classId, stepType } = selectedNode;
+    setSelectedNode(null);
+    navigate(`/student/class-flow?classId=${classId}&step=${stepType}`);
   };
 
   // ── Loading ──
@@ -432,7 +485,7 @@ export default function ModuleMap() {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="font-black text-base text-white truncate">{moduleData?.title ?? 'Module'}</h1>
-            <p className="text-white/40 text-[11px] font-medium">{completedCount}/{classes.length} classes · {pct}% complete</p>
+            <p className="text-white/40 text-[11px] font-medium">{completedCount}/{virtualNodes.length} steps · {pct}% complete</p>
           </div>
           {/* Progress pill */}
           <div
@@ -482,7 +535,7 @@ export default function ModuleMap() {
       </div>
 
       {/* ── Empty state ── */}
-      {classes.length === 0 && (
+      {virtualNodes.length === 0 && (
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <div
             className="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center"
@@ -499,28 +552,28 @@ export default function ModuleMap() {
       )}
 
       {/* ── Candy Crush Map ── */}
-      {classes.length > 0 && (
+      {virtualNodes.length > 0 && (
         <div className="max-w-lg mx-auto px-4 pt-6 pb-32">
           {/* Start Banner */}
           <div
             className="text-center mb-8 py-4 rounded-2xl"
             style={{ background: 'rgba(99,102,241,0.08)', border: '1px dashed rgba(99,102,241,0.2)' }}
           >
-            <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Quest Map · {classes.length} Levels</p>
+            <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Quest Map · {virtualNodes.length} Levels</p>
           </div>
 
           {/* Nodes */}
           <div className="flex flex-col items-center gap-2" ref={currentNodeRef}>
-            {classes.map((cls, idx) => {
-              const state = getNodeState(cls, completedIds, currentClass?.id ?? null);
+            {virtualNodes.map((node, idx) => {
+              const state = idx < currentLevel ? 'completed' : idx === currentLevel ? 'current' : 'locked';
               return (
                 <MapNode
-                  key={cls.id}
-                  cls={cls}
+                  key={node.id}
+                  node={node}
                   state={state}
                   index={idx}
-                  totalNodes={classes.length}
-                  onClick={() => handleNodeClick(cls)}
+                  totalNodes={virtualNodes.length}
+                  onClick={() => handleNodeClick(node)}
                 />
               );
             })}
@@ -534,18 +587,21 @@ export default function ModuleMap() {
             >
               <div className="text-5xl mb-3">🏆</div>
               <h3 className="text-emerald-400 font-black text-xl">Module Complete!</h3>
-              <p className="text-white/40 text-sm mt-1">You've mastered all {classes.length} classes</p>
+              <p className="text-white/40 text-sm mt-1">You've mastered all {virtualNodes.length} steps</p>
             </div>
           )}
         </div>
       )}
 
       {/* ── Popup ── */}
-      {selectedCls && (
+      {selectedNode && (
         <NodePopup
-          cls={selectedCls}
-          state={getNodeState(selectedCls, completedIds, currentClass?.id ?? null)}
-          onClose={() => setSelectedCls(null)}
+          node={selectedNode}
+          state={
+            virtualNodes.findIndex(n => n.id === selectedNode.id) < currentLevel ? 'completed' :
+            virtualNodes.findIndex(n => n.id === selectedNode.id) === currentLevel ? 'current' : 'locked'
+          }
+          onClose={() => setSelectedNode(null)}
           onGo={handleGo}
         />
       )}

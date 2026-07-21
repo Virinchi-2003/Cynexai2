@@ -25,6 +25,7 @@ export default function CourseManagement() {
   // Add Module Modal State
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
   const [newModuleName, setNewModuleName] = useState('');
+  const [newModuleIsIt, setNewModuleIsIt] = useState(true);
   const [selectedCourseForModule, setSelectedCourseForModule] = useState<string | null>(null);
 
   useEffect(() => {
@@ -114,9 +115,10 @@ export default function CourseManagement() {
     try {
       const course = courses.find(c => c.id === selectedCourseForModule);
       const nextOrder = course ? course.modules.length : 0;
-      await createModule(moduleId, selectedCourseForModule, newModuleName, nextOrder);
+      await createModule(moduleId, selectedCourseForModule, newModuleName, nextOrder, newModuleIsIt);
       setIsModuleModalOpen(false);
       setNewModuleName('');
+      setNewModuleIsIt(true);
       await fetchCourses();
     } catch (e) {
       console.error("Error creating module:", e);
@@ -375,6 +377,15 @@ export default function CourseManagement() {
                   className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   autoFocus
                 />
+              </div>
+              <div className="flex items-center gap-3 mt-4">
+                <span className="text-sm font-bold text-erp-text/70">IT Module (Includes Coding)?</span>
+                <button 
+                  onClick={() => setNewModuleIsIt(!newModuleIsIt)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newModuleIsIt ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newModuleIsIt ? 'translate-x-6' : 'translate-x-1'}`} />
+                </button>
               </div>
             </div>
 

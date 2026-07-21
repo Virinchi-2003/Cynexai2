@@ -339,15 +339,31 @@ export async function getModuleMapData(moduleId: string, studentId: string) {
       "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
       [studentId]
     );
+    const qaRes = await executeWithRetry(
+      `SELECT qr.class_id, cq.type 
+       FROM qa_responses qr 
+       JOIN class_questions cq ON qr.question_id = cq.id 
+       WHERE qr.student_id = ?`,
+      [studentId]
+    );
+
+    const completedQaIds = new Set<string>();
+    const completedCodingIds = new Set<string>();
+    qaRes.rows.forEach((r: any) => {
+      if (r.type === 'mcq') completedQaIds.add(r.class_id);
+      if (r.type === 'coding') completedCodingIds.add(r.class_id);
+    });
 
     return {
       moduleData: modRes.rows.length > 0 ? modRes.rows[0] : null,
       classes: clsRes.rows,
-      completedLessonIds: new Set(progRes.rows.map((r: any) => r.lesson_id))
+      completedLessonIds: new Set(progRes.rows.map((r: any) => r.lesson_id)),
+      completedQaIds,
+      completedCodingIds
     };
   } catch (e) {
     console.error(e);
-    return { moduleData: null, classes: [], completedLessonIds: new Set() };
+    return { moduleData: null, classes: [], completedLessonIds: new Set(), completedQaIds: new Set(), completedCodingIds: new Set() };
   }
 }
 

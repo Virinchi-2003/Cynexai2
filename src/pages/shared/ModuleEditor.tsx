@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { FolderOpen, Plus, ArrowRight, Video, FileText, ArrowLeft, X, Edit, Trash2 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getModuleDetails, createClassForModule, deleteClass } from '../../lib/api/cms';
+import { getModuleDetails, createClassForModule, deleteClass, updateModuleCoding } from '../../lib/api/cms';
 
 export default function ModuleEditor() {
   const navigate = useNavigate();
@@ -64,6 +64,17 @@ export default function ModuleEditor() {
     }
   };
 
+  const handleToggleItModule = async () => {
+    if (!moduleData) return;
+    const newVal = !(moduleData.is_it_module === 1);
+    try {
+      await updateModuleCoding(moduleData.id, newVal);
+      setModuleData({ ...moduleData, is_it_module: newVal ? 1 : 0 });
+    } catch (e) {
+      console.error("Failed to update module type", e);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-erp-text">Loading module classes...</div>;
   }
@@ -79,6 +90,17 @@ export default function ModuleEditor() {
             <FolderOpen className="w-8 h-8 text-indigo-500" /> 
             {moduleData?.title || 'Module Editor'}
           </h1>
+          {moduleData && (
+            <div className="mt-2 flex items-center gap-3">
+              <span className="text-sm font-bold text-erp-text/70">IT Module (Includes Coding)?</span>
+              <button 
+                onClick={handleToggleItModule}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${moduleData.is_it_module === 1 ? 'bg-indigo-500' : 'bg-slate-700'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${moduleData.is_it_module === 1 ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+          )}
         </div>
         <Button onClick={() => setIsClassModalOpen(true)} className="flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Class

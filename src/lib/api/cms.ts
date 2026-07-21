@@ -31,12 +31,16 @@ export const createCourse = async (id: string, title: string, description: strin
   );
 };
 
-export const createModule = async (moduleId: string, courseId: string, title: string, orderIndex: number) => {
-  await executeWithRetry('INSERT INTO modules (id, title, description) VALUES (?, ?, ?)', [moduleId, title, '']);
+export const createModule = async (moduleId: string, courseId: string, title: string, orderIndex: number, isItModule: boolean = true) => {
+  await executeWithRetry('INSERT INTO modules (id, title, description, is_it_module) VALUES (?, ?, ?, ?)', [moduleId, title, '', isItModule ? 1 : 0]);
   await executeWithRetry(
     'INSERT INTO course_module_mapping (course_id, module_id, order_index) VALUES (?, ?, ?)',
     [courseId, moduleId, orderIndex]
   );
+};
+
+export const updateModuleCoding = async (moduleId: string, isItModule: boolean) => {
+  await executeWithRetry('UPDATE modules SET is_it_module = ? WHERE id = ?', [isItModule ? 1 : 0, moduleId]);
 };
 
 export const updateCoursePitch = async (courseId: string, pitchSummary: string, pitchScript: string) => {

@@ -3,7 +3,7 @@ import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2, Wand2 } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion } from '../../lib/api/cms';
+import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion, getModuleDetails } from '../../lib/api/cms';
 import { generateAIMaterials, generateAIQuestions } from '../../lib/aiGenerator';
 import { isTursoConfigured } from '../../lib/turso';
 
@@ -15,6 +15,7 @@ export default function ClassEditor() {
   const { courseId, moduleId, classId } = useParams();
 
   const [classData, setClassData] = useState<any>(null);
+  const [moduleData, setModuleData] = useState<any>(null);
   const [classTitle, setClassTitle] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [meetLink, setMeetLink] = useState('');
@@ -56,6 +57,10 @@ export default function ClassEditor() {
           ppt: !!data.ai_ppt_markdown,
           script: !!data.ai_script
         });
+      }
+      if (moduleId) {
+        const mod = await getModuleDetails(moduleId as string);
+        if (mod && mod.module) setModuleData(mod.module);
       }
     } catch (e) {
       console.error("Failed to fetch class data", e);
@@ -106,7 +111,8 @@ export default function ClassEditor() {
     if (!classId || !classTitle) { alert('Please enter a class title first.'); return; }
     setGeneratingQA(true);
     try {
-      const qs = await generateAIQuestions(classTitle);
+      const hasCoding = moduleData ? moduleData.is_it_module === 1 : true;
+      const qs = await generateAIQuestions(classTitle, hasCoding);
       for (const q of qs) {
         const qId = 'q_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
         await createClassQuestion(
