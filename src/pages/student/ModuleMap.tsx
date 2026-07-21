@@ -5,7 +5,44 @@ import { getModuleMapData } from '../../lib/api/student';
 import { gsap } from 'gsap';
 import { useGSAP } from '@gsap/react';
 
+import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
+
 gsap.registerPlugin(useGSAP);
+
+const NODE_SPACING = 140;
+const AMPLITUDE = 90;
+
+function calculatePath(nodesLength: number) {
+  if (nodesLength === 0) return '';
+  let d = `M 0,80 `;
+  for (let i = 1; i < nodesLength; i++) {
+    const prevY = (i - 1) * NODE_SPACING + 80;
+    const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
+    const currY = i * NODE_SPACING + 80;
+    const currX = Math.sin(i * 0.8) * AMPLITUDE;
+    const cp1y = prevY + NODE_SPACING / 2;
+    const cp2y = currY - NODE_SPACING / 2;
+    d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
+  }
+  return d;
+}
+
+function calculateCompletedPath(nodesLength: number, currentLevel: number) {
+  if (nodesLength === 0 || currentLevel <= 0) return '';
+  let d = `M 0,80 `;
+  const drawUntil = Math.min(currentLevel, nodesLength - 1);
+  for (let i = 1; i <= drawUntil; i++) {
+    const prevY = (i - 1) * NODE_SPACING + 80;
+    const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
+    const currY = i * NODE_SPACING + 80;
+    const currX = Math.sin(i * 0.8) * AMPLITUDE;
+    const cp1y = prevY + NODE_SPACING / 2;
+    const cp2y = currY - NODE_SPACING / 2;
+    d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
+  }
+  return d;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -248,7 +285,6 @@ function MapNode({
   totalNodes: number;
   onClick: () => void;
 }) {
-  const isLast = index === totalNodes - 1;
 
   // Map stepType to kind config
   let kind: keyof typeof KIND_CONFIG = 'video';
@@ -257,11 +293,6 @@ function MapNode({
   
   const cfg = KIND_CONFIG[kind];
 
-  // Zigzag: alternate left/right columns
-  // Pattern: center, right, center, left, center, right...
-  const zigzag = [0, 1, 0, -1]; // 0=center, 1=right, -1=left
-  const offset = zigzag[index % 4];
-
   const sizes = {
     completed: 'w-16 h-16 md:w-20 md:h-20',
     current:   'w-20 h-20 md:w-24 md:h-24',
@@ -269,7 +300,7 @@ function MapNode({
   };
 
   return (
-    <div className="flex flex-col items-center map-node" style={{ marginLeft: `${offset * 60}px` }}>
+    <div className="flex flex-col items-center">
       {/* Node button */}
       <div className="relative flex flex-col items-center">
         <button
@@ -327,22 +358,6 @@ function MapNode({
           </p>
         </div>
       </div>
-
-      {/* Connector to next node */}
-      {!isLast && (
-        <div className="flex flex-col items-center mt-3 mb-1" style={{ gap: '3px' }}>
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full"
-              style={{
-                background: state === 'completed' ? '#10b981' : '#2a2a3e',
-                opacity: state === 'completed' ? 1 - i * 0.15 : 0.5,
-              }}
-            />
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -545,28 +560,52 @@ export default function ModuleMap() {
 
       {/* ── Candy Crush Map ── */}
       {virtualNodes.length > 0 && (
-        <div className="max-w-lg mx-auto px-4 pt-6 pb-32" ref={mapContainer}>
+        <div className="max-w-xl mx-auto px-4 pt-6 pb-32" ref={mapContainer}>
           {/* Start Banner */}
           <div
-            className="text-center mb-8 py-4 rounded-2xl"
+            className="text-center mb-8 py-4 rounded-2xl relative z-10"
             style={{ background: 'rgba(99,102,241,0.08)', border: '1px dashed rgba(99,102,241,0.2)' }}
           >
             <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Quest Map · {virtualNodes.length} Levels</p>
           </div>
 
-          {/* Nodes */}
-          <div className="flex flex-col items-center gap-2" ref={currentNodeRef}>
-            {virtualNodes.map((node, idx) => {
-              const state = idx < currentLevel ? 'completed' : idx === currentLevel ? 'current' : 'locked';
+          {/* Map Area */}
+          <div className="relative w-full mx-auto pb-32" style={{ height: `${(virtualNodes.length - 1) * NODE_SPACING + 160}px` }}>
+            {/* SVG Path */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ left: '50%', overflow: 'visible' }}>
+              <path
+                d={calculatePath(virtualNodes.length)}
+                fill="none"
+                stroke="var(--erp-border)"
+                strokeWidth="14"
+                strokeDasharray="0 28"
+                strokeLinecap="round"
+                className="opacity-40"
+              />
+              <path
+                d={calculateCompletedPath(virtualNodes.length, currentLevel)}
+                fill="none"
+                stroke="#00c77a"
+                strokeWidth="14"
+                strokeLinecap="round"
+                className="opacity-90"
+              />
+            </svg>
+            
+            {virtualNodes.map((node, i) => {
+              const x = Math.sin(i * 0.8) * AMPLITUDE;
+              const y = i * NODE_SPACING + 80;
+              const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'locked';
               return (
-                <MapNode
-                  key={node.id}
-                  node={node}
-                  state={state}
-                  index={idx}
-                  totalNodes={virtualNodes.length}
-                  onClick={() => handleNodeClick(node)}
-                />
+                <div key={node.id} className="absolute map-node z-10" style={{ left: `calc(50% + ${x}px)`, top: `${y}px`, transform: 'translate(-50%, -50%)' }}>
+                  <MapNode
+                    node={node}
+                    state={state}
+                    index={i}
+                    totalNodes={virtualNodes.length}
+                    onClick={() => handleNodeClick(node)}
+                  />
+                </div>
               );
             })}
           </div>
@@ -574,11 +613,11 @@ export default function ModuleMap() {
           {/* Finish banner */}
           {pct === 100 && (
             <div
-              className="mt-10 text-center py-8 rounded-3xl"
-              style={{ background: 'radial-gradient(circle, #10b98115, transparent)', border: '1px solid #10b98130' }}
+              className="mt-10 text-center py-8 rounded-3xl relative z-10"
+              style={{ background: 'radial-gradient(circle, rgba(0, 199, 122, 0.15), transparent)', border: '1px solid rgba(0, 199, 122, 0.3)' }}
             >
               <div className="text-5xl mb-3">🏆</div>
-              <h3 className="text-emerald-400 font-black text-xl">Module Complete!</h3>
+              <h3 className="text-[#00c77a] font-black text-xl">Module Complete!</h3>
               <p className="text-white/40 text-sm mt-1">You've mastered all {virtualNodes.length} steps</p>
             </div>
           )}
