@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
-import ReactPlayer from 'react-player/lazy';
+import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
 
 interface Question {
@@ -226,23 +226,34 @@ export default function ClassFlow() {
                 {classData.youtube_video_id ? (
                   <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
                     <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden">
-                      <ReactPlayer
-                        url={formatYoutubeUrl(classData.youtube_video_id || '')}
-                        width="100%"
-                        height="100%"
-                        controls={true}
-                        playing={true}
-                        config={{
-                          youtube: {
-                            playerVars: {
-                              modestbranding: 1,
-                              rel: 0,
-                              showinfo: 0,
-                              fs: 1
-                            }
-                          }
-                        }}
-                      />
+                      {(() => {
+                        const rawUrl = classData.youtube_video_id || '';
+                        let videoId = '';
+                        const match = rawUrl.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|v=))([\w-]{11})/);
+                        if (match && match[1]) {
+                          videoId = match[1];
+                        } else if (/^[\w-]{11}$/.test(rawUrl.trim())) {
+                          videoId = rawUrl.trim();
+                        }
+
+                        if (videoId) {
+                          return (
+                            <iframe
+                              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&showinfo=0`}
+                              className="absolute inset-0 w-full h-full border-0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                              allowFullScreen
+                            />
+                          );
+                        } else {
+                          return (
+                            <div className="text-slate-400 flex flex-col items-center">
+                              <AlertCircle className="w-8 h-8 mb-2" />
+                              <p>Invalid YouTube URL</p>
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
                     <div className="p-4 bg-surface border-t border-border flex justify-between items-center">
                       <p className="text-sm text-muted-foreground">Finished watching?</p>
