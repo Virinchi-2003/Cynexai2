@@ -1,33 +1,31 @@
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_VOICE_API || import.meta.env.VITE_GROQ_API_KEY || '';
 
-async function callGemini(prompt: string): Promise<string> {
-  if (!GEMINI_API_KEY) throw new Error('VITE_GEMINI_API_KEY is not set in .env');
+async function callGroq(prompt: string): Promise<string> {
+  if (!GROQ_API_KEY) throw new Error('VITE_GROQ_VOICE_API is not set in .env');
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`, {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
-      generationConfig: {
-        temperature: 0.8,
-      }
+      model: 'llama3-70b-8192',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.8,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${err}`);
+    throw new Error(`Groq API error ${res.status}: ${err}`);
   }
 
   const data = await res.json();
-  if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+  if (!data.choices?.[0]?.message?.content) {
     throw new Error('No content returned from AI');
   }
-  return data.candidates[0].content.parts[0].text;
+  return data.choices[0].message.content;
 }
 
 /**
@@ -85,7 +83,7 @@ Write one short welcome paragraph (3-4 sentences) for the teacher to read at the
     .replace(/\{\{description\}\}/g, description ? `Additional context: ${description}` : '');
 
   try {
-    const content = await callGemini(prompt);
+    const content = await callGroq(prompt);
     const parts = content.split('---SPLIT---');
 
     if (parts.length >= 3) {
@@ -129,7 +127,7 @@ Generate a well-formatted Markdown summary document for the students to review. 
 Keep it concise but thorough. Use **bold** for key terms. Use inline code for any code/syntax.`;
 
   try {
-    return await callGemini(prompt);
+    return await callGroq(prompt);
   } catch (error: any) {
     console.error('Post-class summary generation failed:', error);
     if (error?.message?.includes('429') || error?.message?.includes('quota') || error?.message?.includes('RESOURCE_EXHAUSTED')) {
@@ -186,7 +184,7 @@ The questions must be relevant to the class topic and appropriate for beginners.
 Output ONLY valid JSON. No text before or after.`;
 
   try {
-    const raw = await callGemini(prompt);
+    const raw = await callGroq(prompt);
     // strip possible markdown fences
     const cleaned = raw.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
     const parsed = JSON.parse(cleaned);

@@ -216,7 +216,12 @@ export default function ClassFlow() {
               <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg">
                 <div className="relative aspect-video bg-black">
                   <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${classData.youtube_video_id}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
+                    src={`https://www.youtube-nocookie.com/embed/${(() => {
+                      const url = classData.youtube_video_id;
+                      const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|live\/)([^#\&\?]*).*/;
+                      const match = url.match(regExp);
+                      return (match && match[2].length === 11) ? match[2] : url;
+                    })()}?enablejsapi=1&modestbranding=1&rel=0&origin=${window.location.origin}`}
                     className="w-full h-full"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
