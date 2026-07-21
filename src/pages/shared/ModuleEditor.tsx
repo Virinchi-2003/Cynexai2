@@ -147,7 +147,8 @@ export default function ModuleEditor() {
                   onChange={(e) => setNewClassType(e.target.value)}
                   className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="video">Video Lesson</option>
+                  <option value="video">Video + Q&A Lesson</option>
+                  <option value="coding">Coding Exercise</option>
                   <option value="pdf">Reading / PDF</option>
                   <option value="zoom">Live Zoom Session</option>
                 </select>
