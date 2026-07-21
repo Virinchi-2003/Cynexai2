@@ -242,12 +242,27 @@ export default function LeadPipeline() {
         const values = lines[i].split(',').map(v => v.trim());
         const leadData: any = { name: '', email: '', phone: '', course_interest: '', source: 'CSV Upload', status: 'New', assigned_to: '' };
         headers.forEach((h, index) => {
-          if (h.includes('name')) leadData.name = values[index];
-          else if (h.includes('email')) leadData.email = values[index];
-          else if (h.includes('phone') || h.includes('number')) leadData.phone = values[index];
-          else if (h.includes('course')) leadData.course_interest = values[index];
-          else if (h.includes('source')) leadData.source = values[index] || 'CSV Upload';
+          const val = values[index];
+          if (!val) return;
+          
+          if (h.includes('name')) leadData.name = val;
+          else if (h.includes('email')) leadData.email = val;
+          else if (h.includes('phone') || h.includes('number')) {
+            // Strip any non-digit characters. If the column had a name by mistake, it will become empty.
+            const sanitizedPhone = val.replace(/\D/g, '');
+            // Only accept if it looks like a valid phone length (at least 7 digits)
+            if (sanitizedPhone.length >= 7) leadData.phone = sanitizedPhone;
+          }
+          else if (h.includes('course')) leadData.course_interest = val;
+          else if (h.includes('source')) leadData.source = val;
+          else if (h === 'status') {
+            const matchedStage = PIPELINE_STAGES.find(s => s.id.toLowerCase() === val.toLowerCase());
+            leadData.status = matchedStage ? matchedStage.id : 'New';
+          }
+          // Any other unrecognized columns are simply ignored!
         });
+
+        // Only create lead if it has a name, AND (a valid phone OR an email)
         if (leadData.name && (leadData.phone || leadData.email)) {
           const newId = await createLead(leadData);
           if (newId) successCount++;
