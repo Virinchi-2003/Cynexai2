@@ -1161,6 +1161,9 @@ export const initTursoDB = async () => {
       await addColumn('users', 'status TEXT DEFAULT \'Active\'');
       await addColumn('users', 'password_hash TEXT');
 
+      // Add batch_id to announcements for targeted messages (e.g., reschedules)
+      await addColumn('announcements', 'batch_id TEXT');
+
       // Add crm_activities student_id if missing
       try {
         await client.execute(`ALTER TABLE crm_activities ADD COLUMN student_id TEXT`);

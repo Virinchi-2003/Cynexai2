@@ -282,7 +282,14 @@ export default function TeacherTimetable() {
         <RescheduleModal
           slot={{
             id: reschedulingSlot.id,
-            title: reschedulingSlot.course_name || reschedulingSlot.batch_name || 'Class',
+            title: (() => {
+              try {
+                const cList = JSON.parse(reschedulingSlot.course_name || '[]');
+                if (Array.isArray(cList) && cList.length > 0) return cList.join(', ');
+              } catch {}
+              if (reschedulingSlot.course_name && reschedulingSlot.course_name !== '[]') return reschedulingSlot.course_name;
+              return reschedulingSlot.batch_name || 'Class';
+            })(),
             start_time: reschedulingSlot.start_time,
             batch_id: reschedulingSlot.batch_id,
           }}
