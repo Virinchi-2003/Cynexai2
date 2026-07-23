@@ -5,6 +5,7 @@ import { Users, Key, Plus, X, Edit, Search, Trash2, Shield } from 'lucide-react'
 import { decryptPassword } from '../../../lib/crypto';
 import { getCurrentUser } from '../../../lib/auth';
 import { getUsers, saveUser, deleteUser, patchUser } from '../../../lib/api/users';
+import { getErpModules, assignModulesToInstructor } from '../../../lib/api/manager';
 import { DataTable } from '../../../components/ui/erp/DataTable';
 
 interface ERPUser {
@@ -37,7 +38,13 @@ export default function UserManagement() {
   const [status, setStatus] = useState('Active');
   const [permissions, setPermissions] = useState<Record<string, boolean>>({ crm: false, timetable: false, leaves: false, settings: false });
 
-  useEffect(() => { fetchUsersData(); }, [filters, sortBy, sortDir]);
+  const [allModules, setAllModules] = useState<any[]>([]);
+  const [assignedModules, setAssignedModules] = useState<string[]>([]);
+
+  useEffect(() => { 
+    fetchUsersData(); 
+    getErpModules().then(setAllModules).catch(console.error);
+  }, [filters, sortBy, sortDir]);
 
   const fetchUsersData = async () => {
     try {
@@ -79,9 +86,11 @@ export default function UserManagement() {
       } else {
         setPermissions({ crm: false, timetable: false, leaves: false, settings: false });
       }
+      setAssignedModules(allModules.filter(m => m.instructor_id === user.id).map(m => m.id));
     } else {
       setEditUser(null);
       resetForm();
+      setAssignedModules([]);
     }
     setIsStaffModalOpen(true);
   };
@@ -89,7 +98,15 @@ export default function UserManagement() {
   const handleSaveUser = async () => {
     if (!name.trim() || !email.trim()) { alert('Name and email are required.'); return; }
     try {
-      await saveUser({ id: editUser?.id || '', name, email, phone, password, role, status, salary: Number(salary) || 0, permissions_json: JSON.stringify(permissions) });
+      const newUserId = editUser?.id || `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+      await saveUser({ id: newUserId, name, email, phone, password, role, status, salary: Number(salary) || 0, permissions_json: JSON.stringify(permissions) });
+      
+      if (role === 'Teacher') {
+        await assignModulesToInstructor(newUserId, assignedModules);
+        const updatedMods = await getErpModules();
+        setAllModules(updatedMods);
+      }
+
       await fetchUsersData();
       setIsStaffModalOpen(false);
     } catch (e) {
@@ -211,6 +228,26 @@ export default function UserManagement() {
                   <div>
                     <label className="block text-xs font-bold text-erp-text/60 mb-1.5">Salary (₹)</label>
                     <input type="number" value={salary} onChange={e => setSalary(Number(e.target.value))} className={inputCls} />
+                  </div>
+                )}
+                
+                {role === 'Teacher' && (
+                  <div className="md:col-span-2 mt-2 border border-erp-border rounded-xl p-4 bg-erp-background/50">
+                    <label className="block text-xs font-bold text-erp-text/60 mb-2 uppercase tracking-wider">Assign Modules</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                      {allModules.map(m => (
+                        <label key={m.id} className="flex items-start gap-2 text-sm text-erp-text/80 cursor-pointer p-1.5 hover:bg-erp-surface rounded">
+                          <input type="checkbox" checked={assignedModules.includes(m.id)}
+                            onChange={e => {
+                              if (e.target.checked) setAssignedModules(p => [...p, m.id]);
+                              else setAssignedModules(p => p.filter(id => id !== m.id));
+                            }}
+                            className="mt-1 w-4 h-4 rounded accent-indigo-500" />
+                          <span className="leading-tight">{m.title}</span>
+                        </label>
+                      ))}
+                      {allModules.length === 0 && <div className="text-xs text-erp-text/50">No modules available</div>}
+                    </div>
                   </div>
                 )}
               </div>
