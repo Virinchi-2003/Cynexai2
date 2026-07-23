@@ -16,6 +16,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@libsql/client": "^0.17.0",
     "@lottiefiles/lottie-player": "^2.0.12",
+    "@monaco-editor/react": "^4.7.0",
     "@react-three/drei": "^10.3.0",
     "@react-three/fiber": "^9.1.2",
     "animejs": "^4.5.0",

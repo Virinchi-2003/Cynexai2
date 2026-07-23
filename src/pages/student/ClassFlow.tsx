@@ -5,6 +5,7 @@ import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttenda
 import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
+import { PythonEditor } from '../../components/ui/erp/PythonEditor';
 
 
 interface Question {
@@ -59,12 +60,19 @@ export default function ClassFlow() {
       setClassData(data.classData);
       setQuestions(data.questions || []);
       setHasWatched(data.hasWatched);
-      setHasAnswered(data.hasAnswered);
-      
       const filteredQs = (data.questions || []).filter((q: Question) => 
         currentStep === 'coding' ? q.type === 'code' || q.type === 'coding' : q.type === 'mcq'
       );
       setStepQuestions(filteredQs);
+      
+      // Check if all questions for THIS step are answered
+      const stepAnswered = filteredQs.length > 0 && filteredQs.every((q: Question) => 
+        data.answeredQuestionIds.includes(q.id)
+      );
+      setHasAnswered(stepAnswered);
+      if (stepAnswered) {
+        setQaComplete(true);
+      }
       setLoading(false);
     });
   }, [classId, user?.id, currentStep]);
@@ -458,23 +466,25 @@ export default function ClassFlow() {
                     </div>
                   ) : (currentQ.type === 'code' || currentQ.type === 'coding') ? (
                     <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Code2 className="w-4 h-4 text-primary" />
-                        <span className="text-sm font-bold text-foreground">Write your code answer:</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Code2 className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-bold text-foreground">Python Code Editor:</span>
+                        </div>
                       </div>
-                      <textarea
-                        value={codeAnswer}
-                        onChange={e => setCodeAnswer(e.target.value)}
-                        rows={8}
-                        className="w-full bg-background border border-border rounded-xl p-4 text-sm font-mono text-foreground focus:outline-none focus:border-primary resize-y"
-                        placeholder="// Write your solution here..."
+                      <PythonEditor
+                        initialCode={currentQ.boilerplate_json || "def solution():\\n    # Write your code here\\n    pass"}
+                        onChange={setCodeAnswer}
+                        onRunSuccess={() => {
+                          // Allow submission after a successful run without exceptions
+                        }}
                       />
                     </div>
                   ) : null}
 
                   <button
                     onClick={() => handleSubmitAnswer(currentQ)}
-                    disabled={submittedAnswers[currentQ.id] !== undefined}
+                    disabled={submittedAnswers[currentQ.id] !== undefined || (currentQ.type === 'code' && !codeAnswer.trim())}
                     className="w-full py-3 candy-btn text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submittedAnswers[currentQ.id] !== undefined ? 'Submitted ✓' : 'Submit Answer'}

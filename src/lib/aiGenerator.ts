@@ -48,15 +48,12 @@ Class title: "{{title}}"
 CRITICAL: Output EXACTLY 3 sections separated by "---SPLIT---" (use this separator NOWHERE else).
 
 SECTION 1 - PRESENTATION SLIDES (Markdown):
-- Generate EXACTLY 12 slides strictly covering the topics outlined in the Additional context/description.
-- DO NOT include any images, photos, or ![] markdown whatsoever
-- Each slide MUST be separated by exactly "---" on its own line
-- Slide 1: Title slide with just # Title and a one-line tagline as a paragraph
-- Slides 2-11: Use # for slide title, then 4-5 bullet points using "-"
-- Slide 12: Summary/Key Takeaways slide
-- Content MUST be directly about the class topic and the specific topics requested in the description.
-- Keep bullet points SHORT — max 12 words each
-- No sub-headings (##) needed
+- Generate EXACTLY 12 detailed, high-quality slides covering the topics outlined in the description.
+- DO NOT include any images, photos, or ![] markdown whatsoever.
+- Each slide MUST be separated by exactly "---" on its own line.
+- Slide 1: Title slide with # Title and a descriptive tagline.
+- Slides 2-11: Deep dive into the subject matter. Use # for slide title, followed by 4-6 bullet points. Each bullet point should be insightful and informative (not just a few words).
+- Slide 12: Summary and Key Takeaways.
 
 ---SPLIT---
 
@@ -66,14 +63,12 @@ For each slide, provide exactly 3 teaching notes (teaching point, analogy, gotch
 - Point: ...
 - Analogy: ...
 - Gotcha: ...
-[Slide 2]
-- Point: ...
 (continue for all 12 slides)
 
 ---SPLIT---
 
 SECTION 3 - TELEPROMPTER SCRIPT:
-Write one short welcome paragraph (3-4 sentences) for the teacher to read at the start.`;
+Write a comprehensive, engaging teleprompter script for the instructor. It should start with a warm welcome (e.g., "Welcome everyone to today's masterclass on..."), introduce the core concepts, provide a high-level overview of what will be taught, and include some motivational words. The script must be at least 3 well-written paragraphs to ensure the instructor has a solid opening monologue before diving into the slides.`;
 
   const templatePrompt = localStorage.getItem(SLIDE_PROMPT_KEY) || defaultPrompt;
 
@@ -154,6 +149,12 @@ export async function generateAIQuestions(title: string, description: string, ke
     "question_text": "Write a Python function to ... [describe a task related to ${title}]",
     "boilerplate": "def solution():\\n    # Write your code here\\n    pass",
     "test_cases": "[{\\"input\\": \\"()\\", \\"expected\\": \\"result\\"}]"
+  },
+  {
+    "type": "coding",
+    "question_text": "Write a Python function to ... [describe another task related to ${title}]",
+    "boilerplate": "def solution():\\n    # Write your code here\\n    pass",
+    "test_cases": "[{\\"input\\": \\"1, 2\\", \\"expected\\": \\"3\\"}]"
   }` : '';
 
   const prompt = `You are a coding instructor for CynexAI. Generate quiz questions for the class: "${title}".
@@ -180,7 +181,7 @@ Output EXACTLY this JSON array (no markdown fences, no explanation, just raw JSO
   }${codingExample}
 ]
 
-Generate exactly 3 MCQ questions${hasCoding ? ' and 1 coding question' : ''} specifically testing the knowledge from this class:
+Generate exactly 4 MCQ questions${hasCoding ? ' and exactly 2 coding questions' : ''} specifically testing the knowledge from this class:
 TITLE: ${title}
 DESCRIPTION: ${description}
 KEY POINTS TAUGHT:

@@ -31,6 +31,7 @@ export interface ClassFlowData {
   questions: any[];
   hasWatched: boolean;
   hasAnswered: boolean;
+  answeredQuestionIds: string[];
 }
 
 export interface LeaderboardEntry {
@@ -251,6 +252,7 @@ export async function getClassFlowData(classId: string, studentId?: string): Pro
 
     let hasWatched = false;
     let hasAnswered = false;
+    let answeredQuestionIds: string[] = [];
 
     if (studentId) {
       const progRes = await executeWithRetry(
@@ -260,9 +262,10 @@ export async function getClassFlowData(classId: string, studentId?: string): Pro
       hasWatched = progRes.rows.length > 0;
 
       const qaRes = await executeWithRetry(
-        `SELECT id FROM qa_responses WHERE student_id = ? AND class_id = ? LIMIT 1`,
+        `SELECT question_id FROM qa_responses WHERE student_id = ? AND class_id = ?`,
         [studentId, classId]
       );
+      answeredQuestionIds = qaRes.rows.map((r: any) => r.question_id);
       hasAnswered = qaRes.rows.length > 0;
     }
 
@@ -270,11 +273,12 @@ export async function getClassFlowData(classId: string, studentId?: string): Pro
       classData: clsRes.rows.length > 0 ? clsRes.rows[0] : null,
       questions: questionsRes.rows,
       hasWatched,
-      hasAnswered
+      hasAnswered,
+      answeredQuestionIds
     };
   } catch (e) {
     console.error(e);
-    return { classData: null, questions: [], hasWatched: false, hasAnswered: false };
+    return { classData: null, questions: [], hasWatched: false, hasAnswered: false, answeredQuestionIds: [] };
   }
 }
 
