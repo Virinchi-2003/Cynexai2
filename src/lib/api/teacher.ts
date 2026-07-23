@@ -89,13 +89,18 @@ export async function deleteTimetable(id: string): Promise<void> {
 export async function getActiveLiveClass(instructorId: string): Promise<any> {
   try {
     const res = await executeWithRetry(
-      `SELECT c.id, c.title, c.description, c.module_id, m.title as module_title
+      `SELECT DISTINCT c.id, c.title, c.description, c.module_id, m.title as module_title
        FROM classes c
        JOIN modules m ON c.module_id = m.id
-       WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) 
+       LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+       LEFT JOIN courses crs ON cmm.course_id = crs.id
+       WHERE (m.instructor_id = ? 
+              OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+              OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+             )
          AND c.status IN ('live', 'in_progress', 'upcoming')
        ORDER BY c.order_index ASC LIMIT 1`,
-      [instructorId, instructorId]
+      [instructorId, instructorId, instructorId]
     );
     return res.rows.length > 0 ? res.rows[0] : null;
   } catch (e) {
@@ -146,17 +151,20 @@ export async function getInstructorClasses(instructorId: string, specificClassId
         const coursePlaceholders = parsedCourses.map(() => '?').join(',');
 
         const res = await executeWithRetry(
-          `SELECT c.id, c.title, c.description, c.type, c.status, 
+          `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
                   c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
                   m.title as module_title
            FROM classes c 
            JOIN modules m ON c.module_id = m.id 
            LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
            LEFT JOIN courses crs ON cmm.course_id = crs.id
-           WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) 
+           WHERE (m.instructor_id = ? 
+                  OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+                  OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+                 )
              AND (crs.title IN (${coursePlaceholders}) OR m.title IN (${coursePlaceholders})) AND c.status != 'completed' 
            ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
-          [instructorId, instructorId, ...parsedCourses, ...parsedCourses]
+          [instructorId, instructorId, instructorId, ...parsedCourses, ...parsedCourses]
         );
         if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
       }
@@ -166,26 +174,37 @@ export async function getInstructorClasses(instructorId: string, specificClassId
 
     if (specificClassId) {
       const res = await executeWithRetry(
-        `SELECT c.id, c.title, c.description, c.type, c.status, 
-                c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
-                m.title as module_title
-         FROM classes c 
-         JOIN modules m ON c.module_id = m.id 
-         WHERE c.id = ? AND (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?))`,
-        [specificClassId, instructorId, instructorId]
-      );
-      return res.rows as unknown as ClassRow[];
-    } else {
-      const res = await executeWithRetry(
-        `SELECT c.id, c.title, c.description, c.type, c.status, 
+        `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
                 c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
                 m.title as module_title
          FROM classes c 
          JOIN modules m ON c.module_id = m.id 
          LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
-         WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) AND c.status != 'completed' 
+         LEFT JOIN courses crs ON cmm.course_id = crs.id
+         WHERE c.id = ? 
+           AND (m.instructor_id = ? 
+                OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+                OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+               )`,
+        [specificClassId, instructorId, instructorId, instructorId]
+      );
+      return res.rows as unknown as ClassRow[];
+    } else {
+      const res = await executeWithRetry(
+        `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
+                c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
+                m.title as module_title
+         FROM classes c 
+         JOIN modules m ON c.module_id = m.id 
+         LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+         LEFT JOIN courses crs ON cmm.course_id = crs.id
+         WHERE (m.instructor_id = ? 
+                OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+                OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+               ) 
+           AND c.status != 'completed' 
          ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
-        [instructorId, instructorId]
+        [instructorId, instructorId, instructorId]
       );
       return res.rows as unknown as ClassRow[];
     }
@@ -269,8 +288,15 @@ export async function getTeacherCMSModules(isSuper: boolean, instructorId: strin
       return res.rows;
     } else {
       const res = await executeWithRetry(
-        "SELECT m.* FROM modules m WHERE m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?) ORDER BY m.title ASC",
-        [instructorId, instructorId]
+        `SELECT DISTINCT m.* 
+         FROM modules m 
+         LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+         LEFT JOIN courses crs ON cmm.course_id = crs.id
+         WHERE m.instructor_id = ? 
+            OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+            OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
+         ORDER BY m.title ASC`,
+        [instructorId, instructorId, instructorId]
       );
       return res.rows;
     }
