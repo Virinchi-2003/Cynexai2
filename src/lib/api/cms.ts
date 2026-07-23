@@ -39,6 +39,18 @@ export const createModule = async (moduleId: string, courseId: string, title: st
   );
 };
 
+export const mapExistingModuleToCourse = async (courseId: string, moduleId: string, orderIndex: number) => {
+  await executeWithRetry(
+    'INSERT INTO course_module_mapping (course_id, module_id, order_index) VALUES (?, ?, ?)',
+    [courseId, moduleId, orderIndex]
+  );
+};
+
+export const getAllModules = async () => {
+  const res = await executeWithRetry('SELECT * FROM modules ORDER BY title ASC');
+  return res.rows;
+};
+
 export const updateModuleCoding = async (moduleId: string, isItModule: boolean) => {
   await executeWithRetry('UPDATE modules SET is_it_module = ? WHERE id = ?', [isItModule ? 1 : 0, moduleId]);
 };

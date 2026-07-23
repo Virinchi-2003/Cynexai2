@@ -5,7 +5,7 @@ import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X }
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client, isTursoConfigured } from '../../lib/turso';
-import { getCoursesFull, createCourse, createModule, updateCoursePitch } from '../../lib/api/cms';
+import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse } from '../../lib/api/cms';
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -24,13 +24,28 @@ export default function CourseManagement() {
 
   // Add Module Modal State
   const [isModuleModalOpen, setIsModuleModalOpen] = useState(false);
+  const [moduleCreationMode, setModuleCreationMode] = useState<'new' | 'existing'>('new');
+  const [allModulesList, setAllModulesList] = useState<any[]>([]);
+  const [selectedExistingModule, setSelectedExistingModule] = useState('');
+  
   const [newModuleName, setNewModuleName] = useState('');
   const [newModuleIsIt, setNewModuleIsIt] = useState(true);
   const [selectedCourseForModule, setSelectedCourseForModule] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCourses();
+    fetchAllModulesList();
   }, []);
+
+  const fetchAllModulesList = async () => {
+    if (!client) return;
+    try {
+      const mods = await getAllModules();
+      setAllModulesList(mods);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const fetchCourses = async () => {
     if (!client) {
@@ -110,19 +125,35 @@ export default function CourseManagement() {
   };
 
   const handleAddModule = async () => {
-    if (!client || !newModuleName || !selectedCourseForModule) return;
-    const moduleId = 'mod_' + Date.now();
+    if (!client || !selectedCourseForModule) return;
+    
     try {
       const course = courses.find(c => c.id === selectedCourseForModule);
       const nextOrder = course ? course.modules.length : 0;
-      await createModule(moduleId, selectedCourseForModule, newModuleName, nextOrder, newModuleIsIt);
+      
+      if (moduleCreationMode === 'new') {
+        if (!newModuleName) return;
+        const moduleId = 'mod_' + Date.now();
+        await createModule(moduleId, selectedCourseForModule, newModuleName, nextOrder, newModuleIsIt);
+      } else {
+        if (!selectedExistingModule) return;
+        // Check if module already in course
+        if (course?.modules.find((m: any) => m.id === selectedExistingModule)) {
+          alert('This module is already in this course!');
+          return;
+        }
+        await mapExistingModuleToCourse(selectedCourseForModule, selectedExistingModule, nextOrder);
+      }
+      
       setIsModuleModalOpen(false);
       setNewModuleName('');
+      setSelectedExistingModule('');
       setNewModuleIsIt(true);
       await fetchCourses();
+      await fetchAllModulesList(); // refresh global list
     } catch (e) {
-      console.error("Error creating module:", e);
-      alert("Failed to create module.");
+      console.error("Error adding module:", e);
+      alert("Failed to add module.");
     }
   };
 
@@ -367,31 +398,71 @@ export default function CourseManagement() {
             </div>
             
             <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-erp-text/70 mb-2">Module Name</label>
-                <input 
-                  type="text" 
-                  value={newModuleName}
-                  onChange={(e) => setNewModuleName(e.target.value)}
-                  placeholder="e.g. Module 1: Introduction to Python"
-                  className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  autoFocus
-                />
-              </div>
-              <div className="flex items-center gap-3 mt-4">
-                <span className="text-sm font-bold text-erp-text/70">IT Module (Includes Coding)?</span>
-                <button 
-                  onClick={() => setNewModuleIsIt(!newModuleIsIt)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newModuleIsIt ? 'bg-indigo-500' : 'bg-slate-700'}`}
+              <div className="flex bg-erp-background border border-erp-border rounded-lg p-1 mb-4">
+                <button
+                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${moduleCreationMode === 'new' ? 'bg-indigo-500 text-white' : 'text-erp-text/60 hover:text-erp-text'}`}
+                  onClick={() => setModuleCreationMode('new')}
                 >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newModuleIsIt ? 'translate-x-6' : 'translate-x-1'}`} />
+                  Create New
+                </button>
+                <button
+                  className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${moduleCreationMode === 'existing' ? 'bg-indigo-500 text-white' : 'text-erp-text/60 hover:text-erp-text'}`}
+                  onClick={() => setModuleCreationMode('existing')}
+                >
+                  Add Existing
                 </button>
               </div>
+
+              {moduleCreationMode === 'new' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-bold text-erp-text/70 mb-2">Module Name</label>
+                    <input 
+                      type="text" 
+                      value={newModuleName}
+                      onChange={(e) => setNewModuleName(e.target.value)}
+                      placeholder="e.g. Module 1: Introduction to Python"
+                      className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 mt-4">
+                    <span className="text-sm font-bold text-erp-text/70">IT Module (Includes Coding)?</span>
+                    <button 
+                      onClick={() => setNewModuleIsIt(!newModuleIsIt)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newModuleIsIt ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newModuleIsIt ? 'translate-x-6' : 'translate-x-1'}`} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-bold text-erp-text/70 mb-2">Select Existing Module</label>
+                  <select 
+                    value={selectedExistingModule}
+                    onChange={(e) => setSelectedExistingModule(e.target.value)}
+                    className="w-full bg-erp-background border border-erp-border rounded-xl px-4 py-3 text-erp-text focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">-- Choose Module --</option>
+                    {allModulesList.map(mod => (
+                      <option key={mod.id} value={mod.id}>{mod.title}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-erp-text/50 mt-2">
+                    Changes made to this module will reflect across all courses it is assigned to.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="p-6 border-t border-erp-border bg-slate-900/30 flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setIsModuleModalOpen(false)}>Cancel</Button>
-              <Button variant="primary" onClick={handleAddModule} disabled={!newModuleName.trim()}>
+              <Button 
+                variant="primary" 
+                onClick={handleAddModule} 
+                disabled={moduleCreationMode === 'new' ? !newModuleName.trim() : !selectedExistingModule}
+              >
                 Add Module <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
