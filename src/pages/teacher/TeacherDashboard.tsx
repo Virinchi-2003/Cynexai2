@@ -186,7 +186,7 @@ export default function TeacherDashboard() {
                   
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button
-                      onClick={() => navigate(`/teacher/live?classId=${nextClass.batchId}`)}
+                      onClick={() => navigate(`/teacher/live?classId=${nextClass.id}`)}
                       className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500 text-white border-green-700 font-bold py-4 text-base"
                     >
                       <Video className="w-5 h-5" /> Launch Teacher Studio
@@ -352,7 +352,7 @@ export default function TeacherDashboard() {
                         
                         {canStart && (
                           <Button 
-                            onClick={() => navigate(`/teacher/live?classId=${slot.batchId}`)}
+                            onClick={() => navigate(`/teacher/live?classId=${slot.id}`)}
                             variant={status === 'Live Now' ? 'primary' : 'secondary'}
                             className={`w-full mt-4 py-2 text-xs flex items-center justify-center gap-1.5 ${status === 'Live Now' ? 'bg-green-600 hover:bg-green-500 border-green-700 text-white' : ''}`}
                           >

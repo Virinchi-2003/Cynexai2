@@ -56,7 +56,7 @@ export default function MockInterview() {
   const [chatHistory, setChatHistory] = useState<{ role: string; content: string }[]>([]);
   const [turnCount, setTurnCount] = useState(1);
   const [ttsAvailable, setTtsAvailable] = useState(true);
-  const [showTranscript, setShowTranscript] = useState(true);
+  const [showChatLog, setShowChatLog] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -506,8 +506,8 @@ export default function MockInterview() {
         </div>
       </div>
 
-      {/* Captions / Subtitles Overlay */}
-      {chatHistory.length > 0 && (
+      {/* Captions / Subtitles Overlay (Only show if chat log is hidden) */}
+      {chatHistory.length > 0 && !showChatLog && (
         <div className="absolute bottom-28 left-0 w-full px-4 z-20 flex justify-center pointer-events-none">
           <div className="max-w-3xl w-full bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-4 md:p-6 text-center shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
             <p className="text-[10px] md:text-xs text-purple-400 font-bold uppercase tracking-widest mb-2 opacity-80">Interviewer says:</p>
@@ -517,6 +517,42 @@ export default function MockInterview() {
           </div>
         </div>
       )}
+
+      {/* Chat Log Drawer */}
+      <div 
+        className={`absolute top-0 right-0 h-[calc(100vh-8rem)] w-full md:w-96 z-50 transform transition-transform duration-300 ease-in-out candy-panel !rounded-none !border-y-0 !border-r-0 bg-white/90 dark:bg-black/90 backdrop-blur-2xl flex flex-col ${
+          showChatLog ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="p-4 border-b-2 border-slate-200 dark:border-white/10 flex items-center justify-between">
+          <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-purple-500" /> Interview Log
+          </h3>
+          <button 
+            onClick={() => setShowChatLog(false)}
+            className="p-2 candy-btn !min-h-[32px] rounded-xl flex items-center justify-center"
+          >
+            <XCircle className="w-5 h-5 text-slate-500" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {chatHistory.map((msg, idx) => (
+            <div key={idx} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1 ml-1">
+                {msg.role === 'user' ? 'You' : 'Interviewer'}
+              </span>
+              <div className={`p-3 rounded-2xl max-w-[85%] text-sm font-bold shadow-md ${
+                msg.role === 'user' 
+                  ? 'bg-purple-500 text-white rounded-br-none' 
+                  : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-zinc-700 rounded-bl-none'
+              }`}>
+                {msg.content}
+              </div>
+            </div>
+          ))}
+          <div ref={chatEndRef} />
+        </div>
+      </div>
 
       {/* Google Meet Style Control Bar */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center justify-center gap-4 bg-zinc-900/90 backdrop-blur-2xl px-6 py-4 rounded-full border border-zinc-700/50 shadow-2xl">
@@ -538,6 +574,16 @@ export default function MockInterview() {
             ) : (
               <Mic className={`w-6 h-6 md:w-7 md:h-7 ${isRecording ? 'animate-pulse' : 'group-hover:scale-110 transition-transform'}`} />
             )}
+          </button>
+          
+          <button
+            onClick={() => setShowChatLog(!showChatLog)}
+            className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center transition-all shadow-lg active:scale-95 group ${
+              showChatLog ? 'bg-purple-600 text-white' : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+            }`}
+            title="Toggle Chat Log"
+          >
+            <MessageSquare className="w-5 h-5 md:w-6 md:h-6 group-hover:scale-110 transition-transform" />
           </button>
           
           <button 

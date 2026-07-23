@@ -110,7 +110,7 @@ export default function TeacherTimetable() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
+      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-hidden pb-4">
         
         {/* Header */}
         <div className="flex justify-between items-end mb-8">
@@ -164,14 +164,14 @@ export default function TeacherTimetable() {
         </div>
 
         {/* Calendar Grid */}
-        <Card className="bg-erp-surface rounded-xl border border-erp-border overflow-hidden relative shadow-md">
-          <div className="overflow-x-auto">
+        <Card className="bg-erp-surface rounded-xl border border-erp-border overflow-hidden relative shadow-md flex-1 flex flex-col min-h-0">
+          <div className="overflow-auto flex-1 relative custom-scrollbar">
             {loading && <div className="absolute inset-0 bg-erp-surface/80 backdrop-blur-sm z-50 flex items-center justify-center font-bold text-erp-primary">Loading Schedule...</div>}
             
             <div className="min-w-[1200px]">
               {/* Header Row */}
-              <div className="grid grid-cols-8 border-b-2 border-erp-border bg-erp-background/50">
-                <div className="p-4 border-r border-erp-border font-bold text-xs text-erp-text/50 text-center uppercase flex items-center justify-center">
+              <div className="grid grid-cols-8 border-b-2 border-erp-border bg-erp-surface sticky top-0 z-30 shadow-sm">
+                <div className="p-4 border-r border-erp-border font-bold text-xs text-erp-text/50 text-center uppercase flex items-center justify-center bg-erp-background/95 backdrop-blur sticky left-0 z-40">
                   <Clock className="w-5 h-5 mr-1" /> Time
                 </div>
                 {DAYS.map(day => {
@@ -179,7 +179,7 @@ export default function TeacherTimetable() {
                   const normToday = today === 0 ? 6 : today - 1;
                   const isCurrentDay = DAYS.indexOf(day) === normToday && currentWeekStart === getMonday(currentTime);
                   return (
-                    <div key={day} className={`p-4 border-r border-erp-border font-bold text-sm text-center last:border-r-0 ${isCurrentDay ? 'text-indigo-600 bg-indigo-50/50' : 'text-erp-text'}`}>
+                    <div key={day} className={`p-4 border-r border-erp-border font-bold text-sm text-center last:border-r-0 ${isCurrentDay ? 'text-indigo-600 bg-indigo-50/50' : 'text-erp-text bg-erp-surface'}`}>
                       {day}
                       {isCurrentDay && <div className="text-[10px] uppercase text-indigo-500 mt-0.5">Today</div>}
                     </div>
@@ -189,8 +189,8 @@ export default function TeacherTimetable() {
 
               {/* Time Slots */}
               {TIME_SLOTS.map(time => (
-                <div key={time} className="grid grid-cols-8 border-b border-erp-border/50 transition-colors">
-                  <div className="p-3 border-r border-erp-border text-xs font-bold text-erp-text/50 text-center sticky left-0 bg-erp-surface">
+                <div key={time} className="grid grid-cols-8 border-b border-erp-border/50 transition-colors group">
+                  <div className="p-3 border-r border-erp-border text-xs font-bold text-erp-text/50 text-center sticky left-0 z-20 bg-erp-surface group-hover:bg-erp-primary/5 transition-colors">
                     {time}
                   </div>
                   

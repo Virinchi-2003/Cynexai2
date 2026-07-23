@@ -137,7 +137,7 @@ export async function getLiveAttendance(classId: string): Promise<any[]> {
 
 export async function getInstructorClasses(instructorId: string, specificClassId?: string): Promise<ClassRow[]> {
   try {
-    if (specificClassId && (specificClassId.startsWith('slot_') || specificClassId.startsWith('ts_'))) {
+    if (specificClassId && (specificClassId.startsWith('slot_') || specificClassId.startsWith('ts_') || specificClassId.startsWith('tt_'))) {
       const slotRes = await executeWithRetry('SELECT course_name FROM timetable_slots WHERE id = ?', [specificClassId]);
       if (slotRes.rows.length > 0) {
         const courseName = slotRes.rows[0].course_name as string;
@@ -151,10 +151,12 @@ export async function getInstructorClasses(instructorId: string, specificClassId
                   m.title as module_title
            FROM classes c 
            JOIN modules m ON c.module_id = m.id 
+           LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+           LEFT JOIN courses crs ON cmm.course_id = crs.id
            WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) 
-             AND m.title IN (${coursePlaceholders}) AND c.status != 'completed' 
-           ORDER BY c.order_index ASC LIMIT 1`,
-          [instructorId, instructorId, ...parsedCourses]
+             AND (crs.title IN (${coursePlaceholders}) OR m.title IN (${coursePlaceholders})) AND c.status != 'completed' 
+           ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
+          [instructorId, instructorId, ...parsedCourses, ...parsedCourses]
         );
         if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
       }
@@ -180,8 +182,9 @@ export async function getInstructorClasses(instructorId: string, specificClassId
                 m.title as module_title
          FROM classes c 
          JOIN modules m ON c.module_id = m.id 
+         LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
          WHERE (m.instructor_id = ? OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)) AND c.status != 'completed' 
-         ORDER BY c.order_index ASC LIMIT 1`,
+         ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
         [instructorId, instructorId]
       );
       return res.rows as unknown as ClassRow[];
