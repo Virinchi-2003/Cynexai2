@@ -62,6 +62,15 @@ export const updateCoursePitch = async (courseId: string, pitchSummary: string, 
   );
 };
 
+export const deleteCourse = async (courseId: string) => {
+  await executeWithRetry('DELETE FROM course_module_mapping WHERE course_id = ?', [courseId]);
+  await executeWithRetry('DELETE FROM courses WHERE id = ?', [courseId]);
+};
+
+export const removeModuleFromCourse = async (courseId: string, moduleId: string) => {
+  await executeWithRetry('DELETE FROM course_module_mapping WHERE course_id = ? AND module_id = ?', [courseId, moduleId]);
+};
+
 // ---- Module Editor ----
 export const getModuleDetails = async (moduleId: string) => {
   const modRes = await executeWithRetry('SELECT * FROM modules WHERE id = ?', [moduleId]);

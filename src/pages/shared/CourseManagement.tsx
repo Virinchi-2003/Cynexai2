@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X } from 'lucide-react';
+import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client, isTursoConfigured } from '../../lib/turso';
-import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse } from '../../lib/api/cms';
+import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse, deleteCourse, removeModuleFromCourse } from '../../lib/api/cms';
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -157,6 +157,31 @@ export default function CourseManagement() {
     }
   };
 
+  const handleDeleteCourse = async (courseId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to completely delete this course? This cannot be undone.')) return;
+    try {
+      await deleteCourse(courseId);
+      if (expandedCourse === courseId) setExpandedCourse(null);
+      await fetchCourses();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to delete course');
+    }
+  };
+
+  const handleRemoveModule = async (courseId: string, moduleId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to remove this module from the course?')) return;
+    try {
+      await removeModuleFromCourse(courseId, moduleId);
+      await fetchCourses();
+    } catch (e) {
+      console.error(e);
+      alert('Failed to remove module');
+    }
+  };
+
   // Pitch Modal State
   const [isPitchModalOpen, setIsPitchModalOpen] = useState(false);
   const [pitchCourseId, setPitchCourseId] = useState<string | null>(null);
@@ -224,9 +249,14 @@ export default function CourseManagement() {
                       <p className="text-sm text-erp-text/50">{course.modules.length} Modules • {course.studentsEnrolled} Students Enrolled</p>
                     </div>
                   </div>
-                  <Button variant="ghost" className="text-erp-secondary">
-                    {expandedCourse === course.id ? 'Hide Details' : 'View Details'}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" onClick={(e) => handleDeleteCourse(course.id, e)} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" className="text-erp-secondary">
+                      {expandedCourse === course.id ? 'Hide Details' : 'View Details'}
+                    </Button>
+                  </div>
                 </div>
 
                 {expandedCourse === course.id && (
@@ -246,9 +276,14 @@ export default function CourseManagement() {
                             </div>
                             <div className="flex justify-between items-center">
                               <div className="text-xs font-bold text-green-400">{mod.completedBy}% Completion</div>
-                              <Button variant="ghost" className="h-6 px-2 text-xs flex items-center gap-1 border border-erp-border">
-                                Edit Classes <ArrowRight className="w-3 h-3" />
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button variant="ghost" onClick={(e) => handleRemoveModule(course.id, mod.id, e)} className="h-6 px-2 text-xs text-red-500 hover:bg-red-500/10 border border-erp-border">
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                                <Button variant="ghost" className="h-6 px-2 text-xs flex items-center gap-1 border border-erp-border">
+                                  Edit Classes <ArrowRight className="w-3 h-3" />
+                                </Button>
+                              </div>
                             </div>
                           </div>
                         ))}
