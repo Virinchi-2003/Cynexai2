@@ -110,10 +110,10 @@ export const updateClassMetadata = async (classId: string, title: string, descri
   );
 };
 
-export const updateClassAiMaterials = async (classId: string, ppt: string, keypoints: string, script: string) => {
+export const updateClassAiMaterials = async (classId: string, ppt: string, keypoints: string, script: string, studyGuide: string = '') => {
   await executeWithRetry(
-    'UPDATE classes SET ai_ppt_markdown = ?, ai_keypoints = ?, ai_script = ? WHERE id = ?',
-    [ppt, keypoints, script, classId]
+    'UPDATE classes SET ai_ppt_markdown = ?, ai_keypoints = ?, ai_script = ?, ai_study_guide = ? WHERE id = ?',
+    [ppt, keypoints, script, studyGuide, classId]
   );
 };
 

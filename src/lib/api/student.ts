@@ -241,7 +241,7 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
 export async function getClassFlowData(classId: string, studentId?: string): Promise<ClassFlowData> {
   try {
     const clsRes = await executeWithRetry(
-      `SELECT id, title, youtube_video_id, meet_link, type, status, ai_summary, description
+      `SELECT id, title, youtube_video_id, meet_link, type, status, ai_summary, description, ai_study_guide
        FROM classes WHERE id = ?`,
       [classId]
     );

@@ -37,7 +37,7 @@ async function callGroq(prompt: string): Promise<string> {
 export async function generateAIMaterials(
   title: string,
   description: string = ''
-): Promise<{ ppt: string; keypoints: string; script: string }> {
+): Promise<{ ppt: string; keypoints: string; script: string; studyGuide: string }> {
   // Read teacher's custom system prompt from settings (falls back to default)
   const SLIDE_PROMPT_KEY = 'cynexai_slide_system_prompt';
   const defaultPrompt = `You are an expert instructor creating a live class presentation.
@@ -45,7 +45,7 @@ export async function generateAIMaterials(
 Class title: "{{title}}"
 {{description}}
 
-CRITICAL: Output EXACTLY 3 sections separated by "---SPLIT---" (use this separator NOWHERE else).
+CRITICAL: Output EXACTLY 4 sections separated by "---SPLIT---" (use this separator NOWHERE else).
 
 SECTION 1 - PRESENTATION SLIDES (Markdown):
 - Generate EXACTLY 12 detailed, high-quality slides covering the topics outlined in the description.
@@ -68,7 +68,12 @@ For each slide, provide exactly 3 teaching notes (teaching point, analogy, gotch
 ---SPLIT---
 
 SECTION 3 - TELEPROMPTER SCRIPT:
-Write a comprehensive, engaging teleprompter script for the instructor. It should start with a warm welcome (e.g., "Welcome everyone to today's masterclass on..."), introduce the core concepts, provide a high-level overview of what will be taught, and include some motivational words. The script must be at least 3 well-written paragraphs to ensure the instructor has a solid opening monologue before diving into the slides.`;
+Write a comprehensive, engaging teleprompter script for the instructor. It should start with a warm welcome (e.g., "Welcome everyone to today's masterclass on..."), introduce the core concepts, provide a high-level overview of what will be taught, and include some motivational words. The script must be at least 3 well-written paragraphs to ensure the instructor has a solid opening monologue before diving into the slides.
+
+---SPLIT---
+
+SECTION 4 - STUDENT STUDY GUIDE (Markdown):
+Write a comprehensive, detailed study guide formatted in Markdown designed specifically for the student. It should explain the core concepts of the class in an easy-to-understand way, include practical examples, and provide step-by-step code snippets (if applicable). This guide will be shown directly to the student for self-study.`;
 
   const templatePrompt = localStorage.getItem(SLIDE_PROMPT_KEY) || defaultPrompt;
 
@@ -81,15 +86,16 @@ Write a comprehensive, engaging teleprompter script for the instructor. It shoul
     const content = await callGroq(prompt);
     const parts = content.split('---SPLIT---');
 
-    if (parts.length >= 3) {
+    if (parts.length >= 4) {
       return {
         ppt: parts[0].trim(),
         keypoints: parts[1].trim(),
         script: parts[2].trim(),
+        studyGuide: parts[3].trim(),
       };
     }
 
-    throw new Error('AI did not return 3 parts');
+    throw new Error('AI did not return 4 parts');
   } catch (error: any) {
     console.error('AI Material generation failed:', error);
     // Show a user-friendly message for quota errors

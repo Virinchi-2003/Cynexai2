@@ -225,8 +225,10 @@ export default function ClassFlow() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className={`mx-auto ${currentStep === 'video' && classData?.ai_study_guide ? 'max-w-7xl lg:grid lg:grid-cols-3 lg:gap-8' : 'max-w-4xl space-y-6'}`}>
 
+        {/* ── MAIN CONTENT AREA ── */}
+        <div className={currentStep === 'video' && classData?.ai_study_guide ? 'lg:col-span-2 space-y-6' : 'space-y-6'}>
         {/* ── VIDEO STEP ── */}
         {currentStep === 'video' && (
           <>
@@ -372,29 +374,6 @@ export default function ClassFlow() {
           </div>
         )}
 
-        {/* ── AI Materials (inline for all class types) ── */}
-        {aiMaterials && (
-          <div className="candy-panel overflow-hidden mb-6 flow-panel">
-            <button
-              onClick={() => setShowMaterials(prev => !prev)}
-              className="w-full p-5 flex items-center justify-between hover:bg-slate-100 dark:hover:bg-white/10 transition-colors bg-slate-50/50 dark:bg-black/30"
-            >
-              <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-4 h-4 text-indigo-500" />
-                Class Notes & Topics
-              </h2>
-              {showMaterials ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
-            </button>
-            {showMaterials && (
-              <div className="px-5 pb-5 border-t border-slate-200 dark:border-white/20 bg-white/70 dark:bg-black/50">
-                <div className="mt-4 bg-white dark:bg-zinc-900 rounded-xl p-4 border border-slate-200 dark:border-zinc-700">
-                  <pre className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed font-bold">{aiMaterials}</pre>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
             {classData.ai_summary && (
               <div className="candy-panel p-5 mt-6 mb-6 flow-panel">
                 <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
@@ -506,6 +485,27 @@ export default function ClassFlow() {
             </div>
           )
         )}
+        </div>
+
+        {/* ── RIGHT SIDEBAR: STUDY GUIDE ── */}
+        {currentStep === 'video' && classData?.ai_study_guide && (
+          <div className="lg:col-span-1 mt-6 lg:mt-0">
+            <div className="candy-panel p-5 sticky top-8 flow-panel flex flex-col" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+              <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4 shrink-0">
+                <BookOpen className="w-4 h-4 text-indigo-500" />
+                Student Study Guide
+              </h2>
+              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
+                <div className="bg-white/50 dark:bg-black/30 rounded-xl p-4 border border-slate-200 dark:border-white/10">
+                  <pre className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed font-bold">
+                    {classData.ai_study_guide}
+                  </pre>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -111,11 +111,11 @@ export default function ClassEditor() {
     }
     setGenerating(true);
     try {
-      const { ppt, keypoints, script } = await generateAIMaterials(classTitle, classDescription);
-      await updateClassAiMaterials(classId as string, ppt, keypoints, script);
+      const { ppt, keypoints, script, studyGuide } = await generateAIMaterials(classTitle, classDescription);
+      await updateClassAiMaterials(classId as string, ppt, keypoints, script, studyGuide);
       setAiStatus({ ppt: true, script: true });
       setAiKeypoints(keypoints);
-      setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints });
+      setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints, ai_study_guide: studyGuide });
       alert('AI Materials generated and saved successfully!');
     } catch (error) {
       console.error(error);
