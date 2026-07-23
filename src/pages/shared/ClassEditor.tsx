@@ -6,6 +6,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion, getModuleDetails } from '../../lib/api/cms';
 import { generateAIMaterials, generateAIQuestions } from '../../lib/aiGenerator';
 import { isTursoConfigured } from '../../lib/turso';
+import { X, AlertCircle } from 'lucide-react';
 
 
 export default function ClassEditor() {
@@ -37,6 +38,12 @@ export default function ClassEditor() {
   const [newQCorrectIdx, setNewQCorrectIdx] = useState<number>(0);
   const [newQBoilerplate, setNewQBoilerplate] = useState('def solution():\n    # Write your code here\n    pass');
   const [newQTestCases, setNewQTestCases] = useState('[\n  {"input": "()", "expected": "True"}\n]');
+
+  const [alertConfig, setAlertConfig] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+
+  const showAlert = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setAlertConfig({ message, type });
+  };
 
   useEffect(() => {
     fetchClassData();
@@ -86,7 +93,7 @@ export default function ClassEditor() {
   const handleSave = async () => {
     if (!classId) return;
     if (!classDescription.trim()) {
-      alert('Class Description is mandatory. Please provide a description before saving.');
+      showAlert('Class Description is mandatory. Please provide a description before saving.', 'error');
       return;
     }
     try {
@@ -95,18 +102,18 @@ export default function ClassEditor() {
         await updateClassAiMaterials(classId as string, classData?.ai_ppt_markdown || '', aiKeypoints, classData?.ai_script || '');
         setClassData({ ...classData, ai_keypoints: aiKeypoints });
       }
-      alert('Class saved successfully!');
-      navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`);
+      showAlert('Class saved successfully!', 'success');
+      setTimeout(() => navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`), 1000);
     } catch (e) {
       console.error('Error saving class', e);
-      alert('Failed to save class.');
+      showAlert('Failed to save class.', 'error');
     }
   };
 
 
   const handleGenerateAI = async () => {
     if (!classDescription.trim()) {
-      alert('Please add and save a class description first.');
+      showAlert('Please add and save a class description first.', 'info');
       return;
     }
     setGenerating(true);
@@ -116,18 +123,18 @@ export default function ClassEditor() {
       setAiStatus({ ppt: true, script: true });
       setAiKeypoints(keypoints);
       setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints, ai_study_guide: studyGuide });
-      alert('AI Materials generated and saved successfully!');
+      showAlert('AI Materials generated and saved successfully!', 'success');
     } catch (error) {
       console.error(error);
-      alert('Failed to generate AI materials.');
+      showAlert('Failed to generate AI materials. Please try again.', 'error');
     } finally {
       setGenerating(false);
     }
   };
 
   const handleGenerateAIQuestions = async () => {
-    if (!classId || !classTitle || !classDescription) { alert('Please enter a class title and description first.'); return; }
-    if (!aiStatus.ppt || !aiKeypoints) { alert('Please generate AI Materials (Slides & Keypoints) first so the Q&A can be based on the exact topics taught.'); return; }
+    if (!classId || !classTitle || !classDescription) { showAlert('Please enter a class title and description first.', 'info'); return; }
+    if (!aiStatus.ppt || !aiKeypoints) { showAlert('Please generate AI Materials (Slides & Keypoints) first so the Q&A can be based on the exact topics taught.', 'info'); return; }
     setGeneratingQA(true);
     try {
       const hasCoding = moduleData ? moduleData.is_it_module === 1 : true;
@@ -143,10 +150,10 @@ export default function ClassEditor() {
         );
       }
       await fetchQuestions();
-      alert(`✅ ${qs.length} AI questions generated and saved!`);
+      showAlert(`✅ ${qs.length} AI questions generated and saved!`, 'success');
     } catch (err: any) {
-      if (err.message === 'QUOTA_EXCEEDED') alert('AI quota exceeded. Try again later.');
-      else alert('Failed to generate AI questions.');
+      if (err.message === 'QUOTA_EXCEEDED') showAlert('AI quota exceeded. Try again later.', 'error');
+      else showAlert('Failed to generate AI questions.', 'error');
       console.error(err);
     } finally {
       setGeneratingQA(false);
@@ -172,10 +179,10 @@ export default function ClassEditor() {
       setNewQOptions(['', '', '', '']);
       setNewQCorrectIdx(0);
       await fetchQuestions();
-      alert("Add-on question created!");
+      showAlert("Add-on question created!", 'success');
     } catch (e) {
       console.error(e);
-      alert("Failed to add question.");
+      showAlert("Failed to add question.", 'error');
     }
   };
 
@@ -387,6 +394,36 @@ export default function ClassEditor() {
           </Card>
         </div>
       </div>
+
+      {/* Custom Alert Modal */}
+      {alertConfig && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-4">
+              <div className={`p-3 rounded-xl shrink-0 ${
+                alertConfig.type === 'success' ? 'bg-green-100 text-green-600 dark:bg-green-500/20 dark:text-green-400' :
+                alertConfig.type === 'error' ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400' :
+                'bg-blue-100 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400'
+              }`}>
+                {alertConfig.type === 'success' ? <CheckCircle className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
+              </div>
+              <div className="flex-1 mt-1">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg">
+                  {alertConfig.type === 'success' ? 'Success' : alertConfig.type === 'error' ? 'Error' : 'Notice'}
+                </h3>
+                <p className="text-slate-600 dark:text-slate-400 mt-1 text-sm font-medium">
+                  {alertConfig.message}
+                </p>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button onClick={() => setAlertConfig(null)} className="px-6 py-2">
+                Got it
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

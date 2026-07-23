@@ -39,7 +39,7 @@ export async function generateAIMaterials(
   description: string = ''
 ): Promise<{ ppt: string; keypoints: string; script: string; studyGuide: string }> {
   // Read teacher's custom system prompt from settings (falls back to default)
-  const SLIDE_PROMPT_KEY = 'cynexai_slide_system_prompt';
+  const SLIDE_PROMPT_KEY = 'cynexai_slide_system_prompt_v2';
   const defaultPrompt = `You are an expert instructor creating a live class presentation.
 
 Class title: "{{title}}"
