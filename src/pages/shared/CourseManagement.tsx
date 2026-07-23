@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
+import { ConfirmModal } from '../../components/ui/erp/ConfirmModal';
 import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
@@ -31,6 +32,19 @@ export default function CourseManagement() {
   const [newModuleName, setNewModuleName] = useState('');
   const [newModuleIsIt, setNewModuleIsIt] = useState(true);
   const [selectedCourseForModule, setSelectedCourseForModule] = useState<string | null>(null);
+
+  // Confirm Modal State
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: '',
+    message: '',
+    onConfirm: () => {}
+  });
 
   useEffect(() => {
     fetchCourses();
@@ -159,27 +173,43 @@ export default function CourseManagement() {
 
   const handleDeleteCourse = async (courseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to completely delete this course? This cannot be undone.')) return;
-    try {
-      await deleteCourse(courseId);
-      if (expandedCourse === courseId) setExpandedCourse(null);
-      await fetchCourses();
-    } catch (e) {
-      console.error(e);
-      alert('Failed to delete course');
-    }
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Delete Course',
+      message: 'Are you sure you want to completely delete this course? This action cannot be undone and will remove all module associations.',
+      onConfirm: async () => {
+        try {
+          await deleteCourse(courseId);
+          if (expandedCourse === courseId) setExpandedCourse(null);
+          await fetchCourses();
+        } catch (e) {
+          console.error(e);
+          alert('Failed to delete course');
+        } finally {
+          setConfirmModalConfig(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   const handleRemoveModule = async (courseId: string, moduleId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to remove this module from the course?')) return;
-    try {
-      await removeModuleFromCourse(courseId, moduleId);
-      await fetchCourses();
-    } catch (e) {
-      console.error(e);
-      alert('Failed to remove module');
-    }
+    setConfirmModalConfig({
+      isOpen: true,
+      title: 'Remove Module',
+      message: 'Are you sure you want to remove this module from the course? The module itself will not be deleted if it is used in other courses.',
+      onConfirm: async () => {
+        try {
+          await removeModuleFromCourse(courseId, moduleId);
+          await fetchCourses();
+        } catch (e) {
+          console.error(e);
+          alert('Failed to remove module');
+        } finally {
+          setConfirmModalConfig(prev => ({ ...prev, isOpen: false }));
+        }
+      }
+    });
   };
 
   // Pitch Modal State
@@ -551,6 +581,17 @@ export default function CourseManagement() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmModal 
+        isOpen={confirmModalConfig.isOpen}
+        title={confirmModalConfig.title}
+        message={confirmModalConfig.message}
+        onConfirm={confirmModalConfig.onConfirm}
+        onCancel={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
+        confirmText="Delete"
+        variant="danger"
+      />
     </div>
   );
 }
