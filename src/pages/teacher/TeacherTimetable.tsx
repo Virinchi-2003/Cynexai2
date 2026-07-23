@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Calendar, Clock, ArrowLeft, ChevronLeft, ChevronRight, Video, MapPin, Users, AlarmClock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../../components/ui/erp/Card';
@@ -8,8 +8,6 @@ import { getGlobalTimetable, GlobalTimetableSlot, getBatchesList } from '../../l
 import { RescheduleModal } from '../../components/crm/classes/RescheduleModal';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'];
-
 const getMonday = (d: Date) => {
   const date = new Date(d);
   const day = date.getDay();
@@ -88,6 +86,25 @@ export default function TeacherTimetable() {
   useEffect(() => {
     fetchData();
   }, [currentWeekStart, resolvedUserId]);
+
+  const dynamicTimeSlots = useMemo(() => {
+    let minHour = 9;
+    let maxHour = 21;
+    
+    schedule.forEach(s => {
+      if (s.start_time) {
+        const h = parseInt(s.start_time.split(':')[0]);
+        if (!isNaN(h) && h < minHour) minHour = h;
+        if (!isNaN(h) && h > maxHour) maxHour = h;
+      }
+    });
+    
+    const slots = [];
+    for (let i = minHour; i <= maxHour; i++) {
+      slots.push(`${i.toString().padStart(2, '0')}:00`);
+    }
+    return slots;
+  }, [schedule]);
 
   const getStatusColor = (day: string, startHourStr: string) => {
     const today = currentTime.getDay(); // 0=Sun, 1=Mon
@@ -188,7 +205,7 @@ export default function TeacherTimetable() {
               </div>
 
               {/* Time Slots */}
-              {TIME_SLOTS.map(time => (
+              {dynamicTimeSlots.map(time => (
                 <div key={time} className="grid grid-cols-8 border-b border-erp-border/50 transition-colors group">
                   <div className="p-3 border-r border-erp-border text-xs font-bold text-erp-text/50 text-center sticky left-0 z-20 bg-erp-surface group-hover:bg-erp-primary/5 transition-colors">
                     {time}
