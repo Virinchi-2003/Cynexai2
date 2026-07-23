@@ -36,7 +36,25 @@ export default function UserManagement() {
   const [role, setRole] = useState('Sales/HR');
   const [salary, setSalary] = useState<number | ''>(0);
   const [status, setStatus] = useState('Active');
-  const [permissions, setPermissions] = useState<Record<string, boolean>>({ crm: false, timetable: false, leaves: false, settings: false });
+  
+  type AccessLevel = 'none' | 'view' | 'full';
+  const DEFAULT_PERMISSIONS: Record<string, AccessLevel> = {
+    dashboard: 'none', users: 'none', students: 'none', courses: 'none',
+    timetable: 'none', classes: 'none', finance: 'none', leaves: 'none', settings: 'none'
+  };
+  const MODULES_LIST = [
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'users', label: 'User Management' },
+    { id: 'students', label: 'Student Management' },
+    { id: 'courses', label: 'Courses & Curriculum' },
+    { id: 'timetable', label: 'Timetable & Scheduling' },
+    { id: 'classes', label: 'Live Classes & Attendance' },
+    { id: 'finance', label: 'Finance & Fees' },
+    { id: 'leaves', label: 'Leave Management' },
+    { id: 'settings', label: 'System Settings' }
+  ];
+  
+  const [permissions, setPermissions] = useState<Record<string, AccessLevel>>(DEFAULT_PERMISSIONS);
 
   const [allModules, setAllModules] = useState<any[]>([]);
   const [assignedModules, setAssignedModules] = useState<string[]>([]);
@@ -70,7 +88,7 @@ export default function UserManagement() {
 
   const resetForm = () => {
     setName(''); setEmail(''); setPhone(''); setPassword(''); setRole('Sales/HR'); setSalary(0); setStatus('Active');
-    setPermissions({ crm: false, timetable: false, leaves: false, settings: false });
+    setPermissions(DEFAULT_PERMISSIONS);
   };
 
   const handleOpenModal = (user: ERPUser | null) => {
@@ -81,10 +99,21 @@ export default function UserManagement() {
       setRole(user.role || 'Sales/HR'); setSalary(user.salary || 0);
       setStatus(user.status || 'Active');
       if (user.permissions_json) {
-        try { setPermissions(JSON.parse(user.permissions_json)); }
-        catch { setPermissions({ crm: false, timetable: false, leaves: false, settings: false }); }
+        try { 
+          const parsed = JSON.parse(user.permissions_json);
+          // Upgrade old boolean permissions if necessary
+          const upgraded = { ...DEFAULT_PERMISSIONS };
+          for (const key of Object.keys(parsed)) {
+            if (typeof parsed[key] === 'boolean') {
+              upgraded[key] = parsed[key] ? 'full' : 'none';
+            } else if (typeof parsed[key] === 'string') {
+              upgraded[key] = parsed[key] as AccessLevel;
+            }
+          }
+          setPermissions(upgraded);
+        } catch { setPermissions(DEFAULT_PERMISSIONS); }
       } else {
-        setPermissions({ crm: false, timetable: false, leaves: false, settings: false });
+        setPermissions(DEFAULT_PERMISSIONS);
       }
       setAssignedModules(allModules.filter(m => m.instructor_id === user.id).map(m => m.id));
     } else {
@@ -251,16 +280,27 @@ export default function UserManagement() {
                   </div>
                 )}
               </div>
-              <div className="border-t border-erp-border pt-4">
-                <label className="block text-xs font-bold text-erp-text/60 mb-2 uppercase tracking-wider">Access Control</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['crm', 'timetable', 'leaves', 'settings'].map(perm => (
-                    <label key={perm} className="flex items-center gap-2 text-sm text-erp-text/80 cursor-pointer">
-                      <input type="checkbox" checked={permissions[perm] || false}
-                        onChange={e => setPermissions(p => ({ ...p, [perm]: e.target.checked }))}
-                        className="w-4 h-4 rounded accent-indigo-500" />
-                      {perm.charAt(0).toUpperCase() + perm.slice(1)} Access
-                    </label>
+              <div className="border-t border-erp-border pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-bold text-erp-text uppercase tracking-wider flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-erp-primary" /> Advanced Access Control
+                  </label>
+                  <span className="text-xs text-erp-text/50">Granular module permissions</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {MODULES_LIST.map(mod => (
+                    <div key={mod.id} className="bg-erp-background border border-erp-border rounded-lg p-3 flex flex-col gap-2">
+                      <span className="text-xs font-semibold text-erp-text/80">{mod.label}</span>
+                      <select 
+                        value={permissions[mod.id] || 'none'} 
+                        onChange={e => setPermissions(p => ({ ...p, [mod.id]: e.target.value as AccessLevel }))}
+                        className="w-full bg-erp-surface border border-erp-border rounded px-2 py-1.5 text-xs text-erp-text focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="none">No Access</option>
+                        <option value="view">View Only</option>
+                        <option value="full">Full Access</option>
+                      </select>
+                    </div>
                   ))}
                 </div>
               </div>
