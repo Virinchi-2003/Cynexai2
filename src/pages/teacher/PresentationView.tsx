@@ -174,11 +174,6 @@ export default function PresentationView() {
     localStorage.setItem('cynexai_live_mode', m);
   };
 
-  const handleThemeChange = (newTheme: Theme) => {
-    setTheme(newTheme);
-    localStorage.setItem('cynexai_live_theme', newTheme);
-  };
-
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newCode = e.target.value;
     setCode(newCode);
@@ -220,8 +215,7 @@ export default function PresentationView() {
 
   const renderRetroTheme = () => (
     <motion.div
-      key={
-etro- + slide}
+      key={`retro-${slide}`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
@@ -232,8 +226,8 @@ etro- + slide}
       <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
       <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-8 z-0">
         {['bg-[#f4a7a1]', 'bg-[#a3c9c4]', 'bg-[#f2c180]', 'bg-[#e77a71]', 'bg-[#a3c9c4]'].map((color, idx) => (
-          <div key={idx} className={w-14 h-12  + color +  border-2 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]}>
-            <div className={bsolute -top-3 left-0 w-6 h-3  + color +  border-2 border-black border-b-0} />
+          <div key={idx} className={`w-14 h-12 ${color} border-2 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
+            <div className={`absolute -top-3 left-0 w-6 h-3 ${color} border-2 border-black border-b-0`} />
           </div>
         ))}
       </div>
@@ -266,7 +260,7 @@ etro- + slide}
 
   const renderModernDarkTheme = () => (
     <motion.div
-      key={modern-dark- + slide}
+      key={`modern-dark-${slide}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
@@ -299,7 +293,7 @@ etro- + slide}
 
   const renderGlassmorphismTheme = () => (
     <motion.div
-      key={glass- + slide}
+      key={`glass-${slide}`}
       initial={{ opacity: 0, scale: 1.05 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
@@ -337,7 +331,7 @@ etro- + slide}
 
   const renderMinimalistTheme = () => (
     <motion.div
-      key={minimal- + slide}
+      key={`minimal-${slide}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -426,13 +420,13 @@ etro- + slide}
 
             <div className="flex items-center gap-2">
               {/* Type vs Draw toggle */}
-              <button onClick={() => setIsDrawMode(false)} className={w-8 h-8 rounded-lg flex items-center justify-center transition-colors } title="Type Mode">
+              <button onClick={() => setIsDrawMode(false)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${!isDrawMode ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Type Mode">
                 <MousePointer2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setIsDrawMode(true)} className={w-8 h-8 rounded-lg flex items-center justify-center transition-colors } title="Pen Tool">
+              <button onClick={() => setIsDrawMode(true)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'pen' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Pen Tool">
                 <Pencil className="w-4 h-4" />
               </button>
-              <button onClick={() => { setIsDrawMode(true); setDrawTool('eraser'); }} className={w-8 h-8 rounded-lg flex items-center justify-center transition-colors } title="Eraser Tool">
+              <button onClick={() => { setIsDrawMode(true); setDrawTool('eraser'); }} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'eraser' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Eraser Tool">
                 <Eraser className="w-4 h-4" />
               </button>
 
@@ -468,7 +462,7 @@ etro- + slide}
               height: '900px',
               top: '50%',
               left: '50%',
-              transform: 	ranslate(-50%, -50%) scale(),
+              transform: `translate(-50%, -50%) scale(${slideScale})`,
               transformOrigin: 'center center',
             }}>
               <AnimatePresence mode="wait">
@@ -482,7 +476,7 @@ etro- + slide}
             <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 z-20">
               {slides.map((_, i) => (
                 <button key={i} onClick={() => changeSlide(i + 1)}
-                  className={h-2.5 rounded-full transition-all duration-300 }
+                  className={`h-2.5 rounded-full transition-all duration-300 ${slide === i + 1 ? 'w-8 bg-indigo-500' : 'w-2.5 bg-white/20'}`}
                 />
               ))}
             </div>
@@ -503,7 +497,7 @@ etro- + slide}
                 ref={canvasRef}
                 width={3840}
                 height={2160}
-                className={bsolute inset-0 w-full h-full }
+                className="absolute inset-0 w-full h-full"
                 style={{ touchAction: 'none', cursor: drawTool === 'eraser' ? 'cell' : 'crosshair', zIndex: 10 }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
