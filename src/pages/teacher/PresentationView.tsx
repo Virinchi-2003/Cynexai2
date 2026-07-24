@@ -220,7 +220,8 @@ export default function PresentationView() {
 
   const renderRetroTheme = () => (
     <motion.div
-      key={etro- + slide}
+      key={
+etro- + slide}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0 }}
@@ -354,7 +355,7 @@ export default function PresentationView() {
             ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'32px 0', width:'100%', maxWidth:'1200px'}} {...props} />,
             li: ({node, ...props}) => (
               <li style={{display:'flex', alignItems:'flex-start', gap:'24px', marginBottom:'20px', fontSize:'28px', fontWeight:400, wordBreak:'break-word', color:'#1e293b'}}>
-                <span style={{color:'#94a3b8', fontSize:'24px', marginTop:'2px'}}>—</span>
+                <span style={{color:'#94a3b8', fontSize:'24px', marginTop:'2px'}}>â€”</span>
                 <span {...props} />
               </li>
             ),
@@ -370,38 +371,22 @@ export default function PresentationView() {
       {/* Minimal control bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-slate-900/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-30">
         <div className="flex gap-2 items-center">
-          <button onClick={() => updateMode('slides')} className={px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors }>
+          <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <BookOpen className="w-4 h-4" /> Slides
           </button>
-          <button onClick={() => updateMode('code')} className={px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors }>
+          <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
             <Code className="w-4 h-4" /> Code & Draw
           </button>
 
           <div className="w-px h-5 bg-white/10 mx-1" />
 
-          {mode === 'slides' && (
-            <div className="flex items-center gap-2 bg-slate-800 rounded-lg px-2 py-1 mr-2 border border-white/5">
-              <Palette className="w-4 h-4 text-slate-400" />
-              <select 
-                value={theme}
-                onChange={(e) => handleThemeChange(e.target.value as Theme)}
-                className="bg-transparent text-sm font-bold text-slate-200 outline-none cursor-pointer"
-              >
-                <option value="modern-dark">Modern Dark</option>
-                <option value="glassmorphism">Glassmorphism</option>
-                <option value="retro">Retro Mac</option>
-                <option value="minimalist">Minimalist</option>
-              </select>
-            </div>
-          )}
-
           {/* Cast / Screen Share */}
           <button
             onClick={handleCast}
             title={isCasting ? 'Stop casting' : 'Cast / Share this screen'}
-            className={px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all }
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
           >
-            {isCasting ? <><MonitorPlay className="w-4 h-4" /> Casting…</> : <><Cast className="w-4 h-4" /> Cast</>}
+            {isCasting ? <><MonitorPlay className="w-4 h-4" /> Castingâ€¦</> : <><Cast className="w-4 h-4" /> Cast</>}
           </button>
         </div>
 
