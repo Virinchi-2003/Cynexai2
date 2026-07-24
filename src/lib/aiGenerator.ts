@@ -38,7 +38,8 @@ export async function generateAIMaterials(
   title: string,
   description: string = '',
   theme: string = 'modern-dark',
-  contentStyle: string = 'standard'
+  contentStyle: string = 'standard',
+  includeImages: boolean = true
 ): Promise<{ ppt: string; keypoints: string; script: string; studyGuide: string }> {
   // Read teacher's custom system prompt from settings (falls back to default)
   const SLIDE_PROMPT_KEY = 'cynexai_slide_system_prompt_v2';
@@ -75,7 +76,7 @@ CRITICAL: Output EXACTLY 4 sections separated by "---SPLIT---" (use this separat
 
 SECTION 1 - PRESENTATION SLIDES (Markdown):
 - Generate EXACTLY 12 detailed, high-quality slides covering the topics outlined in the description.
-- INCLUDE exactly ONE relevant image per slide using the Unsplash source URL pattern provided in the THEME AND LAYOUT instructions. Replace <keywords> with 2-3 highly specific keywords that accurately resemble the slide content.
+${includeImages ? `- INCLUDE exactly ONE relevant image per slide using the Unsplash source URL pattern provided in the THEME AND LAYOUT instructions. Replace <keywords> with 2-3 highly specific keywords that accurately resemble the slide content.` : `- DO NOT include any images, photos, or ![] markdown whatsoever.`}
 - Each slide MUST be separated by exactly "---" on its own line.
 - Slide 1: Title slide with # Title and a descriptive tagline.
 - Slides 2-11: Deep dive into the subject matter. Use # for slide title, followed by 4-6 bullet points. Each bullet point should be insightful and informative (not just a few words).

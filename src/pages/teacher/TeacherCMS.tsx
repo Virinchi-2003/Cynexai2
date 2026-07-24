@@ -21,6 +21,7 @@ export default function TeacherCMS() {
   const [showAiSettings, setShowAiSettings] = useState<any | null>(null); // the class object
   const [selectedTheme, setSelectedTheme] = useState('modern-dark');
   const [selectedContentStyle, setSelectedContentStyle] = useState('storytelling');
+  const [includeImages, setIncludeImages] = useState(true);
 
   const user = getCurrentUser();
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ export default function TeacherCMS() {
     localStorage.setItem('cynexai_live_theme', selectedTheme);
     
     try {
-      const aiContent = await generateAIMaterials(title, description, selectedTheme, selectedContentStyle);
+      const aiContent = await generateAIMaterials(title, description, selectedTheme, selectedContentStyle, includeImages);
       await updateClassMaterials(classId, aiContent.ppt, aiContent.script, aiContent.keypoints);
       await fetchModules();
     } catch (err) {
@@ -245,6 +246,16 @@ export default function TeacherCMS() {
                     <option value="academic">Academic (Formal, structured)</option>
                     <option value="standard">Standard (Clear & Informative)</option>
                   </select>
+                </div>
+                <div className="flex items-center justify-between bg-white border border-erp-border rounded-lg px-4 py-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Include Images</label>
+                    <p className="text-xs text-slate-500">Auto-generate contextual layout imagery</p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" checked={includeImages} onChange={e => setIncludeImages(e.target.checked)} className="sr-only peer" />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
                 </div>
                 <p className="text-xs text-slate-500 font-medium">
                   Settings will apply to the upcoming generation for <strong>{showAiSettings.title}</strong>. 
