@@ -213,152 +213,196 @@ export default function PresentationView() {
 
   // --- THEME RENDERERS ---
 
-  const renderRetroTheme = () => (
-    <motion.div
-      key={`retro-${slide}`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
-      className="bg-[#f5e4dd] border-4 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden p-8"
-    >
-      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
-      <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-8 z-0">
-        {['bg-[#f4a7a1]', 'bg-[#a3c9c4]', 'bg-[#f2c180]', 'bg-[#e77a71]', 'bg-[#a3c9c4]'].map((color, idx) => (
-          <div key={idx} className={`w-14 h-12 ${color} border-2 border-black relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`}>
-            <div className={`absolute -top-3 left-0 w-6 h-3 ${color} border-2 border-black border-b-0`} />
+  const renderModernDarkTheme = () => {
+    const imgRegex = /!\[.*?\]\((.*?)\)/;
+    const match = currentSlide.match(imgRegex);
+    const imgSrc = match ? match[1] : null;
+    const textContent = currentSlide.replace(imgRegex, '');
+
+    return (
+      <motion.div
+        key={`modern-dark-${slide}`}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex overflow-hidden relative w-[1600px] h-[900px] absolute top-0 left-0"
+      >
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] -mr-[400px] -mt-[400px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] -ml-[300px] -mb-[300px] pointer-events-none" />
+        
+        <div className={`flex-1 px-16 md:px-20 py-16 flex flex-col justify-center items-start text-left relative z-10 overflow-y-auto ${imgSrc ? 'w-[55%]' : 'w-full'}`}>
+          <ReactMarkdown
+            components={{
+              h1: ({node, ...props}) => <h1 className="text-5xl md:text-6xl font-display font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400 mb-8 leading-tight" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6" {...props} />,
+              p: ({node, ...props}) => <p className="text-xl md:text-2xl text-slate-300 leading-relaxed mb-6" {...props} />,
+              ul: ({node, ...props}) => <ul className="space-y-4 mb-6 w-full" {...props} />,
+              li: ({node, ...props}) => (
+                <li className="flex items-start text-xl md:text-2xl text-slate-300">
+                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 mt-2.5 mr-4 flex-shrink-0" />
+                  <span {...props} />
+                </li>
+              ),
+              img: () => null
+            }}
+          >{textContent}</ReactMarkdown>
+        </div>
+
+        {imgSrc && (
+          <div className="w-[45%] h-full relative z-0 flex-shrink-0">
+            <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover" alt="Slide visual" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/50 to-transparent w-48 left-0" />
+            <div className="absolute inset-0 bg-indigo-500/20 mix-blend-overlay" />
           </div>
-        ))}
-      </div>
-      <div className="ml-28 flex-1 bg-[#f5e4dd] border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col relative z-10 overflow-hidden">
-        <div className="h-10 border-b-4 border-black flex items-center justify-end px-4 gap-2 bg-[#f4a7a1]">
-          <div className="w-5 h-5 border-2 border-black bg-white" />
-          <div className="w-5 h-5 border-2 border-black bg-white" />
-          <div className="w-5 h-5 border-2 border-black bg-white flex items-center justify-center font-bold text-xs">X</div>
+        )}
+      </motion.div>
+    );
+  };
+
+  const renderGlassmorphismTheme = () => {
+    const imgRegex = /!\[.*?\]\((.*?)\)/;
+    const match = currentSlide.match(imgRegex);
+    const imgSrc = match ? match[1] : null;
+    const textContent = currentSlide.replace(imgRegex, '');
+
+    return (
+      <motion.div
+        key={`glass-${slide}`}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 1.05 }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="w-[1600px] h-[900px] absolute top-0 left-0 relative flex items-center justify-center p-12 overflow-hidden rounded-[40px]"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 opacity-80" />
+        {imgSrc && <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" alt="Glass bg" />}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob" />
+        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
+        <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-4000" />
+        
+        <div className="relative w-full h-full bg-white/20 backdrop-blur-2xl border border-white/40 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-12 md:p-16 z-10 overflow-y-auto">
+          <div className="flex-1 flex flex-col justify-center items-center text-center max-w-5xl mx-auto">
+            <ReactMarkdown
+              components={{
+                h1: ({node, ...props}) => <h1 className="text-5xl md:text-7xl font-display font-black text-white drop-shadow-lg mb-8 leading-tight tracking-tight" {...props} />,
+                h2: ({node, ...props}) => <h2 className="text-4xl md:text-6xl font-display font-bold text-white drop-shadow-md mb-8" {...props} />,
+                p: ({node, ...props}) => <p className="text-xl md:text-3xl text-white/90 leading-relaxed mb-6 font-medium" {...props} />,
+                ul: ({node, ...props}) => <ul className="space-y-6 mb-6 text-left inline-block" {...props} />,
+                li: ({node, ...props}) => (
+                  <li className="flex items-start text-xl md:text-3xl text-white font-medium bg-white/10 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-sm">
+                    <span className="w-3 h-3 rounded-full bg-white mt-3 mr-4 flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                    <span {...props} />
+                  </li>
+                ),
+                img: () => null
+              }}
+            >{textContent}</ReactMarkdown>
+          </div>
         </div>
-        <div className="flex-1 px-14 py-10 flex flex-col justify-center items-center text-center overflow-hidden">
+      </motion.div>
+    );
+  };
+
+  const renderRetroTheme = () => {
+    const imgRegex = /!\[.*?\]\((.*?)\)/;
+    const match = currentSlide.match(imgRegex);
+    const imgSrc = match ? match[1] : null;
+    const textContent = currentSlide.replace(imgRegex, '');
+
+    return (
+      <motion.div
+        key={`retro-${slide}`}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="w-[1600px] h-[900px] absolute top-0 left-0 bg-[#008080] p-12 flex items-center justify-center relative overflow-hidden"
+      >
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 2px, transparent 2px)', backgroundSize: '16px 16px' }} />
+        
+        <div className="w-full h-full bg-[#c0c0c0] border-[6px] border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex flex-col relative z-10">
+          <div className="h-10 bg-[#000080] flex items-center justify-between px-3 select-none">
+            <span className="text-white font-bold text-lg tracking-wider">CynexOS - Presentation.exe</span>
+            <div className="flex gap-1">
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">-</div>
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">□</div>
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">x</div>
+            </div>
+          </div>
+          
+          <div className="flex-1 flex flex-row overflow-hidden">
+            {imgSrc && (
+              <div className="w-[35%] h-full border-r-[6px] border-r-[#808080] p-6 bg-white flex items-center justify-center">
+                <img src={imgSrc} className="w-full max-h-full object-cover border-[4px] border-t-[#808080] border-l-[#808080] border-b-white border-r-white shadow-[2px_2px_0px_rgba(0,0,0,1)]" alt="Retro visual" />
+              </div>
+            )}
+            <div className={`p-10 md:p-14 overflow-y-auto ${imgSrc ? 'w-[65%]' : 'w-full'}`}>
+              <ReactMarkdown
+                components={{
+                  h1: ({node, ...props}) => <h1 className="text-5xl md:text-6xl font-black text-black mb-8 tracking-tight uppercase" style={{ textShadow: '2px 2px 0px #fff' }} {...props} />,
+                  h2: ({node, ...props}) => <h2 className="text-4xl md:text-5xl font-bold text-black mb-6 uppercase border-b-[4px] border-black pb-2 inline-block" {...props} />,
+                  p: ({node, ...props}) => <p className="text-xl md:text-2xl text-black leading-relaxed mb-6 font-medium" {...props} />,
+                  ul: ({node, ...props}) => <ul className="space-y-4 mb-6" {...props} />,
+                  li: ({node, ...props}) => (
+                    <li className="flex items-start text-xl md:text-2xl text-black font-medium">
+                      <span className="text-blue-700 font-bold mr-3">►</span>
+                      <span {...props} />
+                    </li>
+                  ),
+                  img: () => null
+                }}
+              >{textContent}</ReactMarkdown>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  const renderMinimalistTheme = () => {
+    const imgRegex = /!\[.*?\]\((.*?)\)/;
+    const match = currentSlide.match(imgRegex);
+    const imgSrc = match ? match[1] : null;
+    const textContent = currentSlide.replace(imgRegex, '');
+
+    return (
+      <motion.div
+        key={`minimalist-${slide}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6 }}
+        className="w-[1600px] h-[900px] absolute top-0 left-0 bg-[#fdfdfd] flex overflow-hidden relative"
+      >
+        <div className="absolute top-0 left-0 right-0 h-1.5 bg-slate-900 z-20" />
+        
+        <div className={`flex-1 px-16 md:px-24 py-20 flex flex-col justify-center items-start text-left relative z-10 overflow-y-auto ${imgSrc ? 'w-[55%]' : 'w-full'}`}>
           <ReactMarkdown
             components={{
-              h1: ({node, ...props}) => <h1 style={{fontSize:'64px', fontWeight:900, textTransform:'uppercase', letterSpacing:'-2px', marginBottom:'32px', lineHeight:1.1, wordBreak:'break-word', color:'#000'}} {...props} />,
-              h2: ({node, ...props}) => <h2 style={{fontSize:'40px', fontWeight:800, textTransform:'uppercase', marginBottom:'24px', lineHeight:1.2, wordBreak:'break-word', color:'#000'}} {...props} />,
-              p:  ({node, ...props}) => <p  style={{fontSize:'28px', fontWeight:600, marginBottom:'16px', lineHeight:1.5, wordBreak:'break-word', color:'#111', maxWidth:'1200px'}} {...props} />,
-              ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'16px 0', width:'100%', maxWidth:'1300px'}} {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-5xl md:text-7xl font-display font-light text-slate-900 mb-10 tracking-tight" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-3xl md:text-5xl font-display text-slate-800 mb-8 font-light" {...props} />,
+              p: ({node, ...props}) => <p className="text-xl md:text-2xl text-slate-600 leading-relaxed mb-8 font-light max-w-4xl" {...props} />,
+              ul: ({node, ...props}) => <ul className="space-y-6 mb-8 w-full" {...props} />,
               li: ({node, ...props}) => (
-                <li style={{display:'flex', alignItems:'flex-start', gap:'16px', padding:'14px 20px', background:'rgba(255,255,255,0.5)', border:'2px solid #000', boxShadow:'4px 4px 0 #000', marginBottom:'12px', fontSize:'26px', fontWeight:700, wordBreak:'break-word', color:'#000'}}>
-                  <span style={{width:'16px', height:'16px', minWidth:'16px', background:'#e77a71', border:'2px solid #000', display:'inline-block', marginTop:'6px'}} />
+                <li className="flex items-start text-xl md:text-2xl text-slate-600 font-light border-l-2 border-slate-200 pl-6 ml-2">
                   <span {...props} />
                 </li>
               ),
-              img: ({node, ...props}) => <img style={{border:'4px solid #000', boxShadow:'8px 8px 0 #000', width:'300px', height:'220px', objectFit:'cover', float:'left', marginRight:'32px', marginBottom:'24px'}} {...props} />
+              img: () => null
             }}
-          >{currentSlide}</ReactMarkdown>
+          >{textContent}</ReactMarkdown>
         </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderModernDarkTheme = () => (
-    <motion.div
-      key={`modern-dark-${slide}`}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
-      className="bg-slate-950 border border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden relative"
-    >
-      <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-indigo-600/10 rounded-full blur-[120px] -mr-[400px] -mt-[400px] pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-600/10 rounded-full blur-[100px] -ml-[300px] -mb-[300px] pointer-events-none" />
-      
-      <div className="flex-1 px-20 py-16 flex flex-col justify-center items-start text-left relative z-10">
-        <ReactMarkdown
-          components={{
-            h1: ({node, ...props}) => <h1 style={{fontSize:'72px', fontWeight:800, letterSpacing:'-2px', marginBottom:'32px', lineHeight:1.1, wordBreak:'break-word', color:'#fff', background:'linear-gradient(to right, #a78bfa, #818cf8)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent'}} {...props} />,
-            h2: ({node, ...props}) => <h2 style={{fontSize:'44px', fontWeight:700, letterSpacing:'-1px', marginBottom:'24px', lineHeight:1.2, wordBreak:'break-word', color:'#e2e8f0'}} {...props} />,
-            p:  ({node, ...props}) => <p  style={{fontSize:'32px', fontWeight:400, marginBottom:'20px', lineHeight:1.6, wordBreak:'break-word', color:'#94a3b8', maxWidth:'1200px'}} {...props} />,
-            ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'24px 0', width:'100%', maxWidth:'1200px'}} {...props} />,
-            li: ({node, ...props}) => (
-              <li style={{display:'flex', alignItems:'flex-start', gap:'20px', marginBottom:'16px', fontSize:'28px', fontWeight:500, wordBreak:'break-word', color:'#cbd5e1'}}>
-                <span style={{width:'12px', height:'12px', minWidth:'12px', background:'#818cf8', borderRadius:'50%', display:'inline-block', marginTop:'12px', boxShadow:'0 0 10px #818cf8'}} />
-                <span {...props} />
-              </li>
-            ),
-            img: ({node, ...props}) => <img style={{borderRadius:'16px', border:'1px solid #334155', boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.5)', width:'400px', height:'300px', objectFit:'cover', float:'right', marginLeft:'40px', marginBottom:'32px'}} {...props} />
-          }}
-        >{currentSlide}</ReactMarkdown>
-      </div>
-    </motion.div>
-  );
-
-  const renderGlassmorphismTheme = () => (
-    <motion.div
-      key={`glass-${slide}`}
-      initial={{ opacity: 0, scale: 1.05 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, ease: "circOut" }}
-      style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
-      className="flex flex-col overflow-hidden relative rounded-[40px]"
-    >
-      {/* Vibrant Mesh Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-pink-400 via-purple-500 to-indigo-600 opacity-80" />
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-yellow-300 rounded-full mix-blend-multiply filter blur-[100px]" />
-      <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-[100px]" />
-      <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-[100px]" />
-      
-      {/* Glass Panel */}
-      <div className="absolute inset-8 bg-white/20 backdrop-blur-2xl border border-white/40 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-16 z-10">
-        <div className="flex-1 flex flex-col justify-center items-center text-center">
-          <ReactMarkdown
-            components={{
-              h1: ({node, ...props}) => <h1 style={{fontSize:'76px', fontWeight:800, letterSpacing:'-3px', marginBottom:'40px', lineHeight:1.1, wordBreak:'break-word', color:'#fff', textShadow:'0 4px 24px rgba(0,0,0,0.2)'}} {...props} />,
-              h2: ({node, ...props}) => <h2 style={{fontSize:'48px', fontWeight:700, letterSpacing:'-1px', marginBottom:'32px', lineHeight:1.2, wordBreak:'break-word', color:'rgba(255,255,255,0.9)'}} {...props} />,
-              p:  ({node, ...props}) => <p  style={{fontSize:'32px', fontWeight:500, marginBottom:'24px', lineHeight:1.5, wordBreak:'break-word', color:'rgba(255,255,255,0.9)', maxWidth:'1300px'}} {...props} />,
-              ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'24px 0', width:'100%', maxWidth:'1200px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'24px'}} {...props} />,
-              li: ({node, ...props}) => (
-                <li style={{display:'flex', alignItems:'center', justifyContent:'center', padding:'24px', background:'rgba(255,255,255,0.15)', border:'1px solid rgba(255,255,255,0.3)', borderRadius:'24px', fontSize:'24px', fontWeight:600, wordBreak:'break-word', color:'#fff', textAlign:'center', boxShadow:'0 8px 32px rgba(0,0,0,0.1)'}}>
-                  <span {...props} />
-                </li>
-              ),
-              img: ({node, ...props}) => <img style={{borderRadius:'24px', border:'2px solid rgba(255,255,255,0.4)', boxShadow:'0 16px 40px rgba(0,0,0,0.2)', width:'100%', height:'280px', objectFit:'cover', margin:'0 0 32px 0'}} {...props} />
-            }}
-          >{currentSlide}</ReactMarkdown>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const renderMinimalistTheme = () => (
-    <motion.div
-      key={`minimal-${slide}`}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
-      className="bg-white text-slate-900 border border-slate-200 shadow-sm flex flex-col overflow-hidden"
-    >
-      <div className="absolute top-0 left-0 right-0 h-2 bg-slate-900" />
-      <div className="flex-1 px-24 py-20 flex flex-col justify-center items-start text-left">
-        <ReactMarkdown
-          components={{
-            h1: ({node, ...props}) => <h1 style={{fontSize:'84px', fontWeight:300, letterSpacing:'-4px', marginBottom:'48px', lineHeight:1.1, wordBreak:'break-word', color:'#0f172a', fontFamily:'Georgia, serif'}} {...props} />,
-            h2: ({node, ...props}) => <h2 style={{fontSize:'48px', fontWeight:400, letterSpacing:'-1px', marginBottom:'32px', lineHeight:1.2, wordBreak:'break-word', color:'#334155'}} {...props} />,
-            p:  ({node, ...props}) => <p  style={{fontSize:'32px', fontWeight:300, marginBottom:'24px', lineHeight:1.6, wordBreak:'break-word', color:'#475569', maxWidth:'1200px'}} {...props} />,
-            ul: ({node, ...props}) => <ul style={{listStyle:'none', padding:0, margin:'32px 0', width:'100%', maxWidth:'1200px'}} {...props} />,
-            li: ({node, ...props}) => (
-              <li style={{display:'flex', alignItems:'flex-start', gap:'24px', marginBottom:'20px', fontSize:'28px', fontWeight:400, wordBreak:'break-word', color:'#1e293b'}}>
-                <span style={{color:'#94a3b8', fontSize:'24px', marginTop:'2px'}}>—</span>
-                <span {...props} />
-              </li>
-            ),
-            img: ({node, ...props}) => <img style={{width:'350px', height:'350px', objectFit:'cover', margin:'0 0 32px 48px', mixBlendMode:'multiply', float:'right'}} {...props} />
-          }}
-        >{currentSlide}</ReactMarkdown>
-      </div>
-    </motion.div>
-  );
+        
+        {imgSrc && (
+          <div className="w-[45%] h-full relative z-0 flex-shrink-0">
+            <img src={imgSrc} className="absolute inset-0 w-full h-full object-cover grayscale opacity-90" alt="Minimalist visual" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#fdfdfd] to-transparent w-32 left-0" />
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-950 text-white overflow-hidden font-sans select-none">

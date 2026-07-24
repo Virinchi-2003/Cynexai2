@@ -55,13 +55,13 @@ export async function generateAIMaterials(
 
   let themeInstruction = "";
   if (theme === 'modern-dark') {
-    themeInstruction = "The presentation theme is 'Modern Dark'. Images should have a futuristic, sleek, or cyberpunk vibe. Place images on the RIGHT side by adding `![alt](https://source.unsplash.com/800x600/?futuristic,sleek,<keywords>)` at the END of the slide content.";
+    themeInstruction = "The presentation theme is 'Modern Dark'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/futuristic%20<keywords>?width=800&height=1080&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
   } else if (theme === 'glassmorphism') {
-    themeInstruction = "The presentation theme is 'Glassmorphism'. Images should be vibrant, colorful, and abstract. Place images at the TOP by adding `![alt](https://source.unsplash.com/800x600/?vibrant,abstract,<keywords>)` right after the slide title.";
+    themeInstruction = "The presentation theme is 'Glassmorphism'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/abstract%20vibrant%20<keywords>?width=1600&height=900&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
   } else if (theme === 'retro') {
-    themeInstruction = "The presentation theme is 'Retro Mac'. Images should be nostalgic, 90s, pixelated, or retro tech. Place images on the LEFT side by adding `![alt](https://source.unsplash.com/800x600/?retro,90s,vintage,<keywords>)` right after the slide title.";
+    themeInstruction = "The presentation theme is 'Retro Mac'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/90s%20retro%20<keywords>?width=600&height=800&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
   } else if (theme === 'minimalist') {
-    themeInstruction = "The presentation theme is 'Minimalist'. Images should be clean, white-space heavy, and simple. Place images on the RIGHT side by adding `![alt](https://source.unsplash.com/800x600/?minimalist,clean,<keywords>)` at the END of the slide content.";
+    themeInstruction = "The presentation theme is 'Minimalist'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/minimalist%20clean%20<keywords>?width=800&height=1080&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
   }
 
   const defaultPrompt = `You are an expert instructor creating a live class presentation.
