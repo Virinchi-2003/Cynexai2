@@ -20,6 +20,7 @@ export default function TeacherCMS() {
   // AI Settings Modal
   const [showAiSettings, setShowAiSettings] = useState<any | null>(null); // the class object
   const [selectedTheme, setSelectedTheme] = useState('modern-dark');
+  const [selectedContentStyle, setSelectedContentStyle] = useState('storytelling');
 
   const user = getCurrentUser();
   const navigate = useNavigate();
@@ -63,7 +64,7 @@ export default function TeacherCMS() {
     localStorage.setItem('cynexai_live_theme', selectedTheme);
     
     try {
-      const aiContent = await generateAIMaterials(title, description);
+      const aiContent = await generateAIMaterials(title, description, selectedTheme, selectedContentStyle);
       await updateClassMaterials(classId, aiContent.ppt, aiContent.script, aiContent.keypoints);
       await fetchModules();
     } catch (err) {
@@ -230,6 +231,19 @@ export default function TeacherCMS() {
                     <option value="glassmorphism">Glassmorphism (Vibrant, dynamic)</option>
                     <option value="retro">Retro Mac (Nostalgic 90s OS)</option>
                     <option value="minimalist">Minimalist (Clean, elegant reading)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">AI Content Style</label>
+                  <select
+                    value={selectedContentStyle}
+                    onChange={e => setSelectedContentStyle(e.target.value)}
+                    className="w-full bg-white border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  >
+                    <option value="storytelling">Storytelling (Narrative-driven, examples)</option>
+                    <option value="technical">Technical (Precise, code-heavy)</option>
+                    <option value="academic">Academic (Formal, structured)</option>
+                    <option value="standard">Standard (Clear & Informative)</option>
                   </select>
                 </div>
                 <p className="text-xs text-slate-500 font-medium">

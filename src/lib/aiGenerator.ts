@@ -36,20 +36,46 @@ async function callGroq(prompt: string): Promise<string> {
  */
 export async function generateAIMaterials(
   title: string,
-  description: string = ''
+  description: string = '',
+  theme: string = 'modern-dark',
+  contentStyle: string = 'standard'
 ): Promise<{ ppt: string; keypoints: string; script: string; studyGuide: string }> {
   // Read teacher's custom system prompt from settings (falls back to default)
   const SLIDE_PROMPT_KEY = 'cynexai_slide_system_prompt_v2';
+  
+  let styleInstruction = "Be clear and informative.";
+  if (contentStyle === 'storytelling') {
+    styleInstruction = "Use a highly engaging, narrative storytelling approach. Provide rich real-world examples, analogies, and a compelling arc for every slide. Keep the audience hooked with a story.";
+  } else if (contentStyle === 'technical') {
+    styleInstruction = "Use a highly technical, precise, and structured approach. Include code snippets, strict definitions, and deep technical details.";
+  } else if (contentStyle === 'academic') {
+    styleInstruction = "Use a formal, academic, and structured tone. Focus on theory, citations (if applicable), and rigorous explanations.";
+  }
+
+  let themeInstruction = "";
+  if (theme === 'modern-dark') {
+    themeInstruction = "The presentation theme is 'Modern Dark'. Images should have a futuristic, sleek, or cyberpunk vibe. Place images on the RIGHT side by adding `![alt](https://source.unsplash.com/800x600/?futuristic,sleek,<keywords>)` at the END of the slide content.";
+  } else if (theme === 'glassmorphism') {
+    themeInstruction = "The presentation theme is 'Glassmorphism'. Images should be vibrant, colorful, and abstract. Place images at the TOP by adding `![alt](https://source.unsplash.com/800x600/?vibrant,abstract,<keywords>)` right after the slide title.";
+  } else if (theme === 'retro') {
+    themeInstruction = "The presentation theme is 'Retro Mac'. Images should be nostalgic, 90s, pixelated, or retro tech. Place images on the LEFT side by adding `![alt](https://source.unsplash.com/800x600/?retro,90s,vintage,<keywords>)` right after the slide title.";
+  } else if (theme === 'minimalist') {
+    themeInstruction = "The presentation theme is 'Minimalist'. Images should be clean, white-space heavy, and simple. Place images on the RIGHT side by adding `![alt](https://source.unsplash.com/800x600/?minimalist,clean,<keywords>)` at the END of the slide content.";
+  }
+
   const defaultPrompt = `You are an expert instructor creating a live class presentation.
 
 Class title: "{{title}}"
 {{description}}
 
+CONTENT STYLE: ${styleInstruction}
+THEME AND LAYOUT: ${themeInstruction}
+
 CRITICAL: Output EXACTLY 4 sections separated by "---SPLIT---" (use this separator NOWHERE else).
 
 SECTION 1 - PRESENTATION SLIDES (Markdown):
 - Generate EXACTLY 12 detailed, high-quality slides covering the topics outlined in the description.
-- DO NOT include any images, photos, or ![] markdown whatsoever.
+- INCLUDE exactly ONE relevant image per slide using the Unsplash source URL pattern provided in the THEME AND LAYOUT instructions. Replace <keywords> with 2-3 highly specific keywords that accurately resemble the slide content.
 - Each slide MUST be separated by exactly "---" on its own line.
 - Slide 1: Title slide with # Title and a descriptive tagline.
 - Slides 2-11: Deep dive into the subject matter. Use # for slide title, followed by 4-6 bullet points. Each bullet point should be insightful and informative (not just a few words).

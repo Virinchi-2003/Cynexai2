@@ -250,7 +250,7 @@ export default function PresentationView() {
                   <span {...props} />
                 </li>
               ),
-              img: ({node, ...props}) => <img style={{border:'4px solid #000', boxShadow:'8px 8px 0 #000', maxHeight:'300px', objectFit:'cover', margin:'0 auto 24px'}} {...props} />
+              img: ({node, ...props}) => <img style={{border:'4px solid #000', boxShadow:'8px 8px 0 #000', width:'300px', height:'220px', objectFit:'cover', float:'left', marginRight:'32px', marginBottom:'24px'}} {...props} />
             }}
           >{currentSlide}</ReactMarkdown>
         </div>
@@ -284,7 +284,7 @@ export default function PresentationView() {
                 <span {...props} />
               </li>
             ),
-            img: ({node, ...props}) => <img style={{borderRadius:'16px', border:'1px solid #334155', boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.5)', maxHeight:'400px', objectFit:'cover', margin:'0 0 32px 0'}} {...props} />
+            img: ({node, ...props}) => <img style={{borderRadius:'16px', border:'1px solid #334155', boxShadow:'0 25px 50px -12px rgba(0, 0, 0, 0.5)', width:'400px', height:'300px', objectFit:'cover', float:'right', marginLeft:'40px', marginBottom:'32px'}} {...props} />
           }}
         >{currentSlide}</ReactMarkdown>
       </div>
@@ -321,7 +321,7 @@ export default function PresentationView() {
                   <span {...props} />
                 </li>
               ),
-              img: ({node, ...props}) => <img style={{borderRadius:'24px', border:'2px solid rgba(255,255,255,0.4)', boxShadow:'0 16px 40px rgba(0,0,0,0.2)', maxHeight:'350px', objectFit:'cover', margin:'0 auto 40px'}} {...props} />
+              img: ({node, ...props}) => <img style={{borderRadius:'24px', border:'2px solid rgba(255,255,255,0.4)', boxShadow:'0 16px 40px rgba(0,0,0,0.2)', width:'100%', height:'280px', objectFit:'cover', margin:'0 0 32px 0'}} {...props} />
             }}
           >{currentSlide}</ReactMarkdown>
         </div>
@@ -353,7 +353,7 @@ export default function PresentationView() {
                 <span {...props} />
               </li>
             ),
-            img: ({node, ...props}) => <img style={{maxHeight:'400px', objectFit:'cover', margin:'0 0 48px 0', mixBlendMode:'multiply'}} {...props} />
+            img: ({node, ...props}) => <img style={{width:'350px', height:'350px', objectFit:'cover', margin:'0 0 32px 48px', mixBlendMode:'multiply', float:'right'}} {...props} />
           }}
         >{currentSlide}</ReactMarkdown>
       </div>
