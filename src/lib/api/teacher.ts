@@ -226,6 +226,22 @@ export async function updateClassMaterials(classId: string, ppt: string, script:
   }
 }
 
+export async function createClass(moduleId: string, title: string, description: string): Promise<void> {
+  try {
+    const maxRes = await executeWithRetry("SELECT MAX(order_index) as max_idx FROM classes WHERE module_id = ?", [moduleId]);
+    const maxIdx = maxRes.rows[0]?.max_idx || 0;
+    const orderIndex = Number(maxIdx) + 1;
+    
+    await executeWithRetry(
+      "INSERT INTO classes (id, module_id, title, description, type, status, order_index) VALUES (?, ?, ?, ?, 'live', 'upcoming', ?)",
+      [`cls_${Date.now()}`, moduleId, title, description, orderIndex]
+    );
+  } catch (e) {
+    console.error("Failed to create class", e);
+    throw e;
+  }
+}
+
 export async function updateClassDetails(classId: string, title: string, description: string): Promise<void> {
   try {
     await executeWithRetry(

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio } from 'lucide-react';
-import { getTeacherCMSModules, getClassesForModules } from '../../lib/api/teacher';
+import { getTeacherCMSModules, getClassesForModules, createClass } from '../../lib/api/teacher';
 import { getCurrentUser } from '../../lib/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,6 +10,11 @@ export default function TeacherCMS() {
   const [modules, setModules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedModuleId, setSelectedModuleId] = useState<string>('all');
+  
+  const [addingToModule, setAddingToModule] = useState<string | null>(null);
+  const [newClassTitle, setNewClassTitle] = useState('');
+  const [newClassDesc, setNewClassDesc] = useState('');
+
   const user = getCurrentUser();
   const navigate = useNavigate();
 
@@ -46,7 +51,16 @@ export default function TeacherCMS() {
 
   const generateAiContent = async (classId: string, title: string, topics: string) => {
     // Navigate to PresentationView where the AI generation happens
-    navigate(`/teacher/presentation?classId=${classId}`);
+    navigate(`/teacher/presentation-view?classId=${classId}`);
+  };
+
+  const handleAddClass = async (moduleId: string) => {
+    if (!newClassTitle.trim()) return;
+    await createClass(moduleId, newClassTitle, newClassDesc);
+    setAddingToModule(null);
+    setNewClassTitle('');
+    setNewClassDesc('');
+    fetchModules();
   };
 
   if (loading) return <div className="p-8 text-erp-text">Loading Curriculum...</div>;
@@ -88,7 +102,30 @@ export default function TeacherCMS() {
                     <h2 className="text-xl font-bold text-erp-text">{mod.title}</h2>
                     <p className="text-sm font-bold text-erp-text/50">{mod.description}</p>
                   </div>
+                  <Button onClick={() => setAddingToModule(mod.id)} variant="outline" className="h-9 px-3 text-xs">
+                    <Plus className="w-4 h-4 mr-1" /> Add Class
+                  </Button>
                 </div>
+                
+                {addingToModule === mod.id && (
+                  <div className="mb-4 bg-erp-surface p-4 rounded-xl border border-erp-border space-y-3">
+                    <input 
+                      value={newClassTitle} onChange={e => setNewClassTitle(e.target.value)} 
+                      placeholder="Class Title" 
+                      className="w-full bg-white border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text" 
+                    />
+                    <textarea 
+                      value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} 
+                      placeholder="Description (Optional)" 
+                      className="w-full bg-white border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text resize-none" 
+                      rows={2} 
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" className="h-9 text-xs" onClick={() => setAddingToModule(null)}>Cancel</Button>
+                      <Button className="h-9 text-xs" onClick={() => handleAddClass(mod.id)}>Save Class</Button>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="bg-erp-surface rounded-xl border border-erp-border p-4 space-y-3">
                   {mod.classes.length === 0 ? (
