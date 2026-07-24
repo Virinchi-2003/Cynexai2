@@ -56,6 +56,7 @@ export default function ClassFlow() {
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const container = useRef<HTMLDivElement>(null);
   const notesRef = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -115,13 +116,13 @@ export default function ClassFlow() {
   }, []);
 
   const handleDownloadNotes = () => {
-    if (!classData?.ai_study_guide || !notesRef.current) return;
-    const element = notesRef.current;
+    if (!classData?.ai_study_guide || !printRef.current) return;
+    const element = printRef.current;
     const opt = {
-      margin:       10,
+      margin:       [15, 15, 15, 15],
       filename:     `${classData.title.replace(/[^a-zA-Z0-9]/g, '_')}_Study_Guide.pdf`,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
+      html2canvas:  { scale: 2, useCORS: true, letterRendering: true, windowWidth: 800 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     html2pdf().set(opt).from(element).save();
@@ -569,6 +570,63 @@ export default function ClassFlow() {
           </div>
         )}
 
+      </div>
+
+      {/* Hidden off-screen container strictly styled for gorgeous PDF generation */}
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <div 
+          ref={printRef} 
+          className="bg-white text-slate-900" 
+          style={{ width: '800px', padding: '40px', fontFamily: '"Inter", system-ui, sans-serif' }}
+        >
+          {/* Custom PDF Header */}
+          <div className="border-b-4 border-indigo-600 pb-6 mb-8 text-center" style={{ pageBreakAfter: 'avoid' }}>
+            <h1 className="text-4xl font-black text-indigo-600 tracking-tight mb-2">CYNEXAI Study Guide</h1>
+            <h2 className="text-2xl font-bold text-slate-800">{classData?.title}</h2>
+          </div>
+
+          <ReactMarkdown
+            components={{
+              h1: ({node, ...props}) => <h1 className="text-3xl font-black text-slate-900 mb-6 tracking-tight mt-10" style={{ pageBreakAfter: 'avoid' }} {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-2xl font-black text-slate-800 mt-10 mb-4 border-b border-slate-200 pb-2 tracking-tight" style={{ pageBreakAfter: 'avoid' }} {...props} />,
+              h3: ({node, ...props}) => <h3 className="text-xl font-bold text-indigo-600 mt-8 mb-3" style={{ pageBreakAfter: 'avoid' }} {...props} />,
+              p: ({node, ...props}) => <p className="text-base text-slate-700 leading-relaxed mb-5" {...props} />,
+              strong: ({node, ...props}) => <strong className="font-black text-slate-900" {...props} />,
+              ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-5 space-y-2 marker:text-indigo-600" {...props} />,
+              ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-5 space-y-2 marker:text-indigo-600 font-bold" {...props} />,
+              li: ({node, ...props}) => <li className="text-base text-slate-700 leading-relaxed" {...props} />,
+              code: ({node, inline, className, children, ...props}: any) => {
+                return inline ? (
+                  <code className="px-1.5 py-0.5 rounded-md bg-slate-100 text-pink-600 text-sm font-mono font-bold" {...props}>
+                    {children}
+                  </code>
+                ) : (
+                  <div className="my-6 rounded-xl border border-slate-200 bg-[#f8fafc] shadow-sm overflow-hidden" style={{ pageBreakInside: 'avoid' }}>
+                    <div className="flex items-center px-4 py-2 bg-slate-200/50 border-b border-slate-200">
+                      <div className="flex gap-1.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                      </div>
+                    </div>
+                    <pre className="p-5 text-sm font-mono text-slate-800 whitespace-pre-wrap leading-relaxed break-words">
+                      <code {...props}>{children}</code>
+                    </pre>
+                  </div>
+                );
+              },
+              blockquote: ({node, ...props}) => (
+                <blockquote 
+                  className="border-l-4 border-indigo-500 bg-indigo-50 p-5 rounded-r-xl my-6 text-slate-800 italic text-base" 
+                  style={{ pageBreakInside: 'avoid' }} 
+                  {...props} 
+                />
+              )
+            }}
+          >
+            {classData?.ai_study_guide || ''}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );
