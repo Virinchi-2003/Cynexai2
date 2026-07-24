@@ -124,9 +124,9 @@ export default function ClassEditor() {
       setAiKeypoints(keypoints);
       setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints, ai_study_guide: studyGuide });
       showAlert('AI Materials generated and saved successfully!', 'success');
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      showAlert('Failed to generate AI materials. Please try again.', 'error');
+      showAlert(error.message === 'QUOTA_EXCEEDED' ? 'AI quota exceeded. Try again later.' : (error.message || 'Failed to generate AI materials. Please try again.'), 'error');
     } finally {
       setGenerating(false);
     }

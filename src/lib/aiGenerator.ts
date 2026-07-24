@@ -86,16 +86,16 @@ Write a comprehensive, detailed study guide formatted in Markdown designed speci
     const content = await callGroq(prompt);
     const parts = content.split('---SPLIT---');
 
-    if (parts.length >= 4) {
+    if (parts.length >= 1) {
       return {
-        ppt: parts[0].trim(),
-        keypoints: parts[1].trim(),
-        script: parts[2].trim(),
-        studyGuide: parts[3].trim(),
+        ppt: parts[0]?.trim() || '',
+        keypoints: parts[1]?.trim() || '',
+        script: parts[2]?.trim() || '',
+        studyGuide: parts[3]?.trim() || '',
       };
     }
 
-    throw new Error('AI did not return 4 parts');
+    throw new Error('AI returned empty content');
   } catch (error: any) {
     console.error('AI Material generation failed:', error);
     // Show a user-friendly message for quota errors
