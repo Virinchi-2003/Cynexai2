@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio, RefreshCw, Loader2 } from 'lucide-react';
+import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio, RefreshCw, Loader2, Settings2, X } from 'lucide-react';
 import { getTeacherCMSModules, getClassesForModules, createClass, updateClassMaterials } from '../../lib/api/teacher';
 import { generateAIMaterials } from '../../lib/aiGenerator';
 import { getCurrentUser } from '../../lib/auth';
@@ -16,6 +16,10 @@ export default function TeacherCMS() {
   const [newClassTitle, setNewClassTitle] = useState('');
   const [newClassDesc, setNewClassDesc] = useState('');
   const [generatingForClass, setGeneratingForClass] = useState<string | null>(null);
+  
+  // AI Settings Modal
+  const [showAiSettings, setShowAiSettings] = useState<any | null>(null); // the class object
+  const [selectedTheme, setSelectedTheme] = useState('modern-dark');
 
   const user = getCurrentUser();
   const navigate = useNavigate();
@@ -52,7 +56,12 @@ export default function TeacherCMS() {
   }
 
   const generateAiContent = async (classId: string, title: string, description: string) => {
+    setShowAiSettings(null); // Close modal
     setGeneratingForClass(classId);
+    
+    // Set theme for presentation view
+    localStorage.setItem('cynexai_live_theme', selectedTheme);
+    
     try {
       const aiContent = await generateAIMaterials(title, description);
       await updateClassMaterials(classId, aiContent.ppt, aiContent.script, aiContent.keypoints);
@@ -167,18 +176,18 @@ export default function TeacherCMS() {
                                 <FileText className="w-4 h-4 mr-2" /> View Slides
                               </Button>
                               <Button 
-                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
+                                onClick={() => setShowAiSettings(cls)}
                                 variant="ghost" className="h-9 px-3 text-xs bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200"
                                 title="Regenerate Slides (Applies new AI Settings)"
                                 disabled={generatingForClass === cls.id}
                               >
-                                {generatingForClass === cls.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                                {generatingForClass === cls.id ? 'Generating...' : 'Regenerate'}
+                                {generatingForClass === cls.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Settings2 className="w-4 h-4 mr-2" />}
+                                {generatingForClass === cls.id ? 'Generating...' : 'AI Settings & Regenerate'}
                               </Button>
                             </>
                           ) : (
                             <Button 
-                              onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
+                              onClick={() => setShowAiSettings(cls)}
                               variant="ghost" className="h-9 px-3 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200"
                               disabled={generatingForClass === cls.id}
                             >
@@ -193,6 +202,48 @@ export default function TeacherCMS() {
                 </div>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* AI Settings Modal */}
+        {showAiSettings && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-erp-surface rounded-2xl w-full max-w-md border border-erp-border overflow-hidden shadow-2xl">
+              <div className="flex items-center justify-between p-5 border-b border-erp-border bg-white">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-indigo-500" />
+                  <h3 className="font-bold text-erp-text">AI Generation Settings</h3>
+                </div>
+                <button onClick={() => setShowAiSettings(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4 bg-slate-50/50">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PPT Theme Template</label>
+                  <select
+                    value={selectedTheme}
+                    onChange={e => setSelectedTheme(e.target.value)}
+                    className="w-full bg-white border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                  >
+                    <option value="modern-dark">Modern Dark (Sleek, tech-focused)</option>
+                    <option value="glassmorphism">Glassmorphism (Vibrant, dynamic)</option>
+                    <option value="retro">Retro Mac (Nostalgic 90s OS)</option>
+                    <option value="minimalist">Minimalist (Clean, elegant reading)</option>
+                  </select>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  Settings will apply to the upcoming generation for <strong>{showAiSettings.title}</strong>. 
+                  The generation takes about 5-10 seconds and happens in the background.
+                </p>
+              </div>
+              <div className="p-4 border-t border-erp-border flex justify-end gap-2 bg-white">
+                <Button variant="ghost" onClick={() => setShowAiSettings(null)}>Cancel</Button>
+                <Button onClick={() => generateAiContent(showAiSettings.id, showAiSettings.title, showAiSettings.description)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6">
+                  <Sparkles className="w-4 h-4 mr-2" /> Start Generation
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </div>
