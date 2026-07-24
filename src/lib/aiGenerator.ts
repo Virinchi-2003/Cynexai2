@@ -54,14 +54,16 @@ export async function generateAIMaterials(
   }
 
   let themeInstruction = "";
+  const loremFlickrBase = "Replace <keywords> with 1-2 descriptive words joined by a comma, NO SPACES (e.g. 'computer,code'). IMPORTANT: Replace {{SLIDE_NUMBER}} with the actual slide number (1 to 12) so each slide gets a unique image.";
+  
   if (theme === 'modern-dark') {
-    themeInstruction = "The presentation theme is 'Modern Dark'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/futuristic%20<keywords>?width=800&height=1080&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
+    themeInstruction = `The presentation theme is 'Modern Dark'. Include a stock photo by adding \`![alt](https://loremflickr.com/800/1080/<keywords>?lock={{SLIDE_NUMBER}})\` anywhere in the slide. ${loremFlickrBase}`;
   } else if (theme === 'glassmorphism') {
-    themeInstruction = "The presentation theme is 'Glassmorphism'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/abstract%20vibrant%20<keywords>?width=1600&height=900&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
+    themeInstruction = `The presentation theme is 'Glassmorphism'. Include a stock photo by adding \`![alt](https://loremflickr.com/1600/900/<keywords>?lock={{SLIDE_NUMBER}})\` anywhere in the slide. ${loremFlickrBase}`;
   } else if (theme === 'retro') {
-    themeInstruction = "The presentation theme is 'Retro Mac'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/90s%20retro%20<keywords>?width=600&height=800&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
+    themeInstruction = `The presentation theme is 'Retro Mac'. Include a stock photo by adding \`![alt](https://loremflickr.com/600/800/<keywords>?lock={{SLIDE_NUMBER}})\` anywhere in the slide. ${loremFlickrBase}`;
   } else if (theme === 'minimalist') {
-    themeInstruction = "The presentation theme is 'Minimalist'. Include an image by adding `![alt](https://image.pollinations.ai/prompt/minimalist%20clean%20<keywords>?width=800&height=1080&nologo=true)` anywhere in the slide. Replace <keywords> with 2-3 descriptive words separated by %20.";
+    themeInstruction = `The presentation theme is 'Minimalist'. Include a stock photo by adding \`![alt](https://loremflickr.com/800/1080/<keywords>?lock={{SLIDE_NUMBER}})\` anywhere in the slide. ${loremFlickrBase}`;
   }
 
   const defaultPrompt = `You are an expert instructor creating a live class presentation.
