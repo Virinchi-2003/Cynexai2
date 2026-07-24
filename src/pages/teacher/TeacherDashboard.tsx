@@ -10,20 +10,26 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const FULL_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const parseCourseJSON = (str: string) => {
-  if (!str) return '';
+  if (!str || str === '[]') return '';
   try {
     const parsed = JSON.parse(str);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed.join(', ') : str;
+    if (Array.isArray(parsed)) {
+      return parsed.length > 0 ? parsed.join(', ') : '';
+    }
+    return str;
   } catch { return str; }
 };
 
 const parseBatchJSON = (str: string) => {
-  if (!str) return '';
+  if (!str || str === '[]') return '';
   try {
     const parsed = JSON.parse(str);
-    if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+    if (Array.isArray(parsed)) {
+       return parsed.length > 0 ? parsed.join(', ') : '';
+    }
+    if (typeof parsed === 'object' && parsed !== null) {
        const allBatches = Object.values(parsed).flat() as string[];
-       return [...new Set(allBatches)].join(', ');
+       return allBatches.length > 0 ? [...new Set(allBatches)].join(', ') : '';
     }
     return str;
   } catch { return str; }
@@ -178,10 +184,10 @@ export default function TeacherDashboard() {
                 <div className="relative z-10">
                   <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest">{nextClass.batchName}</p>
+                      <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest">{nextClass.batchName || 'Unassigned Batch'}</p>
                       <span className="text-xs font-bold text-white bg-indigo-600 px-3 py-1 rounded-full">{nextClass.time}</span>
                     </div>
-                    <h3 className="text-2xl font-display font-bold text-white mb-2">{nextClass.course}</h3>
+                    <h3 className="text-2xl font-display font-bold text-white mb-2">{nextClass.course || 'Ad-hoc Class'}</h3>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -347,8 +353,8 @@ export default function TeacherDashboard() {
                           <span className="text-xs font-bold text-erp-text/50">{slot.time}</span>
                           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusColor}`}>{status}</span>
                         </div>
-                        <h3 className="font-bold text-erp-text mb-1">{slot.course}</h3>
-                        <p className="text-xs font-medium text-indigo-600">{slot.batchName}</p>
+                        <h3 className="font-bold text-erp-text mb-1">{slot.course || 'Ad-hoc Class'}</h3>
+                        <p className="text-xs font-medium text-indigo-600">{slot.batchName || 'Unassigned Batch'}</p>
                         
                         {canStart && (
                           <Button 
