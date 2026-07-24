@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getClassForPresentation } from '../../lib/api/teacher';
 import ReactMarkdown from 'react-markdown';
-import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2, Undo2, Redo2, Minus, Square, Circle as CircleIcon, ArrowRight as ArrowIcon, Diamond, Database } from 'lucide-react';
+import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2, Undo2, Redo2, Minus, Square, Circle as CircleIcon, ArrowRight as ArrowIcon, Diamond, Database, FilePlus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCode, Language, UploadedFile } from '../../lib/compiler';
 import Editor from '@monaco-editor/react';
@@ -43,6 +43,7 @@ export default function PresentationView() {
   const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
   const [files, setFiles] = useState<UploadedFile[]>([]);
+  const [activeFile, setActiveFile] = useState<string | null>(null);
   
   // Draw vs Type
   const [isDrawMode, setIsDrawMode] = useState(false);
@@ -117,9 +118,30 @@ export default function PresentationView() {
     if (c) setCode(c);
     const o = localStorage.getItem('cynexai_live_output');
     if (o) setOutput(o);
+    
+    const af = localStorage.getItem('cynexai_live_active_file');
+    if (af) setActiveFile(af === 'null' ? null : af);
+    const fs = localStorage.getItem('cynexai_live_files');
+    if (fs) {
+      try { setFiles(JSON.parse(fs)); } catch (e) {}
+    }
 
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
+
+  const updateFiles = (newFiles: UploadedFile[]) => {
+    setFiles(newFiles);
+    try {
+      localStorage.setItem('cynexai_live_files', JSON.stringify(newFiles));
+    } catch (e) {
+      // Ignore quota exceeded
+    }
+  };
+
+  const updateActiveFile = (f: string | null) => {
+    setActiveFile(f);
+    localStorage.setItem('cynexai_live_active_file', f === null ? 'null' : f);
+  };
 
   // --- DRAWING LOGIC ---
 
@@ -313,10 +335,29 @@ export default function PresentationView() {
     localStorage.setItem('cynexai_live_mode', m);
   };
 
-  const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newCode = e.target.value;
-    setCode(newCode);
-    localStorage.setItem('cynexai_live_code', newCode);
+  const handleEditorChange = (v: string | undefined) => {
+    const val = v || '';
+    if (activeFile === null) {
+      setCode(val);
+      localStorage.setItem('cynexai_live_code', val);
+    } else {
+      const newFiles = files.map(f => f.name === activeFile ? { ...f, content: val } : f);
+      updateFiles(newFiles);
+    }
+  };
+
+  const getEditorLanguage = () => {
+    if (activeFile === null) return language === 'sqlite3' ? 'sql' : language;
+    if (activeFile.endsWith('.py')) return 'python';
+    if (activeFile.endsWith('.js')) return 'javascript';
+    if (activeFile.endsWith('.ts')) return 'typescript';
+    if (activeFile.endsWith('.json')) return 'json';
+    if (activeFile.endsWith('.html')) return 'html';
+    if (activeFile.endsWith('.css')) return 'css';
+    if (activeFile.endsWith('.java')) return 'java';
+    if (activeFile.endsWith('.sql')) return 'sql';
+    if (activeFile.endsWith('.csv')) return 'csv';
+    return 'plaintext';
   };
 
   const handleLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -327,22 +368,41 @@ export default function PresentationView() {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-    Array.from(e.target.files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const content = ev.target?.result as string;
-        setFiles(prev => {
-          if (prev.find(f => f.name === file.name)) return prev;
-          return [...prev, { name: file.name, content }];
-        });
-      };
-      reader.readAsText(file);
+    const filePromises = Array.from(e.target.files).map(file => {
+      return new Promise<UploadedFile>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve({ name: file.name, content: ev.target?.result as string });
+        reader.readAsText(file);
+      });
     });
+    
+    Promise.all(filePromises).then(newUploadedFiles => {
+      let currentFiles = [...files];
+      newUploadedFiles.forEach(nf => {
+        if (!currentFiles.find(f => f.name === nf.name)) currentFiles.push(nf);
+      });
+      updateFiles(currentFiles);
+    });
+    
     e.target.value = '';
   };
 
+  const createNewFile = () => {
+    const name = prompt('Enter new file name (e.g. utils.py):');
+    if (!name) return;
+    if (files.some(f => f.name === name)) {
+      alert('File already exists');
+      return;
+    }
+    const newFiles = [...files, { name, content: '' }];
+    updateFiles(newFiles);
+    updateActiveFile(name);
+  };
+
   const removeFile = (name: string) => {
-    setFiles(prev => prev.filter(f => f.name !== name));
+    const newFiles = files.filter(f => f.name !== name);
+    if (activeFile === name) updateActiveFile(null);
+    updateFiles(newFiles);
   };
 
   const runCode = async () => {
@@ -719,25 +779,48 @@ export default function PresentationView() {
           <div className="absolute inset-0 flex flex-col lg:flex-row">
             
             {/* Left Sidebar: Files Panel */}
-            <div className="w-full lg:w-64 bg-[#0a0a0f] border-r border-slate-700/50 flex flex-col">
+            <div className="w-full lg:w-64 bg-[#0a0a0f] border-r border-slate-700/50 flex flex-col z-20" style={{ pointerEvents: 'auto' }}>
               <div className="px-4 py-3 bg-slate-800/80 border-b border-slate-700/50 flex justify-between items-center">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Files</span>
-                <label className="cursor-pointer text-indigo-400 hover:text-indigo-300">
-                  <Upload className="w-4 h-4" />
-                  <input type="file" multiple className="hidden" onChange={handleFileUpload} />
-                </label>
+                <div className="flex items-center gap-2">
+                  <button onClick={createNewFile} className="text-indigo-400 hover:text-indigo-300" title="New File">
+                    <FilePlus className="w-4 h-4" />
+                  </button>
+                  <label className="cursor-pointer text-indigo-400 hover:text-indigo-300" title="Upload File">
+                    <Upload className="w-4 h-4" />
+                    <input type="file" multiple className="hidden" onChange={handleFileUpload} />
+                  </label>
+                </div>
               </div>
               <div className="flex-1 overflow-y-auto p-2">
+                
+                {/* Main Script */}
+                <div 
+                  onClick={() => updateActiveFile(null)} 
+                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${activeFile === null ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white/5 text-slate-300'}`}
+                >
+                  <FileText className="w-4 h-4 flex-shrink-0" />
+                  <span className="text-sm truncate">main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'java' ? 'java' : 'sql'}</span>
+                </div>
+
+                <div className="h-px bg-slate-700/50 my-2 mx-2" />
+
                 {files.length === 0 ? (
-                  <div className="text-center p-4 text-slate-500 text-sm mt-4">
-                    <FileCode2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    Upload CSVs, JSON, or text files to use in your code.
+                  <div className="text-center p-4 text-slate-500 text-xs mt-2">
+                    Create or upload files.
                   </div>
                 ) : (
                   files.map(f => (
-                    <div key={f.name} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg group">
-                      <span className="text-sm text-slate-300 truncate pr-2">{f.name}</span>
-                      <button onClick={() => removeFile(f.name)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div 
+                      key={f.name} 
+                      onClick={() => updateActiveFile(f.name)}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-colors ${activeFile === f.name ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white/5 text-slate-300'}`}
+                    >
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <FileCode2 className="w-4 h-4 flex-shrink-0 opacity-70" />
+                        <span className="text-sm truncate">{f.name}</span>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); removeFile(f.name); }} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -751,10 +834,10 @@ export default function PresentationView() {
               <div className="absolute inset-0 z-0" style={{ pointerEvents: isDrawMode ? 'none' : 'auto' }}>
                 <Editor
                   height="100%"
-                  language={language === 'sqlite3' ? 'sql' : language}
+                  language={getEditorLanguage()}
                   theme="vs-dark"
-                  value={code}
-                  onChange={(v) => handleCodeChange({ target: { value: v || '' } } as any)}
+                  value={activeFile === null ? code : files.find(f => f.name === activeFile)?.content || ''}
+                  onChange={handleEditorChange}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 18,
