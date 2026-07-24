@@ -6,6 +6,7 @@ import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, Alert
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
 import ReactMarkdown from 'react-markdown';
+import html2pdf from 'html2pdf.js';
 import { PythonEditor } from '../../components/ui/erp/PythonEditor';
 
 
@@ -54,6 +55,7 @@ export default function ClassFlow() {
   const [liveSeconds, setLiveSeconds] = useState(0);
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const container = useRef<HTMLDivElement>(null);
+  const notesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!classId || !user) return;
@@ -113,14 +115,16 @@ export default function ClassFlow() {
   }, []);
 
   const handleDownloadNotes = () => {
-    if (!classData?.ai_study_guide) return;
-    const element = document.createElement("a");
-    const file = new Blob([classData.ai_study_guide], {type: 'text/markdown'});
-    element.href = URL.createObjectURL(file);
-    element.download = `${classData.title.replace(/[^a-zA-Z0-9]/g, '_')}_Study_Guide.md`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
+    if (!classData?.ai_study_guide || !notesRef.current) return;
+    const element = notesRef.current;
+    const opt = {
+      margin:       10,
+      filename:     `${classData.title.replace(/[^a-zA-Z0-9]/g, '_')}_Study_Guide.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    html2pdf().set(opt).from(element).save();
   };
 
   const handleSelectAnswer = (questionId: string, idx: number) => {
@@ -523,8 +527,9 @@ export default function ClassFlow() {
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-                <ReactMarkdown
-                  components={{
+                <div ref={notesRef} className="bg-white dark:bg-black p-2">
+                  <ReactMarkdown
+                    components={{
                     h1: ({node, ...props}) => <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-6 tracking-tight" {...props} />,
                     h2: ({node, ...props}) => <h2 className="text-xl font-black text-slate-800 dark:text-white mt-8 mb-4 border-b border-slate-100 dark:border-white/10 pb-2 tracking-tight" {...props} />,
                     h3: ({node, ...props}) => <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-6 mb-3" {...props} />,
@@ -558,6 +563,7 @@ export default function ClassFlow() {
                 >
                   {classData.ai_study_guide}
                 </ReactMarkdown>
+                </div>
               </div>
             </div>
           </div>
