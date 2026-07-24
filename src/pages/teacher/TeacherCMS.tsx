@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio, RefreshCw } from 'lucide-react';
-import { getTeacherCMSModules, getClassesForModules, createClass } from '../../lib/api/teacher';
+import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio, RefreshCw, Loader2 } from 'lucide-react';
+import { getTeacherCMSModules, getClassesForModules, createClass, updateClassMaterials } from '../../lib/api/teacher';
+import { generateAIMaterials } from '../../lib/aiGenerator';
 import { getCurrentUser } from '../../lib/auth';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +15,7 @@ export default function TeacherCMS() {
   const [addingToModule, setAddingToModule] = useState<string | null>(null);
   const [newClassTitle, setNewClassTitle] = useState('');
   const [newClassDesc, setNewClassDesc] = useState('');
+  const [generatingForClass, setGeneratingForClass] = useState<string | null>(null);
 
   const user = getCurrentUser();
   const navigate = useNavigate();
@@ -49,9 +51,22 @@ export default function TeacherCMS() {
     }
   }
 
-  const generateAiContent = async (classId: string, title: string, topics: string, forceRegenerate: boolean = false) => {
-    // Navigate to PresentationView where the AI generation happens
-    navigate(`/teacher/presentation-view?classId=${classId}${forceRegenerate ? '&forceRegenerate=true' : ''}`);
+  const generateAiContent = async (classId: string, title: string, description: string) => {
+    setGeneratingForClass(classId);
+    try {
+      const aiContent = await generateAIMaterials(title, description);
+      await updateClassMaterials(classId, aiContent.ppt, aiContent.script, aiContent.keypoints);
+      await fetchModules();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate materials. Please try again.');
+    } finally {
+      setGeneratingForClass(null);
+    }
+  };
+
+  const viewSlides = (classId: string) => {
+    window.open(`/teacher/presentation-view?classId=${classId}`, '_blank');
   };
 
   const handleAddClass = async (moduleId: string) => {
@@ -146,25 +161,29 @@ export default function TeacherCMS() {
                           {cls.ai_ppt_markdown ? (
                             <>
                               <Button 
-                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
+                                onClick={() => viewSlides(cls.id as string)}
                                 variant="ghost" className="h-9 px-3 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
                               >
                                 <FileText className="w-4 h-4 mr-2" /> View Slides
                               </Button>
                               <Button 
-                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string, true)}
+                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
                                 variant="ghost" className="h-9 px-3 text-xs bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200"
                                 title="Regenerate Slides (Applies new AI Settings)"
+                                disabled={generatingForClass === cls.id}
                               >
-                                <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
+                                {generatingForClass === cls.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                                {generatingForClass === cls.id ? 'Generating...' : 'Regenerate'}
                               </Button>
                             </>
                           ) : (
                             <Button 
                               onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
                               variant="ghost" className="h-9 px-3 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200"
+                              disabled={generatingForClass === cls.id}
                             >
-                              <Sparkles className="w-4 h-4 mr-2" /> Generate AI Slides
+                              {generatingForClass === cls.id ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                              {generatingForClass === cls.id ? 'Generating AI Slides...' : 'Generate AI Slides'}
                             </Button>
                           )}
                         </div>
