@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio } from 'lucide-react';
+import { BookOpen, Upload, FileText, Plus, Sparkles, Video, Radio, RefreshCw } from 'lucide-react';
 import { getTeacherCMSModules, getClassesForModules, createClass } from '../../lib/api/teacher';
 import { getCurrentUser } from '../../lib/auth';
 import { useNavigate } from 'react-router-dom';
@@ -49,9 +49,9 @@ export default function TeacherCMS() {
     }
   }
 
-  const generateAiContent = async (classId: string, title: string, topics: string) => {
+  const generateAiContent = async (classId: string, title: string, topics: string, forceRegenerate: boolean = false) => {
     // Navigate to PresentationView where the AI generation happens
-    navigate(`/teacher/presentation-view?classId=${classId}`);
+    navigate(`/teacher/presentation-view?classId=${classId}${forceRegenerate ? '&forceRegenerate=true' : ''}`);
   };
 
   const handleAddClass = async (moduleId: string) => {
@@ -144,12 +144,21 @@ export default function TeacherCMS() {
                         </div>
                         <div className="flex gap-2 w-full sm:w-auto">
                           {cls.ai_ppt_markdown ? (
-                            <Button 
-                              onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
-                              variant="ghost" className="h-9 px-3 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
-                            >
-                              <FileText className="w-4 h-4 mr-2" /> View Slides
-                            </Button>
+                            <>
+                              <Button 
+                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}
+                                variant="ghost" className="h-9 px-3 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                              >
+                                <FileText className="w-4 h-4 mr-2" /> View Slides
+                              </Button>
+                              <Button 
+                                onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string, true)}
+                                variant="ghost" className="h-9 px-3 text-xs bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200"
+                                title="Regenerate Slides (Applies new AI Settings)"
+                              >
+                                <RefreshCw className="w-4 h-4 mr-2" /> Regenerate
+                              </Button>
+                            </>
                           ) : (
                             <Button 
                               onClick={() => generateAiContent(cls.id as string, cls.title as string, cls.description as string)}

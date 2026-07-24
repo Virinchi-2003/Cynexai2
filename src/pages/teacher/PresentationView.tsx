@@ -101,15 +101,26 @@ export default function PresentationView() {
 
   const fetchSlides = async () => {
     if (!classId) { setLoading(false); return; }
+    
+    const forceRegenerate = searchParams.get('forceRegenerate') === 'true';
+
     try {
       const cls = await getClassForPresentation(classId);
-      if (cls && cls.ai_ppt_markdown) {
+      if (cls && cls.ai_ppt_markdown && !forceRegenerate) {
         setSlides(cls.ai_ppt_markdown.split('---').map((s: string) => s.trim()).filter(Boolean));
         setLoading(false);
       } else if (cls) {
         setIsGenerating(true);
         const aiContent = await generateAIMaterials(cls.title as string, cls.description as string);
         await updateClassMaterials(classId, aiContent.ppt, aiContent.script, aiContent.keypoints);
+        
+        // Remove forceRegenerate from URL to prevent loop on page refresh
+        if (forceRegenerate) {
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('forceRegenerate');
+          window.history.replaceState({}, '', newUrl.toString());
+        }
+
         setSlides(aiContent.ppt.split('---').map(s => s.trim()).filter(Boolean));
         setIsGenerating(false);
         setLoading(false);
