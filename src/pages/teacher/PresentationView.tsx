@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getClassForPresentation } from '../../lib/api/teacher';
 import ReactMarkdown from 'react-markdown';
-import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2 } from 'lucide-react';
+import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2, Undo2, Redo2, Minus, Square, Circle as CircleIcon, ArrowRight as ArrowIcon, Diamond, Database } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCode, Language, UploadedFile } from '../../lib/compiler';
 import Editor from '@monaco-editor/react';
 
-type DrawTool = 'pen' | 'eraser';
+type DrawTool = 'pen' | 'eraser' | 'line' | 'rect' | 'circle' | 'arrow' | 'diamond' | 'cylinder';
 type Theme = 'retro' | 'modern-dark' | 'glassmorphism' | 'minimalist';
 
 export default function PresentationView() {
@@ -67,13 +67,21 @@ export default function PresentationView() {
     }
   };
 
-  // Drawing State
+// Drawing State
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawTool, setDrawTool] = useState<DrawTool>('pen');
   const [drawColor, setDrawColor] = useState('#ef4444');
   const [drawSize, setDrawSize] = useState(4);
+  const startPoint = useRef<{ x: number; y: number } | null>(null);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
+  
+  // History for Undo/Redo & Live Preview
+  const historyRef = useRef<ImageData[]>([]);
+  const historyStepRef = useRef<number>(-1);
+  const snapshotBeforeDrawRef = useRef<ImageData | null>(null);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   useEffect(() => {
     if (classId) fetchSlides();
@@ -85,11 +93,20 @@ export default function PresentationView() {
       if (e.key === 'cynexai_live_slide' && e.newValue) setSlide(parseInt(e.newValue, 10));
       if (e.key === 'cynexai_live_mode' && e.newValue) setMode(e.newValue as 'slides' | 'code');
       if (e.key === 'cynexai_live_theme' && e.newValue) setTheme(e.newValue as Theme);
-      if (e.key === 'cynexai_live_clear_canvas') clearCanvas();
+      if (e.key === 'cynexai_live_clear_canvas') clearCanvas(false);
     };
     window.addEventListener('storage', handleStorage);
-    const s = localStorage.getItem('cynexai_live_slide');
-    if (s) setSlide(parseInt(s, 10));
+
+    const savedClassId = localStorage.getItem('cynexai_live_classId');
+    if (classId && savedClassId !== classId) {
+      setSlide(1);
+      localStorage.setItem('cynexai_live_slide', '1');
+      localStorage.setItem('cynexai_live_classId', classId);
+    } else {
+      const s = localStorage.getItem('cynexai_live_slide');
+      if (s) setSlide(parseInt(s, 10));
+    }
+    
     const m = localStorage.getItem('cynexai_live_mode');
     if (m) setMode(m as 'slides' | 'code');
     const t = localStorage.getItem('cynexai_live_theme');
@@ -103,6 +120,61 @@ export default function PresentationView() {
 
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
+
+  // --- DRAWING LOGIC ---
+
+  const saveHistoryState = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Discard any redo states
+    if (historyStepRef.current < historyRef.current.length - 1) {
+      historyRef.current = historyRef.current.slice(0, historyStepRef.current + 1);
+    }
+    
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    historyRef.current.push(imgData);
+    if (historyRef.current.length > 20) historyRef.current.shift(); // Max 20 steps
+    historyStepRef.current = historyRef.current.length - 1;
+    
+    setCanUndo(true);
+    setCanRedo(false);
+  };
+
+  const undoDraw = () => {
+    if (historyStepRef.current <= 0) {
+      // Clear if undoing first stroke
+      if (historyStepRef.current === 0) {
+        historyStepRef.current = -1;
+        clearCanvas(false);
+        setCanUndo(false);
+        setCanRedo(true);
+      }
+      return;
+    }
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
+    
+    historyStepRef.current -= 1;
+    ctx.putImageData(historyRef.current[historyStepRef.current], 0, 0);
+    setCanUndo(historyStepRef.current >= 0);
+    setCanRedo(true);
+  };
+
+  const redoDraw = () => {
+    if (historyStepRef.current >= historyRef.current.length - 1) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
+
+    historyStepRef.current += 1;
+    ctx.putImageData(historyRef.current[historyStepRef.current], 0, 0);
+    setCanUndo(true);
+    setCanRedo(historyStepRef.current < historyRef.current.length - 1);
+  };
 
   const fetchSlides = async () => {
     if (!classId) { setLoading(false); return; }
@@ -131,38 +203,103 @@ export default function PresentationView() {
   };
 
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawMode) return;
-    lastPoint.current = getCanvasPoint(e);
+    if (!isDrawMode || !canvasRef.current) return;
+    const pt = getCanvasPoint(e);
+    startPoint.current = pt;
+    lastPoint.current = pt;
     setIsDrawing(true);
+    
+    // Save history BEFORE stroke
+    saveHistoryState();
+    
+    // Save snapshot for live preview
+    snapshotBeforeDrawRef.current = canvasRef.current.getContext('2d')!.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+  };
+
+  const drawShape = (ctx: CanvasRenderingContext2D, tool: DrawTool, start: {x: number, y: number}, end: {x: number, y: number}) => {
+    ctx.beginPath();
+    const w = end.x - start.x;
+    const h = end.y - start.y;
+    
+    if (tool === 'line') {
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+    } else if (tool === 'rect') {
+      ctx.rect(start.x, start.y, w, h);
+    } else if (tool === 'circle') {
+      const r = Math.hypot(w, h);
+      ctx.arc(start.x, start.y, r, 0, 2 * Math.PI);
+    } else if (tool === 'arrow') {
+      const angle = Math.atan2(h, w);
+      const headlen = 40 + ctx.lineWidth;
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.lineTo(end.x - headlen * Math.cos(angle - Math.PI / 6), end.y - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.moveTo(end.x, end.y);
+      ctx.lineTo(end.x - headlen * Math.cos(angle + Math.PI / 6), end.y - headlen * Math.sin(angle + Math.PI / 6));
+    } else if (tool === 'diamond') {
+      ctx.moveTo(start.x + w/2, start.y);
+      ctx.lineTo(end.x, start.y + h/2);
+      ctx.lineTo(start.x + w/2, end.y);
+      ctx.lineTo(start.x, start.y + h/2);
+      ctx.closePath();
+    } else if (tool === 'cylinder') {
+      const rx = w / 2;
+      const ry = h * 0.15; // ellipse height ratio
+      ctx.ellipse(start.x + rx, start.y + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI);
+      ctx.moveTo(start.x, start.y + ry);
+      ctx.lineTo(start.x, end.y - ry);
+      ctx.moveTo(end.x, start.y + ry);
+      ctx.lineTo(end.x, end.y - ry);
+      ctx.ellipse(start.x + rx, end.y - ry, Math.abs(rx), Math.abs(ry), 0, 0, Math.PI, false);
+    }
+    
+    ctx.stroke();
   };
 
   const draw = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !canvasRef.current || !isDrawMode) return;
+    if (!isDrawing || !canvasRef.current || !isDrawMode || !startPoint.current || !lastPoint.current) return;
     const ctx = canvasRef.current.getContext('2d')!;
     const pt = getCanvasPoint(e);
-    ctx.beginPath();
-    ctx.moveTo(lastPoint.current!.x, lastPoint.current!.y);
-    ctx.lineTo(pt.x, pt.y);
-    if (drawTool === 'eraser') {
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = drawSize * 8;
-    } else {
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.strokeStyle = drawColor;
-      ctx.lineWidth = drawSize;
-    }
+    
+    ctx.lineWidth = drawSize;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.stroke();
+    
+    if (drawTool === 'pen' || drawTool === 'eraser') {
+      ctx.beginPath();
+      ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
+      ctx.lineTo(pt.x, pt.y);
+      if (drawTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.lineWidth = drawSize * 8;
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = drawColor;
+      }
+      ctx.stroke();
+      lastPoint.current = pt;
+    } else {
+      // Shapes - live preview
+      if (snapshotBeforeDrawRef.current) {
+        ctx.putImageData(snapshotBeforeDrawRef.current, 0, 0);
+      }
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = drawColor;
+      drawShape(ctx, drawTool, startPoint.current, pt);
+    }
+    
     ctx.globalCompositeOperation = 'source-over';
-    lastPoint.current = pt;
   }, [isDrawing, drawTool, drawColor, drawSize, isDrawMode]);
 
-  const clearCanvas = () => {
+  const clearCanvas = (triggerSync = true) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.getContext('2d')!.clearRect(0, 0, canvas.width, canvas.height);
-    localStorage.setItem('cynexai_live_clear_canvas', Date.now().toString());
+    if (triggerSync) {
+      saveHistoryState();
+      localStorage.setItem('cynexai_live_clear_canvas', Date.now().toString());
+    }
   };
 
   const changeSlide = (n: number) => {
@@ -238,7 +375,7 @@ export default function PresentationView() {
   const renderModernDarkTheme = () => {
     const imgRegex = /!\[.*?\]\((.*?)\)/;
     const match = currentSlide.match(imgRegex);
-    const imgSrc = match ? match[1] : null;
+    const imgSrc = match ? encodeURI(match[1]) : null;
     const textContent = currentSlide.replace(imgRegex, '');
 
     return (
@@ -285,7 +422,7 @@ export default function PresentationView() {
   const renderGlassmorphismTheme = () => {
     const imgRegex = /!\[.*?\]\((.*?)\)/;
     const match = currentSlide.match(imgRegex);
-    const imgSrc = match ? match[1] : null;
+    const imgSrc = match ? encodeURI(match[1]) : null;
     const textContent = currentSlide.replace(imgRegex, '');
 
     return (
@@ -329,7 +466,7 @@ export default function PresentationView() {
   const renderRetroTheme = () => {
     const imgRegex = /!\[.*?\]\((.*?)\)/;
     const match = currentSlide.match(imgRegex);
-    const imgSrc = match ? match[1] : null;
+    const imgSrc = match ? encodeURI(match[1]) : null;
     const textContent = currentSlide.replace(imgRegex, '');
 
     return (
@@ -385,7 +522,7 @@ export default function PresentationView() {
   const renderMinimalistTheme = () => {
     const imgRegex = /!\[.*?\]\((.*?)\)/;
     const match = currentSlide.match(imgRegex);
-    const imgSrc = match ? match[1] : null;
+    const imgSrc = match ? encodeURI(match[1]) : null;
     const textContent = currentSlide.replace(imgRegex, '');
 
     return (
@@ -485,29 +622,60 @@ export default function PresentationView() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Undo / Redo */}
+              <div className="flex items-center gap-1 border-r border-white/10 pr-2 mr-1">
+                <button onClick={undoDraw} disabled={!canUndo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canUndo ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 cursor-not-allowed'}`} title="Undo">
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button onClick={redoDraw} disabled={!canRedo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canRedo ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 cursor-not-allowed'}`} title="Redo">
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </div>
+
               {/* Type vs Draw toggle */}
               <button onClick={() => setIsDrawMode(false)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${!isDrawMode ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Type Mode">
                 <MousePointer2 className="w-4 h-4" />
               </button>
-              <button onClick={() => setIsDrawMode(true)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'pen' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Pen Tool">
-                <Pencil className="w-4 h-4" />
-              </button>
-              <button onClick={() => { setIsDrawMode(true); setDrawTool('eraser'); }} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'eraser' ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Eraser Tool">
-                <Eraser className="w-4 h-4" />
-              </button>
+              
+              <div className="flex items-center bg-slate-900 rounded-lg p-0.5 border border-white/10">
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('pen'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'pen' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Pen">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('eraser'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'eraser' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Eraser">
+                  <Eraser className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('line'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'line' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Line">
+                  <Minus className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('arrow'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'arrow' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Arrow">
+                  <ArrowIcon className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('rect'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'rect' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Rectangle">
+                  <Square className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('circle'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'circle' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Circle">
+                  <CircleIcon className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('diamond'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'diamond' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Diamond (Decision)">
+                  <Diamond className="w-3.5 h-3.5" />
+                </button>
+                <button onClick={() => { setIsDrawMode(true); setDrawTool('cylinder'); }} className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${isDrawMode && drawTool === 'cylinder' ? 'bg-indigo-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`} title="Database Cylinder">
+                  <Database className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
               {isDrawMode && (
-                <>
+                <div className="flex items-center gap-1 ml-2">
                   {['#ef4444', '#22c55e', '#facc15', '#3b82f6', '#ffffff'].map(c => (
-                    <button key={c} onClick={() => { setDrawColor(c); setDrawTool('pen'); }}
-                      className="w-6 h-6 rounded-full border-2 transition-all hover:scale-110"
+                    <button key={c} onClick={() => { setDrawColor(c); if (drawTool === 'eraser') setDrawTool('pen'); }}
+                      className="w-5 h-5 rounded-full border-2 transition-all hover:scale-110"
                       style={{ backgroundColor: c, borderColor: drawColor === c ? 'white' : 'transparent' }}
                     />
                   ))}
-                  <input type="range" min={2} max={16} value={drawSize} onChange={e => setDrawSize(+e.target.value)} className="w-20 accent-indigo-500 ml-2" />
-                </>
+                  <input type="range" min={2} max={16} value={drawSize} onChange={e => setDrawSize(+e.target.value)} className="w-16 accent-indigo-500 ml-2" />
+                </div>
               )}
-              <button onClick={clearCanvas} className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 ml-2 transition-colors">Clear Drawing</button>
+              <button onClick={() => clearCanvas()} className="text-xs font-bold text-red-400 hover:text-red-300 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 ml-2 transition-colors">Clear</button>
             </div>
           </div>
         )}
