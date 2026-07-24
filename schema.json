@@ -3117,6 +3117,11 @@
       "name": "created_at",
       "type": "DATETIME",
       "dflt_value": "CURRENT_TIMESTAMP"
+    },
+    {
+      "name": "ai_study_guide",
+      "type": "TEXT",
+      "dflt_value": null
     }
   ],
   "leads": [
@@ -3683,6 +3688,11 @@
     },
     {
       "name": "doc_url",
+      "type": "TEXT",
+      "dflt_value": null
+    },
+    {
+      "name": "ai_study_guide",
       "type": "TEXT",
       "dflt_value": null
     }

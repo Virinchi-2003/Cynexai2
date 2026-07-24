@@ -793,6 +793,7 @@ export const initTursoDB = async () => {
           ai_ppt_markdown TEXT,
           ai_keypoints TEXT,
           ai_script TEXT,
+          ai_study_guide TEXT,
           doc_url TEXT
         )
       `);
