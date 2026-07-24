@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { getClassFlowData, saveQaResponse, markClassWatched, submitOnlineAttendance } from '../../lib/api/student';
-import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, AlertCircle, Wifi, Video, FileText, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
+import ReactMarkdown from 'react-markdown';
 import { PythonEditor } from '../../components/ui/erp/PythonEditor';
 
 
@@ -110,6 +111,17 @@ export default function ClassFlow() {
   useEffect(() => {
     // We now use a manual "Mark as Completed" button
   }, []);
+
+  const handleDownloadNotes = () => {
+    if (!classData?.ai_study_guide) return;
+    const element = document.createElement("a");
+    const file = new Blob([classData.ai_study_guide], {type: 'text/markdown'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${classData.title.replace(/[^a-zA-Z0-9]/g, '_')}_Study_Guide.md`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   const handleSelectAnswer = (questionId: string, idx: number) => {
     if (submittedAnswers[questionId] !== undefined) return;
@@ -490,17 +502,62 @@ export default function ClassFlow() {
         {/* ── RIGHT SIDEBAR: STUDY GUIDE ── */}
         {currentStep === 'video' && classData?.ai_study_guide && (
           <div className="lg:col-span-1 mt-6 lg:mt-0">
-            <div className="candy-panel p-5 sticky top-8 flow-panel flex flex-col" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
-              <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2 mb-4 shrink-0">
-                <BookOpen className="w-4 h-4 text-indigo-500" />
-                Student Study Guide
-              </h2>
-              <div className="flex-1 overflow-y-auto custom-scrollbar pr-2">
-                <div className="bg-white/50 dark:bg-black/30 rounded-xl p-4 border border-slate-200 dark:border-white/10">
-                  <pre className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed font-bold">
-                    {classData.ai_study_guide}
-                  </pre>
-                </div>
+            <div className="candy-panel p-0 sticky top-8 flow-panel flex flex-col bg-white dark:bg-black overflow-hidden border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+              
+              {/* Header */}
+              <div className="p-5 border-b border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between shrink-0">
+                <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
+                    <BookOpen className="w-4 h-4 text-indigo-500" />
+                  </div>
+                  Study Guide
+                </h2>
+                <button 
+                  onClick={handleDownloadNotes} 
+                  title="Download Notes"
+                  className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 flex items-center justify-center text-slate-600 dark:text-white/60 transition-all hover:scale-105 active:scale-95"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+                <ReactMarkdown
+                  components={{
+                    h1: ({node, ...props}) => <h1 className="text-2xl font-black text-slate-900 dark:text-white mb-6 tracking-tight" {...props} />,
+                    h2: ({node, ...props}) => <h2 className="text-xl font-black text-slate-800 dark:text-white mt-8 mb-4 border-b border-slate-100 dark:border-white/10 pb-2 tracking-tight" {...props} />,
+                    h3: ({node, ...props}) => <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400 mt-6 mb-3" {...props} />,
+                    p: ({node, ...props}) => <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-5" {...props} />,
+                    strong: ({node, ...props}) => <strong className="font-black text-slate-900 dark:text-white" {...props} />,
+                    ul: ({node, ...props}) => <ul className="list-disc pl-5 mb-5 space-y-2 marker:text-indigo-400" {...props} />,
+                    ol: ({node, ...props}) => <ol className="list-decimal pl-5 mb-5 space-y-2 marker:text-indigo-400 marker:font-bold" {...props} />,
+                    li: ({node, ...props}) => <li className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" {...props} />,
+                    code: ({node, inline, className, children, ...props}: any) => {
+                      return inline ? (
+                        <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-pink-600 dark:text-pink-400 text-xs font-mono font-bold" {...props}>
+                          {children}
+                        </code>
+                      ) : (
+                        <div className="my-5 rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-xl">
+                          <div className="flex items-center px-4 py-2 bg-[#1e293b] border-b border-slate-700">
+                            <div className="flex gap-1.5">
+                              <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+                              <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+                            </div>
+                          </div>
+                          <pre className="p-4 overflow-x-auto text-xs font-mono text-slate-50 leading-relaxed">
+                            <code {...props}>{children}</code>
+                          </pre>
+                        </div>
+                      );
+                    },
+                    blockquote: ({node, ...props}) => <blockquote className="border-l-4 border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 p-4 rounded-r-xl my-5 text-slate-700 dark:text-slate-300 italic text-sm" {...props} />
+                  }}
+                >
+                  {classData.ai_study_guide}
+                </ReactMarkdown>
               </div>
             </div>
           </div>

@@ -73,7 +73,12 @@ Write a comprehensive, engaging teleprompter script for the instructor. It shoul
 ---SPLIT---
 
 SECTION 4 - STUDENT STUDY GUIDE (Markdown):
-Write a comprehensive, detailed study guide formatted in Markdown designed specifically for the student. It should explain the core concepts of the class in an easy-to-understand way, include practical examples, and provide step-by-step code snippets (if applicable). This guide will be shown directly to the student for self-study.`;
+Write a comprehensive, detailed study guide formatted in Markdown designed specifically for the student. It should NOT be a simple list of bullet points. Instead, for each core topic, strictly use the following structure:
+### [Topic Name]
+**Theory & Explanation:** Provide a deep, easy-to-understand explanation of the concept.
+**Real-World Example:** Give a practical, real-world analogy or example.
+**Code Snippet / Application:** Provide a step-by-step code snippet (if applicable) or a concrete application of the concept.
+Make the guide visually appealing using standard Markdown (bolding, inline code, code blocks). This guide will be shown directly to the student for self-study.`;
 
   const templatePrompt = localStorage.getItem(SLIDE_PROMPT_KEY) || defaultPrompt;
 
