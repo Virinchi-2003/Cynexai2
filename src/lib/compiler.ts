@@ -1,12 +1,36 @@
 export type Language = 'python' | 'javascript' | 'java' | 'sqlite3';
 
-export async function executeCode(code: string, language: Language): Promise<string> {
-  // Simulate network delay
-  await new Promise(r => setTimeout(r, 800));
+export interface UploadedFile {
+  name: string;
+  content: string;
+}
 
+let pyodideInstance: any = null;
+
+async function getPyodide(outputCallback: (msg: string) => void) {
+  if (!pyodideInstance) {
+    if (!(window as any).loadPyodide) {
+      const script = document.createElement('script');
+      script.src = "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js";
+      document.head.appendChild(script);
+      await new Promise(resolve => script.onload = resolve);
+    }
+    pyodideInstance = await (window as any).loadPyodide({
+      indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+    });
+    // Load pandas by default for data science workflows
+    await pyodideInstance.loadPackage("pandas");
+  }
+  
+  pyodideInstance.setStdout({ batched: (msg: string) => outputCallback(msg + '\n') });
+  pyodideInstance.setStderr({ batched: (msg: string) => outputCallback(msg + '\n') });
+  
+  return pyodideInstance;
+}
+
+export async function executeCode(code: string, language: Language, files: UploadedFile[] = []): Promise<string> {
   try {
     if (language === 'javascript') {
-      // Safely evaluate JS in browser memory
       let output = '';
       const originalLog = console.log;
       console.log = (...args) => {
@@ -25,22 +49,26 @@ export async function executeCode(code: string, language: Language): Promise<str
       return output || 'Executed successfully (no output).';
     } 
     
-    // Simulated compilation for non-JS languages
-    const lowerCode = code.toLowerCase();
-    
     if (language === 'python') {
-      if (lowerCode.includes('print')) {
-        const matches = code.match(/print\((["'])(.*?)\1\)/g);
-        if (matches) {
-          return matches.map(m => m.replace(/print\((["'])(.*?)\1\)/, '$2')).join('\n');
-        }
-        return "Python execution simulated successfully.";
+      let output = '';
+      const pyodide = await getPyodide((msg) => { output += msg; });
+      
+      // Write uploaded files to Pyodide virtual filesystem
+      for (const file of files) {
+        pyodide.FS.writeFile(file.name, file.content);
       }
-      if (lowerCode.includes('error') || lowerCode.includes('raise')) {
-        return "Traceback (most recent call last):\n  File \"main.py\", line 1, in <module>\nRuntimeError: Simulated error";
+      
+      try {
+        await pyodide.runPythonAsync(code);
+      } catch (err: any) {
+        output += err.toString();
       }
-      return "Python script executed successfully.";
+      
+      return output || 'Executed successfully (no output).';
     }
+    
+    // Simulated compilation for non-JS/Python languages
+    const lowerCode = code.toLowerCase();
     
     if (language === 'sqlite3') {
       if (lowerCode.includes('select')) {

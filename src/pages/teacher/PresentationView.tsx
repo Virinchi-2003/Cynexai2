@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getClassForPresentation } from '../../lib/api/teacher';
 import ReactMarkdown from 'react-markdown';
-import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette } from 'lucide-react';
+import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { executeCode, Language } from '../../lib/compiler';
+import { executeCode, Language, UploadedFile } from '../../lib/compiler';
+import Editor from '@monaco-editor/react';
 
 type DrawTool = 'pen' | 'eraser';
 type Theme = 'retro' | 'modern-dark' | 'glassmorphism' | 'minimalist';
@@ -41,6 +42,7 @@ export default function PresentationView() {
   const [language, setLanguage] = useState<Language>('python');
   const [output, setOutput] = useState<string>('');
   const [isRunning, setIsRunning] = useState(false);
+  const [files, setFiles] = useState<UploadedFile[]>([]);
   
   // Draw vs Type
   const [isDrawMode, setIsDrawMode] = useState(false);
@@ -186,13 +188,33 @@ export default function PresentationView() {
     localStorage.setItem('cynexai_live_lang', newLang);
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const content = ev.target?.result as string;
+        setFiles(prev => {
+          if (prev.find(f => f.name === file.name)) return prev;
+          return [...prev, { name: file.name, content }];
+        });
+      };
+      reader.readAsText(file);
+    });
+    e.target.value = '';
+  };
+
+  const removeFile = (name: string) => {
+    setFiles(prev => prev.filter(f => f.name !== name));
+  };
+
   const runCode = async () => {
     setIsRunning(true);
     setOutput('Running...');
     localStorage.setItem('cynexai_live_output', 'Running...');
     
     try {
-      const result = await executeCode(code, language);
+      const result = await executeCode(code, language, files);
       setOutput(result);
       localStorage.setItem('cynexai_live_output', result);
     } catch (e: any) {
@@ -528,21 +550,61 @@ export default function PresentationView() {
         ) : (
           <div className="absolute inset-0 flex flex-col lg:flex-row">
             
-            {/* Left side: Code Editor & Canvas overlay */}
+            {/* Left Sidebar: Files Panel */}
+            <div className="w-full lg:w-64 bg-[#0a0a0f] border-r border-slate-700/50 flex flex-col">
+              <div className="px-4 py-3 bg-slate-800/80 border-b border-slate-700/50 flex justify-between items-center">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Project Files</span>
+                <label className="cursor-pointer text-indigo-400 hover:text-indigo-300">
+                  <Upload className="w-4 h-4" />
+                  <input type="file" multiple className="hidden" onChange={handleFileUpload} />
+                </label>
+              </div>
+              <div className="flex-1 overflow-y-auto p-2">
+                {files.length === 0 ? (
+                  <div className="text-center p-4 text-slate-500 text-sm mt-4">
+                    <FileCode2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    Upload CSVs, JSON, or text files to use in your code.
+                  </div>
+                ) : (
+                  files.map(f => (
+                    <div key={f.name} className="flex items-center justify-between p-2 hover:bg-white/5 rounded-lg group">
+                      <span className="text-sm text-slate-300 truncate pr-2">{f.name}</span>
+                      <button onClick={() => removeFile(f.name)} className="text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Middle: Code Editor & Canvas overlay */}
             <div className="relative flex-1 bg-[#0d1117] border-r border-slate-700/50">
-              <textarea
-                value={code}
-                onChange={handleCodeChange}
-                className="absolute inset-0 w-full h-full bg-transparent text-emerald-400 font-mono p-10 text-xl resize-none outline-none custom-scrollbar"
-                spellCheck={false}
-                style={{ zIndex: isDrawMode ? 0 : 20 }} 
-              />
+              <div className="absolute inset-0 z-0" style={{ pointerEvents: isDrawMode ? 'none' : 'auto' }}>
+                <Editor
+                  height="100%"
+                  language={language === 'sqlite3' ? 'sql' : language}
+                  theme="vs-dark"
+                  value={code}
+                  onChange={(v) => handleCodeChange({ target: { value: v || '' } } as any)}
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 18,
+                    wordWrap: 'on',
+                    padding: { top: 24 },
+                    scrollBeyondLastLine: false,
+                    fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                    bracketPairColorization: { enabled: true },
+                    formatOnPaste: true,
+                  }}
+                />
+              </div>
               <canvas
                 ref={canvasRef}
                 width={3840}
                 height={2160}
                 className="absolute inset-0 w-full h-full"
-                style={{ touchAction: 'none', cursor: drawTool === 'eraser' ? 'cell' : 'crosshair', zIndex: 10 }}
+                style={{ touchAction: 'none', cursor: drawTool === 'eraser' ? 'cell' : 'crosshair', zIndex: 10, pointerEvents: isDrawMode ? 'auto' : 'none' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={() => setIsDrawing(false)}
@@ -552,11 +614,11 @@ export default function PresentationView() {
             
             {/* Right side: Execution Output */}
             <div className="w-full lg:w-1/3 bg-[#0a0a0f] flex flex-col">
-              <div className="px-4 py-2 bg-slate-800/80 border-b border-slate-700/50 flex justify-between items-center">
+              <div className="px-4 py-3 bg-slate-800/80 border-b border-slate-700/50 flex justify-between items-center">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Output ({language})</span>
               </div>
               <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-                <pre className="font-mono text-sm text-slate-300 whitespace-pre-wrap">{output}</pre>
+                <pre className="font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{output}</pre>
               </div>
             </div>
 
