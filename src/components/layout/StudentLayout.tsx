@@ -19,13 +19,21 @@ interface GamificationData {
   notifications: number;
 }
 
-const NAV_ITEMS = [
+interface NavItem {
+  to: string;
+  icon: React.ElementType;
+  label: string;
+  short: string;
+  comingSoon?: boolean;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { to: '/student',             icon: Home,           label: 'Dashboard',    short: 'Home'      },
   { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',   short: 'Attend'    },
-  { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank'      },
-  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview' },
-  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards'   },
-  { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career'    },
+  { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank', comingSoon: true },
+  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview', comingSoon: true },
+  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards', comingSoon: true },
+  { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career', comingSoon: true },
 ];
 
 const BOTTOM_NAV = NAV_ITEMS.slice(0, 5);
@@ -187,20 +195,28 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       {/* Navigation */}
       <nav className="flex-1 px-3 mt-4 space-y-2 min-h-0">
         <p className="text-[10px] font-black uppercase tracking-widest px-3 mb-3 text-slate-400 dark:text-slate-500">Navigation</p>
-        {NAV_ITEMS.map(({ to, icon: Icon, label }) => {
+        {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
           const active = isActive(to);
           return (
             <button key={to}
-              onClick={() => { navigate(to); setMobileMenuOpen(false); }}
+              onClick={() => { if (!comingSoon) { navigate(to); setMobileMenuOpen(false); } }}
+              disabled={comingSoon}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all duration-150 min-h-[44px] ${
-                active 
-                  ? 'candy-btn-blue shadow-md text-white' 
-                  : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
+                comingSoon
+                  ? 'opacity-60 cursor-not-allowed text-slate-400 dark:text-white/30 hover:bg-transparent'
+                  : active 
+                    ? 'candy-btn-blue shadow-md text-white' 
+                    : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
               }`}
             >
               <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={active ? 3 : 2} />
-              <span className="flex-1 text-left">{label}</span>
-              {active && <ChevronRight className="w-4 h-4 opacity-60" />}
+              <span className="flex-1 text-left flex items-center gap-2">
+                {label}
+                {comingSoon && (
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 font-bold uppercase tracking-wider text-slate-500 dark:text-white/60">Soon</span>
+                )}
+              </span>
+              {active && !comingSoon && <ChevronRight className="w-4 h-4 opacity-60" />}
             </button>
           );
         })}
@@ -283,18 +299,22 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             height: '80px',
             paddingBottom: 'env(safe-area-inset-bottom, 12px)',
           }}>
-          {BOTTOM_NAV.map(({ to, icon: Icon, short }) => {
+          {BOTTOM_NAV.map(({ to, icon: Icon, short, comingSoon }) => {
             const active = isActive(to);
             return (
-              <button key={to} onClick={() => navigate(to)}
-                className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all min-h-[44px] mx-0.5
-                  ${active ? 'text-white' : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white active:scale-95'}
+              <button key={to} onClick={() => { if (!comingSoon) navigate(to); }}
+                disabled={comingSoon}
+                className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all min-h-[44px] mx-0.5 relative
+                  ${comingSoon ? 'opacity-50 cursor-not-allowed' : active ? 'text-white' : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white active:scale-95'}
                 `}
               >
-                <div className={`w-12 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 ${active ? 'candy-btn-blue shadow-lg !min-h-[40px] !border' : ''}`}>
-                  <Icon className="w-6 h-6" strokeWidth={active ? 3 : 2} />
+                <div className={`w-12 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 ${active && !comingSoon ? 'candy-btn-blue shadow-lg !min-h-[40px] !border' : ''}`}>
+                  <Icon className="w-6 h-6" strokeWidth={active && !comingSoon ? 3 : 2} />
                 </div>
-                <span className={`text-[10px] font-black leading-none ${active ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{short}</span>
+                <span className={`text-[10px] font-black leading-none ${active && !comingSoon ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{short}</span>
+                {comingSoon && (
+                  <span className="absolute top-0 right-0 text-[8px] bg-slate-200 dark:bg-white/20 px-1 py-[1px] rounded font-bold uppercase z-10 text-slate-600 dark:text-white/80">Soon</span>
+                )}
               </button>
             );
           })}

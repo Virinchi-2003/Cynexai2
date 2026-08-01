@@ -4,41 +4,7 @@ import { getCurrentUser } from '../../lib/auth';
 import { getModuleMapData } from '../../lib/api/student';
 
 
-const NODE_SPACING = 140;
-const AMPLITUDE = 90;
 
-function calculatePath(nodesLength: number) {
-  if (nodesLength === 0) return '';
-  const startY = (nodesLength - 1) * NODE_SPACING + 80;
-  let d = `M 0,${startY} `;
-  for (let i = 1; i < nodesLength; i++) {
-    const prevY = (nodesLength - i) * NODE_SPACING + 80;
-    const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
-    const currY = (nodesLength - 1 - i) * NODE_SPACING + 80;
-    const currX = Math.sin(i * 0.8) * AMPLITUDE;
-    const cp1y = prevY - NODE_SPACING / 2;
-    const cp2y = currY + NODE_SPACING / 2;
-    d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
-  }
-  return d;
-}
-
-function calculateCompletedPath(nodesLength: number, currentLevel: number) {
-  if (nodesLength === 0 || currentLevel <= 0) return '';
-  const startY = (nodesLength - 1) * NODE_SPACING + 80;
-  let d = `M 0,${startY} `;
-  const drawUntil = Math.min(currentLevel, nodesLength - 1);
-  for (let i = 1; i <= drawUntil; i++) {
-    const prevY = (nodesLength - i) * NODE_SPACING + 80;
-    const prevX = Math.sin((i - 1) * 0.8) * AMPLITUDE;
-    const currY = (nodesLength - 1 - i) * NODE_SPACING + 80;
-    const currX = Math.sin(i * 0.8) * AMPLITUDE;
-    const cp1y = prevY - NODE_SPACING / 2;
-    const cp2y = currY + NODE_SPACING / 2;
-    d += `C ${prevX},${cp1y} ${currX},${cp2y} ${currX},${currY} `;
-  }
-  return d;
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -381,38 +347,17 @@ export default function ModuleMap() {
       .then((data: any) => {
         setModuleData(data.moduleData);
         
-        const isItModule = data.moduleData?.is_it_module === 1;
         const vNodes: VirtualNode[] = [];
         
         data.classes.forEach((c: any) => {
           vNodes.push({
-            id: `${c.id}-video`,
+            id: `${c.id}`,
             classId: c.id,
-            stepType: 'video',
+            stepType: 'video', // Since we're hiding Q&A and coding, default to video behavior to allow viewing recorded class
             title: c.title,
             isCompleted: data.completedLessonIds.has(c.id),
             classItem: c
           });
-          
-          vNodes.push({
-            id: `${c.id}-qa`,
-            classId: c.id,
-            stepType: 'qa',
-            title: `Q&A: ${c.title}`,
-            isCompleted: data.completedQaIds.has(c.id),
-            classItem: c
-          });
-          
-          if (isItModule) {
-            vNodes.push({
-              id: `${c.id}-coding`,
-              classId: c.id,
-              stepType: 'coding',
-              title: `Coding: ${c.title}`,
-              isCompleted: data.completedCodingIds.has(c.id),
-              classItem: c
-            });
-          }
         });
         
         setVirtualNodes(vNodes);
@@ -437,10 +382,12 @@ export default function ModuleMap() {
   useEffect(() => {
     if (!loading && virtualNodes.length > 0) {
       setTimeout(() => {
-        // Calculate the center point for the current node
         const targetLevel = Math.min(currentLevel, virtualNodes.length - 1);
-        const y = (virtualNodes.length - 1 - targetLevel) * NODE_SPACING + 80;
-        window.scrollTo({ top: y, behavior: 'smooth' });
+        // Simple scroll into view
+        const currentElement = document.getElementById(`node-${targetLevel}`);
+        if (currentElement) {
+          currentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }, 500);
     }
   }, [loading, virtualNodes.length, currentLevel]);
@@ -556,80 +503,59 @@ export default function ModuleMap() {
         </div>
       )}
 
-      {/* ── Candy Crush Map ── */}
+      {/* ── Standard Vertical List ── */}
       {virtualNodes.length > 0 && (
         <div className="max-w-xl mx-auto px-4 pt-6 pb-32" ref={mapContainer}>
           {/* Start Banner */}
           <div
-            className="text-center mb-8 py-4 rounded-2xl relative z-10"
+            className="text-center mb-6 py-4 rounded-2xl relative z-10"
             style={{ background: 'rgba(99,102,241,0.08)', border: '1px dashed rgba(99,102,241,0.2)' }}
           >
-            <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Quest Map · {virtualNodes.length} Levels</p>
+            <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Course Classes · {virtualNodes.length} Items</p>
           </div>
 
-          {/* Map Area */}
-          <div className="relative w-full mx-auto pb-32" style={{ height: `${(virtualNodes.length - 1) * NODE_SPACING + 160}px` }}>
-            {/* SVG Path */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ left: '50%', overflow: 'visible' }}>
-              
-              {/* Land Environment Base */}
-              <path
-                d={calculatePath(virtualNodes.length)}
-                fill="none"
-                stroke="#0f766e" /* Deep teal base */
-                strokeWidth="160"
-                strokeLinecap="round"
-                className="opacity-70 dark:opacity-40"
-              />
-              <path
-                d={calculatePath(virtualNodes.length)}
-                fill="none"
-                stroke="#10b981" /* Green grass */
-                strokeWidth="120"
-                strokeLinecap="round"
-                className="opacity-90 dark:opacity-70"
-              />
-              <path
-                d={calculatePath(virtualNodes.length)}
-                fill="none"
-                stroke="#6ee7b7" /* Lighter path center */
-                strokeWidth="80"
-                strokeLinecap="round"
-                className="opacity-90 dark:opacity-80"
-              />
-
-              {/* Main Dotted Path */}
-              <path
-                d={calculatePath(virtualNodes.length)}
-                fill="none"
-                stroke="rgba(255,255,255,0.8)"
-                strokeWidth="12"
-                strokeDasharray="0 24"
-                strokeLinecap="round"
-              />
-              <path
-                d={calculateCompletedPath(virtualNodes.length, currentLevel)}
-                fill="none"
-                stroke="#00c77a"
-                strokeWidth="12"
-                strokeLinecap="round"
-                className="opacity-90"
-              />
-            </svg>
-            
+          {/* List Area */}
+          <div className="relative w-full mx-auto space-y-4 pb-32">
             {virtualNodes.map((node, i) => {
-              const x = Math.sin(i * 0.8) * AMPLITUDE;
-              const y = (virtualNodes.length - 1 - i) * NODE_SPACING + 80;
               const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'locked';
+              let kind: keyof typeof KIND_CONFIG = 'video';
+              if (node.classItem.type === 'live' || node.classItem.type === 'zoom') kind = 'live';
+              const cfg = KIND_CONFIG[kind] || KIND_CONFIG.lesson;
+              
+              const isLocked = state === 'locked';
+              const isCompleted = state === 'completed';
+              const isCurrent = state === 'current';
+              
               return (
-                <div key={node.id} className="absolute map-node z-10" style={{ left: `calc(50% + ${x}px)`, top: `${y}px`, transform: 'translate(-50%, -50%)' }}>
-                  <MapNode
-                    node={node}
-                    state={state}
-                    index={i}
-                    totalNodes={virtualNodes.length}
-                    onClick={() => handleNodeClick(node)}
-                  />
+                <div 
+                  key={node.id} 
+                  id={`node-${i}`}
+                  onClick={() => !isLocked && handleNodeClick(node)}
+                  className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${isLocked ? 'opacity-60 cursor-not-allowed border-transparent bg-slate-100 dark:bg-white/5' : isCurrent ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]' : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'}`}
+                >
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-white/40'}`}>
+                    {isCompleted ? <NodeIcons.check size={24} /> : isLocked ? <NodeIcons.lock size={20} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: isLocked ? '#94a3b8' : cfg.labelColor }}>
+                      {cfg.label} {isCurrent && <span className="ml-2 text-indigo-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full">Next up</span>}
+                    </p>
+                    <p className={`font-bold text-sm leading-tight line-clamp-2 ${isLocked ? 'text-slate-500 dark:text-white/40' : 'text-slate-900 dark:text-white'}`}>
+                      {node.title}
+                    </p>
+                    {node.classItem.date && (
+                      <p className="text-xs mt-1 text-slate-500 dark:text-white/50 font-medium">
+                        {formatDate(node.classItem.date, node.classItem.start_time)}
+                      </p>
+                    )}
+                  </div>
+                  
+                  {isCompleted && (
+                    <div className="flex-shrink-0 text-emerald-500 bg-emerald-100/50 p-2 rounded-full">
+                      <span className="text-sm font-black">✓</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -638,12 +564,12 @@ export default function ModuleMap() {
           {/* Finish banner */}
           {pct === 100 && (
             <div
-              className="mt-10 text-center py-8 rounded-3xl relative z-10"
+              className="mt-6 text-center py-8 rounded-3xl relative z-10"
               style={{ background: 'radial-gradient(circle, rgba(0, 199, 122, 0.15), transparent)', border: '1px solid rgba(0, 199, 122, 0.3)' }}
             >
               <div className="text-5xl mb-3">🏆</div>
               <h3 className="text-[#00c77a] font-black text-xl">Module Complete!</h3>
-              <p className="text-white/40 text-sm mt-1">You've mastered all {virtualNodes.length} steps</p>
+              <p className="text-white/40 text-sm mt-1">You've mastered all {virtualNodes.length} classes</p>
             </div>
           )}
         </div>
