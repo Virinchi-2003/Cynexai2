@@ -578,164 +578,166 @@ export default function StudentPortal() {
 
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="px-3 py-4 sm:p-4 md:p-6 candy-map-bg min-h-screen" ref={portalContainer}>
-      {/* ── Reschedule Popup Notifications ── */}
-      <ReschedulePopup
-        announcements={announcements.filter(a => !dismissedAnnIds.has(a.id))}
-        onDismiss={handleDismiss}
-      />
+    <div className="candy-map-bg min-h-screen" ref={portalContainer}>
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 py-4 md:py-6">
+        {/* ── Reschedule Popup Notifications ── */}
+        <ReschedulePopup
+          announcements={announcements.filter(a => !dismissedAnnIds.has(a.id))}
+          onDismiss={handleDismiss}
+        />
 
-      {/* ── Announcements Banner ── */}
-      {announcements.length > 0 && (
-        <div className="mb-5">
-          <AnnouncementsBanner announcements={announcements} />
+        {/* ── Announcements Banner ── */}
+        {announcements.length > 0 && (
+          <div className="mb-5">
+            <AnnouncementsBanner announcements={announcements} />
+          </div>
+        )}
+
+        {/* ── Greeting ── */}
+        <div className="mb-5 px-1">
+          <p className="text-slate-600 dark:text-[#94a3b8] text-sm font-medium">
+            Welcome back,{' '}
+            <span className="text-slate-900 dark:text-[#e2e8f0] font-bold">{firstName}</span>
+          </p>
+          <h1 className="text-slate-900 dark:text-[#e2e8f0] text-2xl font-black mt-0.5 leading-tight">
+            Your Dashboard
+          </h1>
         </div>
-      )}
 
-      {/* ── Greeting ── */}
-      <div className="mb-5">
-        <p className="text-slate-600 dark:text-[#94a3b8] text-sm font-medium">
-          Welcome back,{' '}
-          <span className="text-slate-900 dark:text-[#e2e8f0] font-bold">{firstName}</span>
-        </p>
-        <h1 className="text-slate-900 dark:text-[#e2e8f0] text-2xl font-black mt-0.5 leading-tight">
-          Your Dashboard
-        </h1>
-      </div>
+        {/* ══ Two-column desktop layout ══ */}
+        <div className="flex flex-col md:flex-row gap-4 items-start">
 
-      {/* ══ Two-column desktop layout ══ */}
-      <div className="flex flex-col md:flex-row gap-5 items-start">
+          {/* ── LEFT COLUMN ── */}
+          <div className="flex-1 min-w-0 space-y-4">
 
-        {/* ── LEFT COLUMN ── */}
-        <div className="flex-1 min-w-0 space-y-5">
+            {/* Course Hero */}
+            <CourseHeroCard course={course} modules={modules} />
 
-          {/* Course Hero */}
-          <CourseHeroCard course={course} modules={modules} />
-
-          {/* Gamification stats (mobile: visible here; desktop: shown in right col) */}
-          <div className="md:hidden grid grid-cols-3 gap-3">
-            <div className="candy-panel p-3 flex flex-col items-center gap-1">
-              <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" strokeWidth={2.5} />
-              <span className="text-orange-500 dark:text-orange-400 text-xl font-black leading-none tabular-nums">
-                {gamification.streak}
-              </span>
-              <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Streak</span>
+            {/* Gamification stats (mobile: visible here; desktop: shown in right col) */}
+            <div className="md:hidden grid grid-cols-3 gap-2">
+              <div className="candy-panel p-3 flex flex-col items-center gap-1">
+                <Flame className="w-5 h-5 text-orange-500 dark:text-orange-400" strokeWidth={2.5} />
+                <span className="text-orange-500 dark:text-orange-400 text-xl font-black leading-none tabular-nums">
+                  {gamification.streak}
+                </span>
+                <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Streak</span>
+              </div>
+              <div className="candy-panel p-3 flex flex-col items-center gap-1">
+                <Coins className="w-5 h-5 text-amber-500 dark:text-amber-400" strokeWidth={2.5} />
+                <span className="text-amber-500 dark:text-amber-400 text-xl font-black leading-none tabular-nums">
+                  {gamification.coins}
+                </span>
+                <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Coins</span>
+              </div>
+              <div className="candy-panel p-3 flex flex-col items-center gap-1">
+                <Trophy className="w-5 h-5 text-violet-500 dark:text-violet-400" strokeWidth={2.5} />
+                <span className="text-violet-500 dark:text-violet-400 text-xl font-black leading-none tabular-nums">0</span>
+                <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Trophies</span>
+              </div>
             </div>
-            <div className="candy-panel p-3 flex flex-col items-center gap-1">
-              <Coins className="w-5 h-5 text-amber-500 dark:text-amber-400" strokeWidth={2.5} />
-              <span className="text-amber-500 dark:text-amber-400 text-xl font-black leading-none tabular-nums">
-                {gamification.coins}
-              </span>
-              <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Coins</span>
-            </div>
-            <div className="candy-panel p-3 flex flex-col items-center gap-1">
-              <Trophy className="w-5 h-5 text-violet-500 dark:text-violet-400" strokeWidth={2.5} />
-              <span className="text-violet-500 dark:text-violet-400 text-xl font-black leading-none tabular-nums">0</span>
-              <span className="text-slate-500 dark:text-[#475569] text-[9px] font-bold uppercase tracking-wider">Trophies</span>
-            </div>
+
+            {/* Modules */}
+            {modules.length > 0 ? (
+              <section>
+                <SectionHeading
+                  icon={BookOpen}
+                  title="Modules"
+                  meta={`${modules.length} total`}
+                />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {modules.map((mod, i) => (
+                    <ModuleCard key={mod.id ?? i} mod={mod} index={i} />
+                  ))}
+                </div>
+              </section>
+            ) : (
+              <div className="candy-panel p-6 text-center">
+                <Trophy className="w-8 h-8 text-slate-400 dark:text-[#475569] mx-auto mb-2" />
+                <p className="text-slate-600 dark:text-[#94a3b8] text-sm">No modules have been added to your course yet.</p>
+              </div>
+            )}
           </div>
 
-          {/* Modules */}
-          {modules.length > 0 ? (
-            <section>
-              <SectionHeading
-                icon={BookOpen}
-                title="Modules"
-                meta={`${modules.length} total`}
+          {/* ── RIGHT COLUMN (desktop only) ── */}
+          <div className="w-full md:w-80 flex-shrink-0 space-y-4">
+
+            {/* Gamification stats */}
+            <div className="hidden md:block space-y-3">
+              <SectionHeading icon={Zap} title="Your Stats" />
+              <StatCard
+                icon={Flame}
+                value={gamification.streak}
+                label="Day Streak"
+                sublabel="Study daily to keep your streak alive."
+                iconColor="text-orange-500 dark:text-orange-400"
+                bgGrad="bg-orange-50 dark:bg-gradient-to-br dark:from-orange-500/10 dark:to-transparent"
+                borderColor="border-orange-200 dark:border-orange-500/20"
               />
-              <div className="grid gap-3 sm:grid-cols-2">
-                {modules.map((mod, i) => (
-                  <ModuleCard key={mod.id ?? i} mod={mod} index={i} />
-                ))}
+              <StatCard
+                icon={Coins}
+                value={gamification.coins}
+                label="Coins"
+                sublabel="Earn more by completing Q&A sessions."
+                iconColor="text-amber-500 dark:text-amber-400"
+                bgGrad="bg-amber-50 dark:bg-gradient-to-br dark:from-amber-500/10 dark:to-transparent"
+                borderColor="border-amber-200 dark:border-amber-500/20"
+              />
+              <StatCard
+                icon={TrendingUp}
+                value={modules.reduce((s, m) => s + (m.completedClasses || 0), 0)}
+                label="Classes Done"
+                sublabel="Total across all course modules."
+                iconColor="text-cyan-500 dark:text-cyan-400"
+                bgGrad="bg-cyan-50 dark:bg-gradient-to-br dark:from-cyan-500/10 dark:to-transparent"
+                borderColor="border-cyan-200 dark:border-cyan-500/20"
+              />
+            </div>
+
+            {/* Upcoming Class */}
+            {upcomingClass && (
+              <div>
+                <SectionHeading icon={Calendar} title="Upcoming Class" />
+                <UpcomingClassCard cls={upcomingClass} />
               </div>
-            </section>
-          ) : (
-            <div className="candy-panel p-6 text-center">
-              <Trophy className="w-8 h-8 text-slate-400 dark:text-[#475569] mx-auto mb-2" />
-              <p className="text-slate-600 dark:text-[#94a3b8] text-sm">No modules have been added to your course yet.</p>
-            </div>
-          )}
-        </div>
+            )}
 
-        {/* ── RIGHT COLUMN (desktop only) ── */}
-        <div className="w-full md:w-80 flex-shrink-0 space-y-4">
-
-          {/* Gamification stats */}
-          <div className="hidden md:block space-y-3">
-            <SectionHeading icon={Zap} title="Your Stats" />
-            <StatCard
-              icon={Flame}
-              value={gamification.streak}
-              label="Day Streak"
-              sublabel="Study daily to keep your streak alive."
-              iconColor="text-orange-500 dark:text-orange-400"
-              bgGrad="bg-orange-50 dark:bg-gradient-to-br dark:from-orange-500/10 dark:to-transparent"
-              borderColor="border-orange-200 dark:border-orange-500/20"
-            />
-            <StatCard
-              icon={Coins}
-              value={gamification.coins}
-              label="Coins"
-              sublabel="Earn more by completing Q&A sessions."
-              iconColor="text-amber-500 dark:text-amber-400"
-              bgGrad="bg-amber-50 dark:bg-gradient-to-br dark:from-amber-500/10 dark:to-transparent"
-              borderColor="border-amber-200 dark:border-amber-500/20"
-            />
-            <StatCard
-              icon={TrendingUp}
-              value={modules.reduce((s, m) => s + (m.completedClasses || 0), 0)}
-              label="Classes Done"
-              sublabel="Total across all course modules."
-              iconColor="text-cyan-500 dark:text-cyan-400"
-              bgGrad="bg-cyan-50 dark:bg-gradient-to-br dark:from-cyan-500/10 dark:to-transparent"
-              borderColor="border-cyan-200 dark:border-cyan-500/20"
-            />
-          </div>
-
-          {/* Upcoming Class */}
-          {upcomingClass && (
-            <div>
-              <SectionHeading icon={Calendar} title="Upcoming Class" />
-              <UpcomingClassCard cls={upcomingClass} />
-            </div>
-          )}
-
-          {/* Announcements card (desktop) */}
-          {announcements.length > 0 && (
-            <div className="hidden md:block">
-              <SectionHeading icon={Bell} title="Announcements" meta={`${announcements.length}`} />
-              <div className="candy-panel divide-y divide-slate-100 dark:divide-white/[0.05]">
-                {announcements.slice(0, 4).map((ann, i) => (
-                  <div key={ann.id ?? i} className="px-4 py-3">
-                    <div className="flex items-start gap-2.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 mt-1.5 flex-shrink-0" />
-                      <p className="text-slate-600 dark:text-[#94a3b8] text-xs font-medium leading-snug line-clamp-2">
-                        {ann.title}
-                      </p>
+            {/* Announcements card (desktop) */}
+            {announcements.length > 0 && (
+              <div className="hidden md:block">
+                <SectionHeading icon={Bell} title="Announcements" meta={`${announcements.length}`} />
+                <div className="candy-panel divide-y divide-slate-100 dark:divide-white/[0.05]">
+                  {announcements.slice(0, 4).map((ann, i) => (
+                    <div key={ann.id ?? i} className="px-4 py-3">
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 dark:bg-cyan-400 mt-1.5 flex-shrink-0" />
+                        <p className="text-slate-600 dark:text-[#94a3b8] text-xs font-medium leading-snug line-clamp-2">
+                          {ann.title}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Quick tip card */}
-          <div className="hidden md:flex items-start gap-3 candy-panel p-4">
-            <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-200 dark:border-violet-500/25 flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" strokeWidth={2} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-slate-900 dark:text-[#e2e8f0] text-xs font-bold mb-0.5">Pro Tip</p>
-              <p className="text-slate-500 dark:text-[#475569] text-[11px] leading-snug">
-                Complete at least one class daily to maintain your streak and earn bonus coins.
-              </p>
+            {/* Quick tip card */}
+            <div className="hidden md:flex items-start gap-3 candy-panel p-4">
+              <div className="w-8 h-8 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-200 dark:border-violet-500/25 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-4 h-4 text-violet-600 dark:text-violet-400" strokeWidth={2} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-slate-900 dark:text-[#e2e8f0] text-xs font-bold mb-0.5">Pro Tip</p>
+                <p className="text-slate-500 dark:text-[#475569] text-[11px] leading-snug">
+                  Complete at least one class daily to maintain your streak and earn bonus coins.
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Bottom spacer for mobile nav */}
-      <div className="h-4" />
+        {/* Bottom spacer for mobile nav */}
+        <div className="h-6" />
+      </div>
     </div>
   );
 }

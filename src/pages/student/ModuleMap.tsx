@@ -422,9 +422,9 @@ export default function ModuleMap() {
     <div className="min-h-screen candy-map-bg">
       {/* ── Sticky Header ── */}
       <div
-        className="sticky top-0 z-30 px-4 py-3 bg-white/70 dark:bg-black/70 backdrop-blur-md border-b border-white/20 shadow-sm"
+        className="sticky top-0 z-30 px-2 sm:px-4 py-3 bg-white/70 dark:bg-black/70 backdrop-blur-md border-b border-white/20 shadow-sm"
       >
-        <div className="max-w-lg mx-auto flex items-center gap-3">
+        <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/student')}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/10 transition-all candy-panel !border-2 !p-0"
@@ -500,7 +500,7 @@ export default function ModuleMap() {
 
       {/* ── Standard Vertical List ── */}
       {virtualNodes.length > 0 && (
-        <div className="max-w-xl mx-auto px-4 pt-6 pb-32" ref={mapContainer}>
+        <div className="max-w-xl mx-auto px-2 sm:px-4 pt-6 pb-32" ref={mapContainer}>
           {/* Start Banner */}
           <div
             className="text-center mb-6 py-4 rounded-2xl relative z-10"
@@ -581,6 +581,7 @@ export default function ModuleMap() {
           onGo={handleGo}
         />
       )}
+      </div>
     </div>
   );
 }

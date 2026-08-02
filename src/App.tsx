@@ -110,7 +110,7 @@ const CRMLayout = ({ children }: { children: React.ReactNode }) => {
       </button>
       
       {/* Main Content Area — overflow-y-auto allows each page to scroll */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto pb-20 md:pb-0">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto pb-20 md:pb-0 overflow-x-hidden">
         {children}
       </div>
 

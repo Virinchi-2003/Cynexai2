@@ -18,7 +18,7 @@ export default function ManagerDashboard() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
+      <div className="flex-1 flex flex-col px-2 py-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full min-w-0 overflow-y-auto pb-20 md:pb-8">
         <AttendanceButton />
         <div className="flex justify-between items-center mb-8">
           <div>

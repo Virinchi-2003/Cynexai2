@@ -24,7 +24,7 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="p-4 pt-8 min-h-screen bg-erp-background pb-32">
+    <div className="w-full max-w-7xl mx-auto px-2 py-4 sm:px-6 lg:px-8 min-h-screen bg-erp-background pb-32">
       <AttendanceButton />
       <h1 className="text-3xl font-display font-bold text-erp-text mb-6">Admin Overview</h1>
       
