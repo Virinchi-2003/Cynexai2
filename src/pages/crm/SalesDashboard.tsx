@@ -76,6 +76,7 @@ export default function SalesDashboard() {
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
         
+        <AttendanceButton />
         {/* Header & Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>

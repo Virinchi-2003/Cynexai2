@@ -4,6 +4,8 @@ import { getPendingApprovals, PendingApproval, getManagerAnalytics } from '../..
 import { Card } from '../../../components/ui/erp/Card';
 import { CheckCircle, Users, BookOpen, CheckSquare, Settings, Calendar } from 'lucide-react';
 
+import { AttendanceButton } from '../../../components/ui/AttendanceButton';
+
 export default function ManagerDashboard() {
   const [approvals, setApprovals] = useState<PendingApproval[]>([]);
   const [stats, setStats] = useState({ totalStudents: 0, totalLeads: 0, totalRevenue: 0, classesCompleted: 0 });
@@ -17,6 +19,7 @@ export default function ManagerDashboard() {
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-20 md:pb-8">
+        <AttendanceButton />
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-display font-bold text-erp-text">Manager Hub</h1>

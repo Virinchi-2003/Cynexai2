@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/erp/Button';
 import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
+import { AttendanceButton } from '../../components/ui/AttendanceButton';
 import { getTeacherTimetables, getTeacherFirstCourse, getCourseModulesMap, getCourseClassesMap } from '../../lib/api/teacher';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -133,6 +134,7 @@ export default function TeacherDashboard() {
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
+        <AttendanceButton />
         
         {/* Header */}
         <div className="flex justify-between items-center mb-8">

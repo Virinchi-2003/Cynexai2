@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
-import { BarChart3, TrendingUp, MousePointerClick, Calendar, Key, AlertCircle, CheckCircle, Upload, Layout, FileText, Search, Sparkles, Briefcase } from 'lucide-react';
+import { BarChart3, TrendingUp, MousePointerClick, Calendar, Key, AlertCircle, Layout, Save, CheckSquare, Plus, CheckCircle, Video, Search, Edit, Trash2, Briefcase, Sparkles, FileText, Upload } from 'lucide-react';
+import { AttendanceButton } from '../../../components/ui/AttendanceButton';
 import { useNavigate } from 'react-router-dom';
 import { getMarketingMetrics, getMarketingCampaigns } from '../../../lib/api/marketing';
 import { getBlogPosts, getScrapedJobs, getAISuggestions, getSEOKeywords, triggerJobScraper } from '../../../lib/api/dm';
@@ -188,8 +189,9 @@ export default function DMDashboard() {
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
         <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-erp-text">Marketing Hub</h1>
+          <div className="w-full">
+            <AttendanceButton />
+            <h1 className="text-3xl font-display font-bold text-erp-text mt-4">Marketing Hub</h1>
             <p className="text-erp-text/70 font-medium mt-1">Manage Ads, Content, and SEO</p>
           </div>
         </div>

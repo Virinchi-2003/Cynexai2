@@ -130,17 +130,13 @@ function EmployeeRow({ report, rank, allTasks }: { report: EmployeeReport; rank:
         <td className="px-4 py-3.5 text-center">
           <span className="font-bold text-erp-text">{report.total_calls}</span>
         </td>
-        <td className="px-4 py-3.5">
-          <div className="space-y-1 min-w-[100px]">
-            <div className="flex justify-between">
-              <span className="text-xs font-bold text-erp-text">{report.tasks_completed}/{report.total_tasks}</span>
-              <span className="text-xs text-erp-text/40">{report.completion_rate}%</span>
-            </div>
-            <ProgressBar
-              value={report.tasks_completed}
-              max={report.total_tasks}
-              color={report.completion_rate >= 80 ? 'bg-emerald-500' : report.completion_rate >= 50 ? 'bg-amber-500' : 'bg-red-500'}
-            />
+        <td className="px-4 py-3.5 text-center">
+          <span className="font-bold text-erp-text">{report.tasks_completed}</span>
+        </td>
+        <td className="px-4 py-3.5 text-center">
+          <div className="flex flex-col text-xs font-bold text-erp-text/60">
+            <span>{report.login_time ? new Date(report.login_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—'}</span>
+            <span className="text-[10px] text-erp-text/40">{report.logout_time ? new Date(report.logout_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (report.login_time ? 'Active' : '')}</span>
           </div>
         </td>
         <td className="px-4 py-3.5 text-center">
@@ -320,8 +316,8 @@ export default function ReportsPage() {
   const [projectData, setProjectData] = useState<ProjectGroup[]>([]);
   const [allTasks, setAllTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
+  const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
   const [sortBy, setSortBy] = useState<keyof EmployeeReport>('completion_rate');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [roleFilter, setRoleFilter] = useState('');
@@ -423,6 +419,17 @@ export default function ReportsPage() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-2 items-center bg-erp-surface border-2 border-erp-border rounded-2xl p-3 shadow-sm">
+              <div className="flex gap-1 mr-2 bg-erp-background p-1 rounded-xl">
+                <button onClick={() => {
+                  const t = new Date().toISOString().split('T')[0];
+                  setDateFrom(t); setDateTo(t);
+                }} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-erp-surface hover:bg-erp-primary/10">Today</button>
+                <button onClick={() => {
+                  const d = new Date(); d.setDate(d.getDate() - 1);
+                  const t = d.toISOString().split('T')[0];
+                  setDateFrom(t); setDateTo(t);
+                }} className="text-xs font-bold px-3 py-1.5 rounded-lg bg-erp-surface hover:bg-erp-primary/10">Yesterday</button>
+              </div>
               <Calendar className="w-4 h-4 text-erp-text/40 flex-shrink-0" />
               <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
                 className="bg-erp-surface border border-erp-border rounded-xl px-3 py-1.5 text-sm text-erp-text outline-none font-medium" />
@@ -472,7 +479,8 @@ export default function ReportsPage() {
                         <th className="px-4 py-3 text-left text-erp-text/50 font-bold text-[10px] uppercase tracking-wider w-10">#</th>
                         <th className="px-4 py-3 text-left text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Employee</th>
                         <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Calls</th>
-                        <th className="px-4 py-3 text-left text-erp-text/50 font-bold text-[10px] uppercase tracking-wider min-w-[140px]">Tasks</th>
+                        <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Tasks Done</th>
+                        <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Login / Out</th>
                         <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Overdue</th>
                         <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Conversions</th>
                         <th className="px-4 py-3 text-center text-erp-text/50 font-bold text-[10px] uppercase tracking-wider">Time Spent</th>

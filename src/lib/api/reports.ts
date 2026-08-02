@@ -14,6 +14,8 @@ export interface EmployeeReport {
   total_time_minutes: number;
   conversions: number; // leads converted to admissions
   completion_rate: number;
+  login_time: string | null;
+  logout_time: string | null;
 }
 
 export interface TimeLog {
@@ -110,6 +112,64 @@ export const getActiveTimeLog = async (userId: string): Promise<TimeLog | null> 
   } catch (e) {
     console.error('Failed to get active time log', e);
     return null;
+  }
+};
+
+// ─── Office Attendance (Employee) ─────────────────────────────────────────────
+
+export interface EmployeeAttendance {
+  id: string;
+  user_id: string;
+  date: string;
+  login_time: string | null;
+  logout_time: string | null;
+  duration_minutes: number | null;
+}
+
+export const getTodayAttendance = async (userId: string): Promise<EmployeeAttendance | null> => {
+  if (!isTursoConfigured || !client) return null;
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const res = await client.execute({
+      sql: `SELECT * FROM employee_attendance WHERE user_id = ? AND date = ?`,
+      args: [userId, today]
+    });
+    if (res.rows.length === 0) return null;
+    return res.rows[0] as unknown as EmployeeAttendance;
+  } catch (e) {
+    console.error('Failed to get today attendance', e);
+    return null;
+  }
+};
+
+export const logOfficeAttendance = async (userId: string, action: 'login' | 'logout'): Promise<boolean> => {
+  if (!isTursoConfigured || !client) return false;
+  const today = new Date().toISOString().split('T')[0];
+  const now = new Date().toISOString();
+  
+  try {
+    const existing = await getTodayAttendance(userId);
+    if (action === 'login') {
+      if (existing) return true; // Already logged in today
+      const id = 'att_' + Date.now().toString(36);
+      await client.execute({
+        sql: `INSERT INTO employee_attendance (id, user_id, date, login_time) VALUES (?, ?, ?, ?)`,
+        args: [id, userId, today, now]
+      });
+      return true;
+    } else {
+      if (!existing || !existing.login_time) return false; // Not logged in
+      const start = new Date(existing.login_time);
+      const duration = Math.round((new Date(now).getTime() - start.getTime()) / 60000);
+      await client.execute({
+        sql: `UPDATE employee_attendance SET logout_time = ?, duration_minutes = ? WHERE id = ?`,
+        args: [now, duration, existing.id]
+      });
+      return true;
+    }
+  } catch (e) {
+    console.error('Failed to log office attendance', e);
+    return false;
   }
 };
 
@@ -259,6 +319,22 @@ export const getEmployeeReports = async (
         conversions = Number(convRes.rows[0]?.cnt) || 0;
       } catch { /* table may not exist */ }
 
+      // Attendance stats
+      let login_time = null;
+      let logout_time = null;
+      try {
+        const attRes = await client.execute({
+          sql: `SELECT login_time, logout_time FROM employee_attendance 
+                WHERE user_id = ? ${dateFilter.replace(/t\.created_at/g, 'date')} 
+                ORDER BY date DESC LIMIT 1`,
+          args: [userId, ...dateArgs]
+        });
+        if (attRes.rows.length > 0) {
+          login_time = attRes.rows[0].login_time as string;
+          logout_time = attRes.rows[0].logout_time as string;
+        }
+      } catch { /* table might be missing */ }
+
       reports.push({
         user_id: userId,
         user_name: userRow.name as string,
@@ -270,7 +346,9 @@ export const getEmployeeReports = async (
         tasks_overdue: Number(taskRow.tasks_overdue) || 0,
         total_time_minutes: totalTimeMinutes,
         conversions,
-        completion_rate: totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0
+        completion_rate: totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0,
+        login_time,
+        logout_time
       });
     }
 

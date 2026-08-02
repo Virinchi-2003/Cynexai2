@@ -999,6 +999,17 @@ export const initTursoDB = async () => {
       `);
 
       await client.execute(`
+        CREATE TABLE IF NOT EXISTS employee_attendance (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          date TEXT NOT NULL,
+          login_time TEXT,
+          logout_time TEXT,
+          duration_minutes INTEGER
+        )
+      `);
+
+      await client.execute(`
         CREATE TABLE IF NOT EXISTS task_comments (
           id TEXT PRIMARY KEY,
           task_id TEXT,

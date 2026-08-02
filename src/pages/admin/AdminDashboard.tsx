@@ -3,6 +3,7 @@ import { isTursoConfigured } from '../../lib/turso';
 import { getAdminStats } from '../../lib/api/admin';
 import { Card } from '../../components/ui/erp/Card';
 import { Users, BookOpen, IndianRupee, TrendingUp } from 'lucide-react';
+import { AttendanceButton } from '../../components/ui/AttendanceButton';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-4 pt-8 min-h-screen bg-erp-background pb-32">
+      <AttendanceButton />
       <h1 className="text-3xl font-display font-bold text-erp-text mb-6">Admin Overview</h1>
       
       <div className="grid grid-cols-2 gap-4 mb-6">
