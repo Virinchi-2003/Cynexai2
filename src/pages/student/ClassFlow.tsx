@@ -258,7 +258,7 @@ export default function ClassFlow() {
                       {(() => {
                         const rawUrl = classData.youtube_video_id || '';
                         let videoId = '';
-                        const match = rawUrl.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|v=))([\w-]{11})/);
+                        const match = rawUrl.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|v=|live\/|shorts\/))([\w-]{11})/i);
                         if (match && match[1]) {
                           videoId = match[1];
                         } else if (/^[\w-]{11}$/.test(rawUrl.trim())) {

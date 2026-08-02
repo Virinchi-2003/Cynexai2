@@ -517,31 +517,31 @@ export default function ModuleMap() {
           {/* List Area */}
           <div className="relative w-full mx-auto space-y-4 pb-32">
             {virtualNodes.map((node, i) => {
-              const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'locked';
+              const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'future';
               let kind: keyof typeof KIND_CONFIG = 'video';
               if (node.classItem.type === 'live' || node.classItem.type === 'zoom') kind = 'live';
               const cfg = KIND_CONFIG[kind] || KIND_CONFIG.lesson;
               
-              const isLocked = state === 'locked';
               const isCompleted = state === 'completed';
               const isCurrent = state === 'current';
+              const isLocked = false;
               
               return (
                 <div 
                   key={node.id} 
                   id={`node-${i}`}
-                  onClick={() => !isLocked && handleNodeClick(node)}
-                  className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${isLocked ? 'opacity-60 cursor-not-allowed border-transparent bg-slate-100 dark:bg-white/5' : isCurrent ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]' : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'}`}
+                  onClick={() => handleNodeClick(node)}
+                  className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${isCurrent ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]' : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'}`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-white/40'}`}>
-                    {isCompleted ? <NodeIcons.check size={24} /> : isLocked ? <NodeIcons.lock size={20} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-white/40'}`}>
+                    {isCompleted ? <NodeIcons.check size={24} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: isLocked ? '#94a3b8' : cfg.labelColor }}>
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.labelColor }}>
                       {cfg.label} {isCurrent && <span className="ml-2 text-indigo-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full">Next up</span>}
                     </p>
-                    <p className={`font-bold text-sm leading-tight line-clamp-2 ${isLocked ? 'text-slate-500 dark:text-white/40' : 'text-slate-900 dark:text-white'}`}>
+                    <p className={`font-bold text-sm leading-tight line-clamp-2 text-slate-900 dark:text-white`}>
                       {node.title}
                     </p>
                     {node.classItem.date && (

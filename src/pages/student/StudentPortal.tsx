@@ -33,6 +33,27 @@ import { gsap } from 'gsap';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+function isAnnouncementExpired(ann: Announcement): boolean {
+  if (!ann.title?.startsWith('⏰')) return false;
+  
+  const timeMatch = ann.body?.match(/🕐 New Time: ([\d:]+)/);
+  const dateMatch = ann.body?.match(/📆 New Date: ([\d-]+)/);
+  
+  if (timeMatch) {
+    const classTime = timeMatch[1];
+    let classDateStr = dateMatch ? dateMatch[1] : ann.created_at?.split('T')[0];
+    if (!classDateStr) classDateStr = new Date().toISOString().split('T')[0];
+    
+    // Parse the new class date and time
+    const classDate = new Date(`${classDateStr}T${classTime}:00`);
+    if (!isNaN(classDate.getTime())) {
+      // If the scheduled time is in the past, it's expired
+      return classDate < new Date();
+    }
+  }
+  return false;
+}
+
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '—';
   const d = new Date(dateStr);
@@ -515,8 +536,9 @@ export default function StudentPortal() {
         })),
         getAnnouncements().catch(() => []),
       ]);
+      const activeAnns = annsResult.filter((a: Announcement) => !isAnnouncementExpired(a));
       setDashData(dashResult as StudentDashboardData);
-      setAnnouncements(annsResult);
+      setAnnouncements(activeAnns);
     } catch (e) {
       console.error('StudentPortal load error:', e);
       setError(true);

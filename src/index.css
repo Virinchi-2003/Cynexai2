@@ -72,16 +72,16 @@ html {
   --border: 42 40 36;
   --ring: 88 204 2;
 
-  /* ERP Portal colors — Rich Warm Black */
+  /* ERP Portal colors — Premium True Black */
   --erp-primary: #58CC02;
   --erp-primary-shadow: #58A700;
-  --erp-background: #0F0E0C;
-  --erp-surface: #1A1916;
-  --erp-text: #F0EDE8;
-  --erp-text-muted: #8C8880;
-  --erp-border: #2E2C28;
-  --erp-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
-  --erp-sidebar-bg: #141310;
+  --erp-background: #000000;
+  --erp-surface: #0a0a0a;
+  --erp-text: #ffffff;
+  --erp-text-muted: #888888;
+  --erp-border: #1a1a1a;
+  --erp-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --erp-sidebar-bg: #050505;
   --erp-sidebar-border: #262420;
   --erp-input-bg: #1E1D1A;
   --erp-hover: rgba(88, 204, 2, 0.08);
@@ -381,9 +381,9 @@ button, [role="button"] {
   transition: all 0.2s ease;
 }
 [data-theme="dark"] .candy-panel {
-  @apply bg-[#131f24];
-  border-color: #202f36;
-  box-shadow: 0 4px 0 #202f36;
+  @apply bg-[#0a0a0a];
+  border-color: #1a1a1a;
+  box-shadow: 0 4px 0 #1a1a1a;
 }
 
 /* Gamified Background (Clean, soft dots or solid) */
@@ -394,6 +394,6 @@ button, [role="button"] {
   background-size: 32px 32px;
 }
 [data-theme="dark"] .candy-map-bg {
-  background-color: #0b1416;
-  background-image: radial-gradient(#1a262a 2px, transparent 2px);
+  background-color: #000000;
+  background-image: radial-gradient(#111111 2px, transparent 2px);
 }

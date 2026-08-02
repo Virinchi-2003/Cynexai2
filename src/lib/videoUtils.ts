@@ -18,7 +18,7 @@ export function formatYoutubeUrl(rawUrl: string): string {
   }
 
   // Extract ID using standard youtube URL regex
-  const youtubeRegex = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|v=))([\w-]{11})/;
+  const youtubeRegex = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|v=|live\/|shorts\/))([\w-]{11})/i;
   const match = processUrl.match(youtubeRegex);
   
   if (match && match[1] && match[1].length === 11) {

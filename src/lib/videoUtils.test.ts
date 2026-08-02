@@ -28,6 +28,14 @@ describe('formatYoutubeUrl', () => {
     expect(formatYoutubeUrl('https://www.youtube.com/embed/dQw4w9WgXcQ')).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   });
 
+  test('extracts ID from live URL', () => {
+    expect(formatYoutubeUrl('https://www.youtube.com/live/dQw4w9WgXcQ?si=abcdef')).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  });
+
+  test('extracts ID from shorts URL', () => {
+    expect(formatYoutubeUrl('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  });
+
   test('handles empty or whitespace strings', () => {
     expect(formatYoutubeUrl('   ')).toBe('');
     expect(formatYoutubeUrl('')).toBe('');
