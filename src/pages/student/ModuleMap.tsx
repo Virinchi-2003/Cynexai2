@@ -195,11 +195,6 @@ function NodePopup({
                 Ready to start
               </span>
             )}
-            {state === 'locked' && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-400 dark:text-white/30">
-                <NodeIcons.lock size={14} /> Complete previous classes to unlock
-              </span>
-            )}
           </div>
 
           {/* Action */}
@@ -217,7 +212,7 @@ function NodePopup({
                 isClickable ? 'candy-btn-blue' : 'bg-slate-300 dark:bg-zinc-700 text-slate-500 dark:text-zinc-500 shadow-none border-none'
               }`}
             >
-              {state === 'completed' ? 'Review' : state === 'current' ? 'Start ▶' : 'Locked'}
+              {state === 'completed' ? 'Review' : 'Start ▶'}
             </button>
           </div>
         </div>
@@ -517,7 +512,7 @@ export default function ModuleMap() {
           {/* List Area */}
           <div className="relative w-full mx-auto space-y-4 pb-32">
             {virtualNodes.map((node, i) => {
-              const state = i < currentLevel ? 'completed' : i === currentLevel ? 'current' : 'future';
+              const state = i < currentLevel ? 'completed' : 'current';
               let kind: keyof typeof KIND_CONFIG = 'video';
               if (node.classItem.type === 'live' || node.classItem.type === 'zoom') kind = 'live';
               const cfg = KIND_CONFIG[kind] || KIND_CONFIG.lesson;
@@ -580,8 +575,7 @@ export default function ModuleMap() {
         <NodePopup
           node={selectedNode}
           state={
-            virtualNodes.findIndex(n => n.id === selectedNode.id) < currentLevel ? 'completed' :
-            virtualNodes.findIndex(n => n.id === selectedNode.id) === currentLevel ? 'current' : 'locked'
+            virtualNodes.findIndex(n => n.id === selectedNode.id) < currentLevel ? 'completed' : 'current'
           }
           onClose={() => setSelectedNode(null)}
           onGo={handleGo}
