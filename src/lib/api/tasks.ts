@@ -32,7 +32,6 @@ export const createTask = async (task: Omit<Task, 'id' | 'status'>) => {
   
   if (isTursoConfigured && client) {
     try {
-      await initTursoDB(); // Ensure tables are initialized and updated
       await client.execute({
         sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, project_id, related_entity, task_type, target_number, current_number, start_date, tags, recurrence_rule, created_by, lead_id, student_id, created_at, updated_at) 
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,

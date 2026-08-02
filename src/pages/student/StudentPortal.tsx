@@ -578,7 +578,7 @@ export default function StudentPortal() {
 
   // ──────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-4 md:p-6 candy-map-bg min-h-screen" ref={portalContainer}>
+    <div className="px-3 py-4 sm:p-4 md:p-6 candy-map-bg min-h-screen" ref={portalContainer}>
       {/* ── Reschedule Popup Notifications ── */}
       <ReschedulePopup
         announcements={announcements.filter(a => !dismissedAnnIds.has(a.id))}

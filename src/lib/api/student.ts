@@ -155,85 +155,94 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
     return { course: null, gamification, modules: [], upcomingClass: null };
   }
 
-  // Modules
-  let modulesData: any[] = [];
-  try {
-    const modRes = await executeWithRetry(
-      `SELECT m.*, cmm.order_index as map_order
-       FROM modules m
-       JOIN course_module_mapping cmm ON m.id = cmm.module_id
-       WHERE cmm.course_id = ?
-       ORDER BY cmm.order_index ASC`,
-      [activeCourse.id]
-    );
+  // Now we can parallelize the remaining independent tasks
+  // 1. Fetch modules, classes, progress, QA (they depend on activeCourse.id)
+  // 2. Fetch upcoming class (independent of course id)
+  
+  const [modulesDataResult, upcomingClassResult] = await Promise.all([
+    (async () => {
+      let modulesData: any[] = [];
+      if (!activeCourse) return modulesData;
 
-    let clsRows: any[] = [];
-    try {
-      const clsRes = await executeWithRetry(
-        `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
-           SELECT module_id FROM course_module_mapping WHERE course_id = ?
-         )`,
-        [activeCourse.id]
-      );
-      clsRows = clsRes.rows;
-    } catch { /* no classes */ }
+      try {
+        const [modRes, clsRes, progRes, qaRes] = await Promise.all([
+          // Get Modules
+          executeWithRetry(
+            `SELECT m.*, cmm.order_index as map_order
+             FROM modules m
+             JOIN course_module_mapping cmm ON m.id = cmm.module_id
+             WHERE cmm.course_id = ?
+             ORDER BY cmm.order_index ASC`,
+            [activeCourse.id]
+          ),
+          // Get Classes
+          executeWithRetry(
+            `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
+               SELECT module_id FROM course_module_mapping WHERE course_id = ?
+             )`,
+            [activeCourse.id]
+          ).catch(() => ({ rows: [] })),
+          // Get Progress
+          executeWithRetry(
+            "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
+            [studentId]
+          ).catch(() => ({ rows: [] })),
+          // Get QA
+          executeWithRetry(
+            `SELECT class_id, COUNT(*) as cnt FROM qa_responses WHERE student_id = ? GROUP BY class_id`,
+            [studentId]
+          ).catch(() => ({ rows: [] }))
+        ]);
 
-    let completedSet = new Set<string>();
-    try {
-      const progRes = await executeWithRetry(
-        "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
-        [studentId]
-      );
-      completedSet = new Set(progRes.rows.map((r: any) => r.lesson_id));
-    } catch { /* no progress */ }
+        const clsRows = clsRes.rows || [];
+        const completedSet = new Set((progRes.rows || []).map((r: any) => r.lesson_id));
+        
+        let qaByClass: Record<string, number> = {};
+        (qaRes.rows || []).forEach((r: any) => { qaByClass[r.class_id] = Number(r.cnt); });
 
-    let qaByClass: Record<string, number> = {};
-    try {
-      const qaRes = await executeWithRetry(
-        `SELECT class_id, COUNT(*) as cnt FROM qa_responses WHERE student_id = ? GROUP BY class_id`,
-        [studentId]
-      );
-      qaRes.rows.forEach((r: any) => { qaByClass[r.class_id] = Number(r.cnt); });
-    } catch { /* no qa */ }
+        modulesData = (modRes.rows || []).map((m: any) => {
+          const mClasses = clsRows.filter((c: any) => c.module_id === m.id);
+          const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed').length;
+          const qaTotal = mClasses.reduce((s: number, c: any) => s + (qaByClass[c.id] || 0), 0);
+          const quizClasses = mClasses.filter((c: any) => ['quiz','qa','q&a'].includes((c.type||'').toLowerCase())).length;
+          const codeClasses = mClasses.filter((c: any) => ['code','exercise','coding'].includes((c.type||'').toLowerCase())).length;
+          return {
+            ...m,
+            totalClasses: mClasses.length,
+            completedClasses: completed,
+            progressPct: mClasses.length > 0 ? Math.round((completed / mClasses.length) * 100) : 0,
+            questionsAnswered: qaTotal,
+            quizCount: quizClasses,
+            codeExerciseCount: codeClasses,
+          };
+        });
+      } catch { /* ignore */ }
+      return modulesData;
+    })(),
 
-    modulesData = modRes.rows.map((m: any) => {
-      const mClasses = clsRows.filter((c: any) => c.module_id === m.id);
-      const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed').length;
-      const qaTotal = mClasses.reduce((s: number, c: any) => s + (qaByClass[c.id] || 0), 0);
-      const quizClasses = mClasses.filter((c: any) => ['quiz','qa','q&a'].includes((c.type||'').toLowerCase())).length;
-      const codeClasses = mClasses.filter((c: any) => ['code','exercise','coding'].includes((c.type||'').toLowerCase())).length;
-      return {
-        ...m,
-        totalClasses: mClasses.length,
-        completedClasses: completed,
-        progressPct: mClasses.length > 0 ? Math.round((completed / mClasses.length) * 100) : 0,
-        questionsAnswered: qaTotal,
-        quizCount: quizClasses,
-        codeExerciseCount: codeClasses,
-      };
-    });
-  } catch { /* no module mapping */ }
+    (async () => {
+      let upcomingClass = null;
+      try {
+        const tsRes = await executeWithRetry(
+          `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
+           WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+        );
+        if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
+      } catch { /* no timetable */ }
+      if (!upcomingClass) {
+        try {
+          const clsUp = await executeWithRetry(
+            `SELECT id, title, date, start_time, meet_link, type FROM classes
+             WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+          );
+          if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
+        } catch { /* ignore */ }
+      }
+      return upcomingClass;
+    })()
+  ]);
 
-  // Upcoming class
-  let upcomingClass = null;
-  try {
-    const tsRes = await executeWithRetry(
-      `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
-       WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
-    );
-    if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
-  } catch { /* no timetable */ }
-  if (!upcomingClass) {
-    try {
-      const clsUp = await executeWithRetry(
-        `SELECT id, title, date, start_time, meet_link, type FROM classes
-         WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
-      );
-      if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
-    } catch { /* ignore */ }
-  }
-
-  return { course: activeCourse, gamification, modules: modulesData, upcomingClass };
+  return { course: activeCourse, gamification, modules: modulesDataResult, upcomingClass: upcomingClassResult };
 }
 
 // ─── Class Flow ───────────────────────────────────────────────────────────────
