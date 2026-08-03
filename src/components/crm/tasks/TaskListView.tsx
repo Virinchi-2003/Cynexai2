@@ -73,13 +73,15 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
                 <button className="text-erp-text/30 hover:text-erp-primary transition-colors focus:outline-none">
                   {task.status === 'Done' ? (
                     <CheckCircle className="w-5 h-5 text-green-500" />
+                  ) : task.status === 'Excused' ? (
+                    <Circle className="w-5 h-5 text-yellow-500" />
                   ) : (
                     <Circle className="w-5 h-5" />
                   )}
                 </button>
               </td>
               <td className="p-3">
-                <div className={`font-bold text-sm ${task.status === 'Done' ? 'text-erp-text/50 line-through' : 'text-erp-text'}`}>
+                <div className={`font-bold text-sm ${task.status === 'Done' || task.status === 'Excused' ? 'text-erp-text/50 line-through' : 'text-erp-text'}`}>
                   {task.title}
                 </div>
                 <div className="flex items-center gap-2 mt-1">

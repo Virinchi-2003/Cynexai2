@@ -230,6 +230,7 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
               <option value="In Progress">In Progress</option>
               <option value="Review">Review</option>
               <option value="Done">Done</option>
+              <option value="Excused">Excused</option>
             </select>
           </div>
 

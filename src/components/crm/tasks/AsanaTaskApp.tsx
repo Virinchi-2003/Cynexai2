@@ -35,6 +35,7 @@ const STATUS_COLORS: Record<string, string> = {
   'In Progress': 'text-blue-600 bg-blue-50 border-blue-200',
   'Review': 'text-purple-600 bg-purple-50 border-purple-200',
   'Done': 'text-emerald-600 bg-emerald-50 border-emerald-200',
+  'Excused': 'text-yellow-600 bg-yellow-50 border-yellow-200',
 };
 
 // ── Stats Bar ─────────────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ function StatsBar({ tasks, isManagerOrAbove, onStatClick, activeFilter }: { task
   const done = tasks.filter(t => t.status === 'Done').length;
   const inProgress = tasks.filter(t => t.status === 'In Progress').length;
   const today = new Date().toISOString().split('T')[0];
-  const overdue = tasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done').length;
+  const overdue = tasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done' && t.status !== 'Excused').length;
   const urgent = tasks.filter(t => t.priority === 'Urgent' && t.status !== 'Done').length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -285,8 +286,8 @@ export default function AsanaTaskApp() {
       // Sort tasks: Incomplete Overdue tasks first, then by due date
       const today = new Date().toISOString().split('T')[0];
       fetched.sort((a, b) => {
-        const aOverdue = a.due_date && a.due_date < today && a.status !== 'Done' ? 1 : 0;
-        const bOverdue = b.due_date && b.due_date < today && b.status !== 'Done' ? 1 : 0;
+        const aOverdue = a.due_date && a.due_date < today && a.status !== 'Done' && a.status !== 'Excused' ? 1 : 0;
+        const bOverdue = b.due_date && b.due_date < today && b.status !== 'Done' && b.status !== 'Excused' ? 1 : 0;
         
         if (aOverdue !== bOverdue) return bOverdue - aOverdue; // Overdue tasks come first
         

@@ -280,10 +280,10 @@ export const getEmployeeReports = async (
       // Task stats
       const taskRes = await client.execute({
         sql: `SELECT 
-                COUNT(*) as total_tasks,
+                COUNT(CASE WHEN status != 'Excused' THEN 1 END) as total_tasks,
                 SUM(CASE WHEN status = 'Done' THEN 1 ELSE 0 END) as tasks_completed,
                 SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as tasks_in_progress,
-                SUM(CASE WHEN due_date < ? AND status != 'Done' THEN 1 ELSE 0 END) as tasks_overdue
+                SUM(CASE WHEN due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as tasks_overdue
               FROM tasks t
               WHERE assignee_id = ? ${dateFilter}`,
         args: [new Date().toISOString().split('T')[0], userId, ...dateArgs]
