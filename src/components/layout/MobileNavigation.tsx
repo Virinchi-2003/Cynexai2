@@ -116,15 +116,15 @@ export const MobileNavigation: React.FC = () => {
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          {/* Close button overlay inside drawer */}
+          {/* Close button fixed to viewport */}
           <button 
             onClick={() => setMenuOpen(false)}
-            className="absolute top-4 right-4 p-2 candy-btn !min-h-[40px] z-50 flex items-center justify-center rounded-xl"
+            className="fixed top-4 right-4 p-2 bg-white dark:bg-black rounded-full shadow-lg z-[120] text-slate-800 dark:text-white"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
           
-          <div className="h-full w-full overflow-hidden">
+          <div className="h-full w-full overflow-y-auto overflow-x-hidden relative">
             <Sidebar onNavClick={() => setMenuOpen(false)} />
           </div>
         </div>

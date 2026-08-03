@@ -94,10 +94,19 @@ function TaskMiniCard({ task }: { task: Task }) {
 }
 
 // ── Employee Row ───────────────────────────────────────────────────────────────
-function EmployeeRow({ report, rank, allTasks }: { report: EmployeeReport; rank: number; allTasks: Task[] }) {
+function EmployeeRow({ report, rank, allTasks, dateFrom, dateTo }: { report: EmployeeReport; rank: number; allTasks: Task[]; dateFrom: string; dateTo: string; }) {
   const [expanded, setExpanded] = useState(false);
 
-  const myTasks = allTasks.filter(t => t.assignee_id === report.user_id);
+  // Filter tasks to match the date range (same as the report stats)
+  const myTasks = allTasks.filter(t => {
+    if (t.assignee_id !== report.user_id) return false;
+    if (t.created_at) {
+      const taskDate = t.created_at.split('T')[0];
+      if (dateFrom && taskDate < dateFrom) return false;
+      if (dateTo && taskDate > dateTo) return false;
+    }
+    return true;
+  });
   const doneTasks = myTasks.filter(t => t.status === 'Done');
   const activeTasks = myTasks.filter(t => t.status !== 'Done');
   const today = new Date().toISOString().split('T')[0];
@@ -131,7 +140,12 @@ function EmployeeRow({ report, rank, allTasks }: { report: EmployeeReport; rank:
           <span className="font-bold text-erp-text">{report.total_calls}</span>
         </td>
         <td className="px-4 py-3.5 text-center">
-          <span className="font-bold text-erp-text">{report.tasks_completed}</span>
+          <div className="flex flex-col items-center">
+            <span className="font-bold text-erp-text">{report.tasks_completed}</span>
+            {report.subtasks_completed > 0 && (
+              <span className="text-[9px] font-bold text-erp-primary">+{report.subtasks_completed} subtasks</span>
+            )}
+          </div>
         </td>
         <td className="px-4 py-3.5 text-center">
           <div className="flex flex-col text-xs font-bold text-erp-text/60">
@@ -168,7 +182,7 @@ function EmployeeRow({ report, rank, allTasks }: { report: EmployeeReport; rank:
       {expanded && (
         <tr className="bg-erp-surface/50 border-b border-erp-border/40">
           <td colSpan={8} className="px-6 py-4">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-4">
               <div className="bg-erp-surface border border-erp-border rounded-xl p-3 text-center">
                 <p className="text-[10px] text-erp-text/40 font-bold uppercase mb-1">In Progress</p>
                 <p className="text-lg font-black text-blue-600">{report.tasks_in_progress}</p>
@@ -184,6 +198,14 @@ function EmployeeRow({ report, rank, allTasks }: { report: EmployeeReport; rank:
               <div className="bg-erp-surface border border-erp-border rounded-xl p-3 text-center">
                 <p className="text-[10px] text-erp-text/40 font-bold uppercase mb-1">Conversions</p>
                 <p className="text-lg font-black text-emerald-600">{report.conversions}</p>
+              </div>
+              <div className="bg-erp-surface border border-erp-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-erp-text/40 font-bold uppercase mb-1">Subtasks Done</p>
+                <p className="text-lg font-black text-erp-primary">{report.subtasks_completed}</p>
+              </div>
+              <div className="bg-erp-surface border border-erp-border rounded-xl p-3 text-center">
+                <p className="text-[10px] text-erp-text/40 font-bold uppercase mb-1">Missed Daily</p>
+                <p className={`text-lg font-black ${report.daily_tasks_missed > 0 ? 'text-red-500' : 'text-erp-text/30'}`}>{report.daily_tasks_missed}</p>
               </div>
             </div>
 
@@ -489,7 +511,7 @@ export default function ReportsPage() {
                     </thead>
                     <tbody>
                       {filteredReports.map((r, i) => (
-                        <EmployeeRow key={r.user_id} report={r} rank={i + 1} allTasks={allTasks} />
+                        <EmployeeRow key={r.user_id} report={r} rank={i + 1} allTasks={allTasks} dateFrom={dateFrom} dateTo={dateTo} />
                       ))}
                     </tbody>
                   </table>

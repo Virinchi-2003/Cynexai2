@@ -11,6 +11,8 @@ export interface EmployeeReport {
   tasks_completed: number;
   tasks_in_progress: number;
   tasks_overdue: number;
+  daily_tasks_missed: number;
+  subtasks_completed: number;
   total_time_minutes: number;
   conversions: number; // leads converted to admissions
   completion_rate: number;
@@ -142,6 +144,30 @@ export const getTodayAttendance = async (userId: string): Promise<EmployeeAttend
   }
 };
 
+const autoCleanupAttendance = async () => {
+  if (!isTursoConfigured || !client) return;
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const res = await client.execute({
+      sql: `SELECT id, date, login_time FROM employee_attendance WHERE logout_time IS NULL AND date < ?`,
+      args: [today]
+    });
+    for (const row of res.rows) {
+      const date = row.date as string;
+      const loginTime = row.login_time as string;
+      const endOfThatDay = `${date}T23:59:59.000Z`;
+      const duration = Math.round((new Date(endOfThatDay).getTime() - new Date(loginTime).getTime()) / 60000);
+      
+      await client.execute({
+        sql: `UPDATE employee_attendance SET logout_time = ?, duration_minutes = ? WHERE id = ?`,
+        args: [endOfThatDay, duration, row.id]
+      });
+    }
+  } catch (e) {
+    console.error('Failed auto cleanup', e);
+  }
+};
+
 export const logOfficeAttendance = async (userId: string, action: 'login' | 'logout'): Promise<boolean> => {
   if (!isTursoConfigured || !client) return false;
   const today = new Date().toISOString().split('T')[0];
@@ -254,6 +280,9 @@ export const getEmployeeReports = async (
 ): Promise<EmployeeReport[]> => {
   if (!isTursoConfigured || !client) return [];
 
+  // Auto-cleanup missed logouts before generating reports
+  await autoCleanupAttendance();
+
   try {
     // Build date filter
     let dateFilter = '';
@@ -283,15 +312,26 @@ export const getEmployeeReports = async (
                 COUNT(CASE WHEN status != 'Excused' THEN 1 END) as total_tasks,
                 SUM(CASE WHEN status = 'Done' THEN 1 ELSE 0 END) as tasks_completed,
                 SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as tasks_in_progress,
-                SUM(CASE WHEN due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as tasks_overdue
+                SUM(CASE WHEN due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as tasks_overdue,
+                SUM(CASE WHEN task_type = 'Daily' AND due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as daily_tasks_missed
               FROM tasks t
               WHERE assignee_id = ? ${dateFilter}`,
-        args: [new Date().toISOString().split('T')[0], userId, ...dateArgs]
+        args: [new Date().toISOString().split('T')[0], new Date().toISOString().split('T')[0], userId, ...dateArgs]
       });
 
       const taskRow = taskRes.rows[0] || {};
       const totalTasks = Number(taskRow.total_tasks) || 0;
       const tasksCompleted = Number(taskRow.tasks_completed) || 0;
+
+      // Subtasks stats
+      const subtaskRes = await client.execute({
+        sql: `SELECT COUNT(*) as subtasks_completed
+              FROM task_subtasks ts
+              JOIN tasks t ON ts.task_id = t.id
+              WHERE t.assignee_id = ? AND ts.status = 'Done' ${dateFilter}`,
+        args: [userId, ...dateArgs]
+      });
+      const subtasksCompleted = Number(subtaskRes.rows[0]?.subtasks_completed) || 0;
 
       // Call stats (from CRM activities)
       const callRes = await client.execute({
@@ -344,6 +384,8 @@ export const getEmployeeReports = async (
         tasks_completed: tasksCompleted,
         tasks_in_progress: Number(taskRow.tasks_in_progress) || 0,
         tasks_overdue: Number(taskRow.tasks_overdue) || 0,
+        daily_tasks_missed: Number(taskRow.daily_tasks_missed) || 0,
+        subtasks_completed: subtasksCompleted,
         total_time_minutes: totalTimeMinutes,
         conversions,
         completion_rate: totalTasks > 0 ? Math.round((tasksCompleted / totalTasks) * 100) : 0,
