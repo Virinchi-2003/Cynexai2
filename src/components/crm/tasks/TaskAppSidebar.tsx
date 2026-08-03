@@ -42,24 +42,20 @@ export function TaskAppSidebar({ currentView, onViewChange, projects, onNewProje
             My Tasks
           </button>
           
-          {['Manager', 'CEO', 'Admin'].includes(getCurrentUser()?.role || '') && (
-            <>
-              <button 
-                onClick={() => onViewChange('delegated')}
-                className={getButtonClass(currentView === 'delegated')}
-              >
-                <FolderOpen className="w-4 h-4" />
-                Assigned by Me
-              </button>
-              <button 
-                onClick={() => onViewChange('all-tasks')}
-                className={getButtonClass(currentView === 'all-tasks')}
-              >
-                <Hash className="w-4 h-4" />
-                Team Tasks
-              </button>
-            </>
-          )}
+          <button 
+            onClick={() => onViewChange('delegated')}
+            className={getButtonClass(currentView === 'delegated')}
+          >
+            <FolderOpen className="w-4 h-4" />
+            Assigned by Me
+          </button>
+          <button 
+            onClick={() => onViewChange('all-tasks')}
+            className={getButtonClass(currentView === 'all-tasks')}
+          >
+            <Hash className="w-4 h-4" />
+            Team Tasks
+          </button>
         </div>
 
         {/* Projects */}

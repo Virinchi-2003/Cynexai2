@@ -4,6 +4,7 @@ import { getCurrentUser } from '../../lib/auth';
 import { getCRMAnalytics } from '../../lib/api/crm';
 import { Calendar, TrendingUp, Users, Target, Phone, Filter, Percent, Source } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AttendanceButton } from '../../components/ui/AttendanceButton';
 
 const getStatusColor = (status: string) => {
   switch(status) {

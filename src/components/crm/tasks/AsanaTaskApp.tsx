@@ -138,16 +138,14 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
 
       <div className="p-3 bg-erp-surface/60 flex flex-wrap gap-2 items-center">
         {/* Assignee */}
-        {isManagerOrAbove && (
-          <select
-            value={assignee}
-            onChange={e => setAssignee(e.target.value)}
-            className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
-          >
-            <option value={currentUserId}>Assign to me</option>
-            {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
-          </select>
-        )}
+        <select
+          value={assignee}
+          onChange={e => setAssignee(e.target.value)}
+          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+        >
+          <option value={currentUserId}>Assign to me</option>
+          {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+        </select>
 
         {/* Due date */}
         <input
@@ -283,6 +281,20 @@ export default function AsanaTaskApp() {
       } else {
         fetched = await getTasksForUser(user.id);
       }
+
+      // Sort tasks: Incomplete Overdue tasks first, then by due date
+      const today = new Date().toISOString().split('T')[0];
+      fetched.sort((a, b) => {
+        const aOverdue = a.due_date && a.due_date < today && a.status !== 'Done' ? 1 : 0;
+        const bOverdue = b.due_date && b.due_date < today && b.status !== 'Done' ? 1 : 0;
+        
+        if (aOverdue !== bOverdue) return bOverdue - aOverdue; // Overdue tasks come first
+        
+        if (a.due_date && b.due_date) {
+          return a.due_date.localeCompare(b.due_date);
+        }
+        return 0;
+      });
 
       setTasks(fetched);
     } catch (e) {
