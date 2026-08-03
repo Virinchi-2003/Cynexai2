@@ -255,6 +255,7 @@ export default function AsanaTaskApp() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterPriority, setFilterPriority] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterAssignee, setFilterAssignee] = useState('');
   const [customFilter, setCustomFilter] = useState('');
   const [activeTimeLog, setActiveTimeLog] = useState<any>(null);
   const [showHierarchyForProject, setShowHierarchyForProject] = useState<Project | null>(null);
@@ -322,6 +323,7 @@ export default function AsanaTaskApp() {
   let filteredTasks = tasks
     .filter(t => !searchQuery || t.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .filter(t => !filterPriority || t.priority === filterPriority)
+    .filter(t => !filterAssignee || t.assignee_id === filterAssignee)
     .filter(t => !filterStatus || t.status === filterStatus);
 
   if (customFilter) {
@@ -488,6 +490,20 @@ export default function AsanaTaskApp() {
               <option value="Done">Done</option>
             </select>
 
+            {/* Assignee Filter (Only in Team Tasks) */}
+            {currentView === 'all-tasks' && (
+              <select
+                value={filterAssignee}
+                onChange={e => setFilterAssignee(e.target.value)}
+                className="bg-white border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
+              >
+                <option value="">All Employees</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            )}
+
             {/* View Toggle */}
             <div className="flex bg-erp-surface rounded-xl p-1 border-2 border-erp-border gap-0.5">
               <button onClick={() => setViewMode('list')} className={viewBtnClass(viewMode === 'list')} title="List">
@@ -566,10 +582,10 @@ export default function AsanaTaskApp() {
               <p className="text-xs text-erp-text/30">
                 {searchQuery || filterPriority || filterStatus ? 'Try clearing your filters' : 'Click "New Task" to get started'}
               </p>
-              {(searchQuery || filterPriority || filterStatus) && (
-                <button
-                  onClick={() => { setSearchQuery(''); setFilterPriority(''); setFilterStatus(''); }}
-                  className="text-xs font-bold text-erp-primary hover:underline"
+              {(searchQuery || filterPriority || filterStatus || filterAssignee) && (
+                <button 
+                  onClick={() => { setSearchQuery(''); setFilterPriority(''); setFilterStatus(''); setFilterAssignee(''); }}
+                  className="mt-4 px-4 py-2 bg-erp-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-erp-primary/90"
                 >
                   Clear filters
                 </button>
