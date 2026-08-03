@@ -249,8 +249,8 @@ export default function UserManagement() {
             <div className="flex items-center gap-3 mb-6">
               <LayoutGrid className="w-6 h-6 text-erp-primary" />
               <div>
-                <h2 className="text-xl font-bold text-erp-text">Role Page Access Manager</h2>
-                <p className="text-sm text-erp-text/60">Configure which pages each role can see in the sidebar. Changes apply immediately on next login.</p>
+                <h2 className="text-xl font-bold text-erp-text">Extra Page Access per Role</h2>
+                <p className="text-sm text-erp-text/60">Grant additional pages to a role on top of their defaults. Each role already has their own pages — use this to give cross-role access (e.g. give Sales/HR access to Reports). No duplicates are shown.</p>
               </div>
             </div>
 

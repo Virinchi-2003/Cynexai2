@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { User, LogOut, Loader2, MessageCircle } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap, TrendingUp } from 'lucide-react';
 import { getCurrentUser, logout } from '../../lib/auth';
 import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { ALL_PAGES, PageDef } from '../../lib/pageRegistry';
+import { ALL_PAGES } from '../../lib/pageRegistry';
 import { getRolePages } from '../../lib/api/rolePageAccess';
+
+type NavItem = { to: string, icon: any, label: string, section: string };
 
 export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> = ({ onNavClick, isMobile }) => {
   const user = getCurrentUser();
-  const navigate = useNavigate();
   const [accessLevels, setAccessLevels] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [navPages, setNavPages] = useState<PageDef[]>([]);
+  const [extraNavItems, setExtraNavItems] = useState<NavItem[]>([]);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -22,23 +23,102 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
       const levels = computeAccessiblePortals(user.role, isTeacher);
       setAccessLevels(levels);
 
-      // Build nav from dynamic page registry
-      const enabledKeys = new Set<string>();
-      for (const role of levels) {
-        getRolePages(role).forEach(k => enabledKeys.add(k));
-      }
+      // Load extra pages granted via Role Page Access manager (additive only)
+      const grantedKeys = new Set<string>(getRolePages(user.role));
+      const extras: NavItem[] = ALL_PAGES
+        .filter(p => grantedKeys.has(p.key))
+        .map(p => ({ to: p.to, icon: p.icon, label: p.label, section: 'Extra Access' }));
+      setExtraNavItems(extras);
 
-      // Always include chat if not student
-      if (user.role !== 'Student') enabledKeys.add('shared/chat');
-
-      const pages = ALL_PAGES.filter(p => enabledKeys.has(p.key));
-      setNavPages(pages);
       setLoading(false);
     };
     fetchAccess();
   }, [user?.id, user?.role]);
 
   if (!user) return null;
+
+  // ── Hardcoded base nav per role (original logic, no duplicates) ──────────
+  let allNavItems: NavItem[] = [];
+
+  if (accessLevels.includes('Manager') && !accessLevels.includes('CEO')) {
+    allNavItems.push(
+      { to: '/manager',                  icon: LayoutDashboard, label: 'Manager Hub',      section: 'Manager' },
+      { to: '/manager/courses',          icon: BookOpen,        label: 'Course CMS',       section: 'Manager' },
+      { to: '/sales/pitch',              icon: BookOpen,        label: 'Sales Pitch',      section: 'Manager' },
+      { to: '/sales/pipeline',           icon: Users,           label: 'CRM Pipeline',     section: 'Manager' },
+      { to: '/sales/history',            icon: DollarSign,      label: 'Sales History',    section: 'Manager' },
+      { to: '/manager/timetable',        icon: Calendar,        label: 'Timetable',        section: 'Manager' },
+      { to: '/manager/students',         icon: GraduationCap,   label: 'Students',         section: 'Manager' },
+      { to: '/manager/student-progress', icon: TrendingUp,      label: 'Student Progress', section: 'Manager' },
+      { to: '/manager/users',            icon: Users,           label: 'Staff Mgmt',       section: 'Manager' },
+      { to: '/manager/student-settings', icon: Settings,        label: 'Student Portal',   section: 'Manager' },
+      { to: '/manager/gamification',     icon: Zap,             label: 'Game Config',      section: 'Manager' },
+      { to: '/manager/reports',          icon: BarChart2,       label: 'Reports',          section: 'Manager' },
+      { to: '/manager/tasks',            icon: CheckSquare,     label: 'Assign Tasks',     section: 'Manager' }
+    );
+  }
+
+  if (accessLevels.includes('Teacher') && !accessLevels.includes('CEO')) {
+    allNavItems.push(
+      { to: '/teacher',             icon: LayoutDashboard, label: 'Teacher Hub', section: 'Teacher' },
+      { to: '/teacher/timetable',   icon: Calendar,        label: 'Timetable',   section: 'Teacher' },
+      { to: '/teacher/live',        icon: Video,           label: 'Live Stream', section: 'Teacher' },
+      { to: '/teacher/cms',         icon: BookOpen,        label: 'Course CMS',  section: 'Teacher' },
+      { to: '/teacher/attendance',  icon: Users,           label: 'Attendance',  section: 'Teacher' },
+      { to: '/teacher/tasks',       icon: CheckSquare,     label: 'Tasks',       section: 'Teacher' },
+      { to: '/teacher/settings',    icon: Settings,        label: 'AI Settings', section: 'Teacher' }
+    );
+  }
+
+  if (accessLevels.includes('DM') && !accessLevels.includes('CEO')) {
+    allNavItems.push(
+      { to: '/dm/dashboard', icon: LayoutDashboard, label: 'DM Hub',          section: 'Marketing' },
+      { to: '/dm/planner',   icon: Calendar,        label: 'Content Planner', section: 'Marketing' },
+      { to: '/dm/tasks',     icon: CheckSquare,     label: 'Tasks',           section: 'Marketing' }
+    );
+  }
+
+  if (accessLevels.includes('Sales/HR') && !accessLevels.includes('CEO')) {
+    allNavItems.push(
+      { to: '/sales/dashboard', icon: LayoutDashboard, label: 'Dashboard',    section: 'Sales & HR' },
+      { to: '/sales/pitch',     icon: BookOpen,        label: 'Sales Pitch',  section: 'Sales & HR' },
+      { to: '/sales/pipeline',  icon: Users,           label: 'Pipeline',     section: 'Sales & HR' },
+      { to: '/sales/tasks',     icon: CheckSquare,     label: 'Tasks',        section: 'Sales & HR' }
+    );
+  }
+
+  if (accessLevels.includes('CEO')) {
+    allNavItems.push(
+      { to: '/ceo/dashboard',        icon: LayoutDashboard, label: 'Master View',       section: 'CEO' },
+      { to: '/ceo/tasks',            icon: CheckSquare,     label: 'Tasks',             section: 'CEO' },
+      { to: '/ceo/users',            icon: Users,           label: 'User Admin',        section: 'CEO' },
+      { to: '/ceo/students',         icon: GraduationCap,   label: 'Students',          section: 'CEO' },
+      { to: '/ceo/student-progress', icon: TrendingUp,      label: 'Student Progress',  section: 'CEO' },
+      { to: '/ceo/courses',          icon: BookOpen,        label: 'Course CMS',        section: 'CEO' },
+      { to: '/ceo/timetable',        icon: Calendar,        label: 'Timetable',         section: 'CEO' },
+      { to: '/ceo/sales-dashboard',  icon: DollarSign,      label: 'Sales Hub',         section: 'CEO' },
+      { to: '/ceo/sales-pipeline',   icon: Users,           label: 'CRM Pipeline',      section: 'CEO' },
+      { to: '/ceo/history',          icon: History,         label: 'Master History',    section: 'CEO' },
+      { to: '/sales/pitch',          icon: BookOpen,        label: 'Sales Pitch',       section: 'CEO' },
+      { to: '/ceo/dm-dashboard',     icon: LayoutDashboard, label: 'Marketing Hub',     section: 'CEO' },
+      { to: '/ceo/ai-voice',         icon: Bot,             label: 'AI Voice Gen',      section: 'CEO' },
+      { to: '/teacher/settings',     icon: Settings,        label: 'AI Settings',       section: 'CEO' },
+      { to: '/manager/gamification', icon: Zap,             label: 'Game Config',       section: 'CEO' },
+      { to: '/ceo/student-settings', icon: Settings,        label: 'Student Portal',    section: 'CEO' },
+      { to: '/ceo/reports',          icon: BarChart2,       label: 'Reports',           section: 'CEO' },
+      { to: '/ceo/settings',         icon: Settings,        label: 'ERP Config',        section: 'CEO' }
+    );
+  }
+
+  // Common elements for internal staff
+  if (user.role !== 'Student') {
+    allNavItems.push({ to: '/chat', icon: MessageCircle, label: 'Chat Center', section: 'Shared' });
+  }
+
+  // Append extra granted pages (deduplicated by route)
+  const existingRoutes = new Set(allNavItems.map(i => i.to));
+  const dedupedExtras = extraNavItems.filter(e => !existingRoutes.has(e.to));
+  allNavItems = [...allNavItems, ...dedupedExtras];
 
   let portalName = "CynexAI CRM";
   if (accessLevels.includes('CEO')) portalName = "CEO Portal";
@@ -48,11 +128,11 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   else if (accessLevels.length > 1) portalName = "Staff Portal";
 
   // Group by section
-  const groupedNavs = navPages.reduce((acc, item) => {
+  const groupedNavs = allNavItems.reduce((acc, item) => {
     if (!acc[item.section]) acc[item.section] = [];
     acc[item.section].push(item);
     return acc;
-  }, {} as Record<string, PageDef[]>);
+  }, {} as Record<string, NavItem[]>);
 
   return (
     <div className={`h-full flex flex-col ${isMobile ? '' : 'bg-erp-surface'}`}>
@@ -94,9 +174,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
       </div>
 
       <div className={`${isMobile ? 'mt-4 pt-4 border-t border-slate-200 dark:border-white/10' : 'p-4 border-t-2 border-erp-border'} space-y-1`}>
-        {/* Theme Toggle */}
         <ThemeToggle variant="sidebar" />
-
         <NavLink
           to="/profile"
           onClick={onNavClick}
