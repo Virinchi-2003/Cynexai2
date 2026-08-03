@@ -76,15 +76,15 @@ html {
   --erp-primary: #58CC02;
   --erp-primary-shadow: #58A700;
   --erp-background: #000000;
-  --erp-surface: #0a0a0a;
+  --erp-surface: #121212;
   --erp-text: #ffffff;
-  --erp-text-muted: #888888;
-  --erp-border: #1a1a1a;
-  --erp-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --erp-sidebar-bg: #050505;
-  --erp-sidebar-border: #262420;
-  --erp-input-bg: #1E1D1A;
-  --erp-hover: rgba(88, 204, 2, 0.08);
+  --erp-text-muted: #a3a3a3;
+  --erp-border: #262626;
+  --erp-card-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --erp-sidebar-bg: #0a0a0a;
+  --erp-sidebar-border: #1f1f1f;
+  --erp-input-bg: #1a1a1a;
+  --erp-hover: rgba(255, 255, 255, 0.05);
 }
 
 /* ── Base Body ───────────────────────────────────────────────────────────── */
@@ -94,9 +94,41 @@ body {
 }
 
 /* ── ERP Dark Mode Overrides ─────────────────────────────────────────────── */
-/* Override white/gray in components that use literal colors */
-[data-theme="dark"] .bg-white { background-color: var(--erp-surface) !important; }
-[data-theme="dark"] .border-white { border-color: var(--erp-border) !important; }
+/* Override white/gray backgrounds in components that use literal colors */
+[data-theme="dark"] .bg-white:not([class*="dark:bg-"]) { background-color: var(--erp-surface) !important; }
+[data-theme="dark"] .border-white:not([class*="dark:border-"]) { border-color: var(--erp-border) !important; }
+
+/* Global fix for light-mode text colors that are invisible in dark mode */
+[data-theme="dark"] .text-slate-900:not([class*="dark:text-"]),
+[data-theme="dark"] .text-slate-800:not([class*="dark:text-"]),
+[data-theme="dark"] .text-slate-700:not([class*="dark:text-"]),
+[data-theme="dark"] .text-gray-900:not([class*="dark:text-"]),
+[data-theme="dark"] .text-gray-800:not([class*="dark:text-"]),
+[data-theme="dark"] .text-zinc-900:not([class*="dark:text-"]) {
+  color: var(--erp-text) !important;
+}
+
+[data-theme="dark"] .text-slate-600:not([class*="dark:text-"]),
+[data-theme="dark"] .text-slate-500:not([class*="dark:text-"]),
+[data-theme="dark"] .text-gray-600:not([class*="dark:text-"]),
+[data-theme="dark"] .text-gray-500:not([class*="dark:text-"]) {
+  color: var(--erp-text-muted) !important;
+}
+
+/* Global fix for light-mode backgrounds */
+[data-theme="dark"] .bg-slate-50:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-slate-100:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-gray-50:not([class*="dark:bg-"]),
+[data-theme="dark"] .bg-gray-100:not([class*="dark:bg-"]) {
+  background-color: var(--erp-sidebar-bg) !important;
+}
+
+/* Global fix for light-mode borders */
+[data-theme="dark"] .border-slate-200:not([class*="dark:border-"]),
+[data-theme="dark"] .border-slate-100:not([class*="dark:border-"]),
+[data-theme="dark"] .border-gray-200:not([class*="dark:border-"]) {
+  border-color: var(--erp-border) !important;
+}
 
 /* Input & form overrides for dark mode */
 [data-theme="dark"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
