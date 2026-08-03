@@ -6,7 +6,7 @@ import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
 import { ThemeToggle } from '../ui/ThemeToggle';
 
-export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) => {
+export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> = ({ onNavClick, isMobile }) => {
   const user = getCurrentUser();
   const navigate = useNavigate();
   const [accessLevels, setAccessLevels] = useState<string[]>([]);
@@ -120,10 +120,12 @@ export const Sidebar: React.FC<{ onNavClick?: () => void }> = ({ onNavClick }) =
   }, {} as Record<string, NavItem[]>);
 
   return (
-    <div className="h-full flex flex-col bg-erp-surface">
-      <div className="p-6 border-b-2 border-erp-border flex items-center justify-between">
-        <h2 className="font-display font-bold text-2xl text-erp-text truncate">{portalName}</h2>
-      </div>
+    <div className={`h-full flex flex-col ${isMobile ? '' : 'bg-erp-surface'}`}>
+      {!isMobile && (
+        <div className="p-6 border-b-2 border-erp-border flex items-center justify-between">
+          <h2 className="font-display font-bold text-2xl text-erp-text truncate">{portalName}</h2>
+        </div>
+      )}
       
       <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
         {loading ? (

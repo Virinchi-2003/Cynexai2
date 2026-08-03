@@ -124,8 +124,8 @@ export const MobileNavigation: React.FC = () => {
             <X className="w-6 h-6" />
           </button>
           
-          <div className="h-full w-full overflow-y-auto overflow-x-hidden relative">
-            <Sidebar onNavClick={() => setMenuOpen(false)} />
+          <div className="h-full w-full overflow-hidden relative">
+            <Sidebar onNavClick={() => setMenuOpen(false)} isMobile={true} />
           </div>
         </div>
       </div>
