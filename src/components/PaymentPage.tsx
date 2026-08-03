@@ -198,7 +198,7 @@ const PaymentPage = () => {
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPaymentLink)}`}
                     alt="UPI QR Code"
-                    className="mx-auto border border-gray-300 rounded-lg p-2"
+                    className="mx-auto border border-gray-300 dark:border-white/10 rounded-lg p-2"
                   />
                 )}
                 {!upiPaymentLink && (

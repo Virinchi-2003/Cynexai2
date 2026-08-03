@@ -95,7 +95,7 @@ export default function Profile() {
                 <h2 className="text-2xl font-bold text-erp-text">Dev Settings</h2>
               </div>
               
-              <p className="text-sm font-medium text-erp-text/70 mb-6 bg-blue-50 text-blue-800 p-3 rounded-xl border border-blue-200">
+              <p className="text-sm font-medium text-erp-text/70 mb-6 bg-blue-50 text-blue-800 dark:text-white p-3 rounded-xl border border-blue-200">
                 API Keys stored here are saved locally in your browser's localStorage. They are never sent to our servers.
               </p>
 

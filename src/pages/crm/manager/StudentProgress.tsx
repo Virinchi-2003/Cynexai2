@@ -204,7 +204,7 @@ export default function StudentProgress() {
                   const isEditing = editingId === row.id;
                   
                   return (
-                    <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800/30">
+                    <tr key={row.id} className="border-b border-zinc-100 dark:border-zinc-800 hover:bg-zinc-50 dark:bg-zinc-900/50 dark:hover:bg-zinc-800/30">
                       <td className="p-4">
                         <div className="font-bold text-zinc-800 dark:text-white">{row.student_name}</div>
                         <div className="text-xs text-zinc-500">{row.student_email}</div>
@@ -263,7 +263,7 @@ export default function StudentProgress() {
                           <div className="flex justify-end gap-2">
                             <button 
                               onClick={handleCancelEdit}
-                              className="p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-700 rounded-full transition-colors"
+                              className="p-2 text-zinc-500 hover:bg-zinc-100 dark:bg-zinc-900/50 dark:hover:bg-zinc-700 rounded-full transition-colors"
                               disabled={isSaving}
                             >
                               <X className="w-4 h-4" />

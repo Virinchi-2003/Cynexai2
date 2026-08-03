@@ -108,8 +108,8 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
       case 'Urgent': return 'text-red-600 bg-red-100';
       case 'High': return 'text-orange-600 bg-orange-100';
       case 'Medium': return 'text-blue-600 bg-blue-100';
-      case 'Low': return 'text-gray-600 bg-gray-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'Low': return 'text-gray-600 bg-gray-100 dark:bg-zinc-900/50';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-zinc-900/50';
     }
   };
 
@@ -132,7 +132,7 @@ export const TaskDetailPanel: React.FC<Props> = ({ task, onClose, onUpdate, curr
         </div>
         <div className="flex items-center gap-2">
           {['Manager', 'CEO', 'Admin'].includes(currentUserRole) && (
-            <button onClick={handleDelete} className="p-2 text-red-500 hover:text-red-700 rounded-full hover:bg-red-50 transition-colors" title="Delete Task">
+            <button onClick={handleDelete} className="p-2 text-red-500 hover:text-red-700 dark:text-white rounded-full hover:bg-red-50 transition-colors" title="Delete Task">
               <Trash2 className="w-5 h-5" />
             </button>
           )}

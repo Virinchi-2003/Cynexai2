@@ -69,7 +69,7 @@ export default function ContentPlanner() {
                   <h3 className="font-bold text-lg text-erp-text">LinkedIn Post - Student Success</h3>
                   <p className="text-sm font-bold text-erp-text/50">Platform: LinkedIn • Type: Image + Text</p>
                 </div>
-                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1">
+                <span className="bg-green-100 text-green-700 dark:text-white px-2 py-1 rounded-md text-[10px] font-bold flex items-center gap-1">
                   <CheckCircle className="w-3 h-3" /> Published 10:00 AM
                 </span>
               </div>

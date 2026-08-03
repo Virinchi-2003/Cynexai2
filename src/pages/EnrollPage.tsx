@@ -58,12 +58,12 @@ export default function EnrollPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
+      <div className="min-h-screen bg-slate-50 dark:bg-zinc-900/50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-white dark:bg-black rounded-2xl shadow-sm border border-slate-200 dark:border-white/10 p-8 text-center">
           <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2 font-display">Enrollment Successful!</h2>
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 font-display">Enrollment Successful!</h2>
           <p className="text-slate-600 mb-8">Thank you for enrolling with CynexAI. Our team will get back to you shortly.</p>
           <button 
             onClick={() => setSuccess(false)}
@@ -77,14 +77,14 @@ export default function EnrollPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 md:p-8">
-      <div className="max-w-xl w-full bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-900/50 flex items-center justify-center p-4 md:p-8">
+      <div className="max-w-xl w-full bg-white dark:bg-black rounded-3xl shadow-sm border border-slate-200 dark:border-white/10 overflow-hidden">
         
         {/* Header */}
         <div className="bg-slate-900 px-8 py-10 text-center relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
           <div className="relative z-10 flex flex-col items-center">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
+            <div className="w-14 h-14 bg-white dark:bg-black/10 backdrop-blur-md rounded-2xl flex items-center justify-center mb-4 border border-white/20">
               <GraduationCap className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white font-display mb-2">Join CynexAI</h1>
@@ -95,7 +95,7 @@ export default function EnrollPage() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-8 space-y-5">
           {error && (
-            <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm flex items-start gap-3">
+            <div className="bg-red-50 text-red-700 dark:text-white p-4 rounded-xl text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
               <p>{error}</p>
             </div>
@@ -103,7 +103,7 @@ export default function EnrollPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Full Name *</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Full Name *</label>
               <div className="relative">
                 <User className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <input 
@@ -113,13 +113,13 @@ export default function EnrollPage() {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="John Doe"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Phone Number *</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Phone Number *</label>
               <div className="relative">
                 <Phone className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <input 
@@ -129,14 +129,14 @@ export default function EnrollPage() {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+91 98765 43210"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
                 />
               </div>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold text-slate-700 ml-1">Email Address</label>
+            <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Email Address</label>
             <div className="relative">
               <Mail className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
               <input 
@@ -145,14 +145,14 @@ export default function EnrollPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="johndoe@example.com"
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">College Name</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">College Name</label>
               <div className="relative">
                 <School className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <input 
@@ -161,13 +161,13 @@ export default function EnrollPage() {
                   value={formData.college}
                   onChange={handleChange}
                   placeholder="University Name"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Current Batch (Year)</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Current Batch (Year)</label>
               <div className="relative">
                 <BookOpen className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <input 
@@ -176,7 +176,7 @@ export default function EnrollPage() {
                   value={formData.batch}
                   onChange={handleChange}
                   placeholder="e.g. 2024"
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
                 />
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function EnrollPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Date of Birth</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Date of Birth</label>
               <div className="relative">
                 <Calendar className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <input 
@@ -192,20 +192,20 @@ export default function EnrollPage() {
                   name="dob"
                   value={formData.dob}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold text-slate-700 ml-1">Interested Course</label>
+              <label className="text-sm font-semibold text-slate-700 dark:text-white ml-1">Interested Course</label>
               <div className="relative">
                 <GraduationCap className="w-5 h-5 absolute left-3.5 top-3 text-slate-400" />
                 <select 
                   name="course"
                   value={formData.course}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 appearance-none"
+                  className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-900/50 border border-slate-200 dark:border-white/10 rounded-xl focus:bg-white dark:bg-black focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all text-slate-900 dark:text-white appearance-none"
                 >
                   <option value="" disabled>Select a course</option>
                   <option value="Testing">Testing</option>

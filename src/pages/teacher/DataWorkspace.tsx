@@ -40,20 +40,20 @@ export const DataWorkspace: React.FC = () => {
             <p className="text-slate-400 mb-6 text-sm">Import an Excel or CSV file to display data dynamically for the class to follow along.</p>
           </div>
         ) : (
-          <div className="w-full h-full bg-white text-black rounded-lg overflow-hidden flex flex-col">
-            <div className="bg-slate-100 border-b border-slate-300 px-4 py-2 flex items-center gap-2">
+          <div className="w-full h-full bg-white dark:bg-black text-black rounded-lg overflow-hidden flex flex-col">
+            <div className="bg-slate-100 dark:bg-zinc-900/50 border-b border-slate-300 dark:border-white/10 px-4 py-2 flex items-center gap-2">
               <span className="text-xs font-bold text-slate-500">A1</span>
-              <input type="text" className="flex-1 border border-slate-300 px-2 py-0.5 text-sm" value="ID" readOnly />
+              <input type="text" className="flex-1 border border-slate-300 dark:border-white/10 px-2 py-0.5 text-sm" value="ID" readOnly />
             </div>
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
-                  <tr className="bg-slate-100">
-                    <th className="border border-slate-300 w-10 bg-slate-200"></th>
-                    <th className="border border-slate-300 px-4 py-1 text-center font-normal w-32">A</th>
-                    <th className="border border-slate-300 px-4 py-1 text-center font-normal w-48">B</th>
-                    <th className="border border-slate-300 px-4 py-1 text-center font-normal w-32">C</th>
-                    <th className="border border-slate-300 px-4 py-1 text-center font-normal">D</th>
+                  <tr className="bg-slate-100 dark:bg-zinc-900/50">
+                    <th className="border border-slate-300 dark:border-white/10 w-10 bg-slate-200 dark:bg-zinc-900/50"></th>
+                    <th className="border border-slate-300 dark:border-white/10 px-4 py-1 text-center font-normal w-32">A</th>
+                    <th className="border border-slate-300 dark:border-white/10 px-4 py-1 text-center font-normal w-48">B</th>
+                    <th className="border border-slate-300 dark:border-white/10 px-4 py-1 text-center font-normal w-32">C</th>
+                    <th className="border border-slate-300 dark:border-white/10 px-4 py-1 text-center font-normal">D</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -69,11 +69,11 @@ export const DataWorkspace: React.FC = () => {
                     ['9', '', '', '', ''],
                   ].map((row, i) => (
                     <tr key={i}>
-                      <td className="border border-slate-300 bg-slate-100 text-center text-xs text-slate-500">{row[0]}</td>
-                      <td className="border border-slate-300 px-2 py-1">{row[1]}</td>
-                      <td className="border border-slate-300 px-2 py-1">{row[2]}</td>
-                      <td className="border border-slate-300 px-2 py-1">{row[3]}</td>
-                      <td className="border border-slate-300 px-2 py-1">{row[4]}</td>
+                      <td className="border border-slate-300 dark:border-white/10 bg-slate-100 dark:bg-zinc-900/50 text-center text-xs text-slate-500">{row[0]}</td>
+                      <td className="border border-slate-300 dark:border-white/10 px-2 py-1">{row[1]}</td>
+                      <td className="border border-slate-300 dark:border-white/10 px-2 py-1">{row[2]}</td>
+                      <td className="border border-slate-300 dark:border-white/10 px-2 py-1">{row[3]}</td>
+                      <td className="border border-slate-300 dark:border-white/10 px-2 py-1">{row[4]}</td>
                     </tr>
                   ))}
                 </tbody>

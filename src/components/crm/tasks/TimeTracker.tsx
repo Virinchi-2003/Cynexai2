@@ -183,7 +183,7 @@ export const TimeTracker: React.FC<Props> = ({ taskId }) => {
                 value={manualHours}
                 onChange={e => setManualHours(e.target.value)}
                 placeholder="0"
-                className="w-16 bg-white border border-erp-border rounded-lg px-2 py-1.5 text-sm font-bold text-erp-text outline-none focus:border-erp-primary text-center"
+                className="w-16 bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-sm font-bold text-erp-text outline-none focus:border-erp-primary text-center"
               />
               <span className="text-xs font-bold text-erp-text/50">hrs</span>
             </div>
@@ -195,7 +195,7 @@ export const TimeTracker: React.FC<Props> = ({ taskId }) => {
                 value={manualMins}
                 onChange={e => setManualMins(e.target.value)}
                 placeholder="0"
-                className="w-16 bg-white border border-erp-border rounded-lg px-2 py-1.5 text-sm font-bold text-erp-text outline-none focus:border-erp-primary text-center"
+                className="w-16 bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-sm font-bold text-erp-text outline-none focus:border-erp-primary text-center"
               />
               <span className="text-xs font-bold text-erp-text/50">mins</span>
             </div>
@@ -205,7 +205,7 @@ export const TimeTracker: React.FC<Props> = ({ taskId }) => {
             value={manualNotes}
             onChange={e => setManualNotes(e.target.value)}
             placeholder="Notes (optional)..."
-            className="w-full bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs text-erp-text outline-none focus:border-erp-primary"
+            className="w-full bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs text-erp-text outline-none focus:border-erp-primary"
           />
           <div className="flex gap-2">
             <button

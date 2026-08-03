@@ -285,7 +285,7 @@ export default function MockInterview() {
     return (
       <div className="flex min-h-screen candy-map-bg items-center justify-center p-4">
         <div className="max-w-md text-center space-y-6 candy-panel p-8 !border-2">
-          <div className="mx-auto w-24 h-24 bg-slate-100 dark:bg-white/5 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/10">
+          <div className="mx-auto w-24 h-24 bg-slate-100 dark:bg-white dark:bg-black/5 rounded-2xl flex items-center justify-center border border-slate-200 dark:border-white/10">
             <Clock className="w-12 h-12 text-slate-400 dark:text-white/30" />
           </div>
           <div>
@@ -438,7 +438,7 @@ export default function MockInterview() {
             </div>
           </div>
 
-          <button onClick={() => window.location.reload()} className="w-full py-4 candy-btn text-slate-900 font-bold hover:bg-white transition-colors">
+          <button onClick={() => window.location.reload()} className="w-full py-4 candy-btn text-slate-900 dark:text-white font-bold hover:bg-white dark:bg-black transition-colors">
             Return to Dashboard
           </button>
         </div>

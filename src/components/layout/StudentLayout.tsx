@@ -213,7 +213,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               <span className="flex-1 text-left flex items-center gap-2">
                 {label}
                 {comingSoon && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 font-bold uppercase tracking-wider text-slate-500 dark:text-white/60">Soon</span>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-white dark:bg-black/10 font-bold uppercase tracking-wider text-slate-500 dark:text-white/60">Soon</span>
                 )}
               </span>
               {active && !comingSoon && <ChevronRight className="w-4 h-4 opacity-60" />}
@@ -313,7 +313,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 </div>
                 <span className={`text-[10px] font-black leading-none ${active && !comingSoon ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{short}</span>
                 {comingSoon && (
-                  <span className="absolute top-0 right-0 text-[8px] bg-slate-200 dark:bg-white/20 px-1 py-[1px] rounded font-bold uppercase z-10 text-slate-600 dark:text-white/80">Soon</span>
+                  <span className="absolute top-0 right-0 text-[8px] bg-slate-200 dark:bg-white dark:bg-black/20 px-1 py-[1px] rounded font-bold uppercase z-10 text-slate-600 dark:text-white/80">Soon</span>
                 )}
               </button>
             );

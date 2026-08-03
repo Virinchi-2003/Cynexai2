@@ -154,7 +154,7 @@ export default function CEOSettings() {
               </div>
             </div>
             <div className="mt-4 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-xl">
-              <h4 className="font-bold text-blue-800 text-sm mb-1">Security Notice</h4>
+              <h4 className="font-bold text-blue-800 dark:text-white text-sm mb-1">Security Notice</h4>
               <p className="text-xs font-medium text-blue-600/80 leading-relaxed">
                 These credentials give full access to the production database. Only CEO and authorized DevOps personnel should have access to this page. Do not share your Auth Token.
               </p>

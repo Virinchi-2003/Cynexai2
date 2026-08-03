@@ -231,7 +231,7 @@ const ApplicationForm = () => {
               )}
             </motion.button>
             {error && (
-              <div className="mt-4 p-4 flex items-center bg-red-100 text-red-700 rounded-lg border border-red-200">
+              <div className="mt-4 p-4 flex items-center bg-red-100 text-red-700 dark:text-white rounded-lg border border-red-200">
                 <XCircle className="w-5 h-5 mr-2 flex-shrink-0" />
                 <span>{error}</span>
               </div>

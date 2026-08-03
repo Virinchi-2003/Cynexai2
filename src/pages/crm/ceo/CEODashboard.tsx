@@ -81,7 +81,7 @@ export default function CEODashboard() {
             <span className="font-bold text-erp-text text-sm text-center">Course Management</span>
           </Card>
           
-          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors border-slate-200 dark:border-slate-700 card-hover" onClick={() => navigate('/ceo/settings')}>
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-slate-50 dark:bg-zinc-900/50 dark:hover:bg-slate-800/50 transition-colors border-slate-200 dark:border-slate-700 card-hover" onClick={() => navigate('/ceo/settings')}>
             <Settings className="w-8 h-8 text-slate-600 dark:text-slate-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Global Settings</span>
           </Card>
@@ -110,7 +110,7 @@ export default function CEODashboard() {
               <BrainCircuit className="w-5 h-5 text-blue-400" /> AI Strategic Advisory
             </h2>
             <div className="space-y-4">
-              <div className="bg-white/10 p-3 rounded-xl border border-white/20">
+              <div className="bg-white dark:bg-black/10 p-3 rounded-xl border border-white/20">
                 <p className="text-sm text-blue-100 italic leading-relaxed">
                   "Based on last week's data, conversion rate is currently {conversionRate}%. I recommend assigning more tasks to follow up with Demo Leads to increase conversions, as there is a backlog in the 'Demo Scheduled' bucket."
                 </p>

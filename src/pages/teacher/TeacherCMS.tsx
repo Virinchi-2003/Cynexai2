@@ -114,7 +114,7 @@ export default function TeacherCMS() {
         </div>
 
         {modules.length === 0 ? (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-12 text-center">
+          <div className="bg-white dark:bg-black/5 border border-white/10 rounded-2xl p-12 text-center">
             <BookOpen className="w-12 h-12 text-erp-text/30 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-erp-text mb-2">No modules assigned</h2>
             <p className="text-erp-text/50">Please contact the manager to assign modules to your account.</p>
@@ -138,12 +138,12 @@ export default function TeacherCMS() {
                     <input 
                       value={newClassTitle} onChange={e => setNewClassTitle(e.target.value)} 
                       placeholder="Class Title" 
-                      className="w-full bg-white border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text" 
+                      className="w-full bg-white dark:bg-black border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text" 
                     />
                     <textarea 
                       value={newClassDesc} onChange={e => setNewClassDesc(e.target.value)} 
                       placeholder="Description (Optional)" 
-                      className="w-full bg-white border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text resize-none" 
+                      className="w-full bg-white dark:bg-black border border-erp-border rounded-lg px-3 py-2 text-sm text-erp-text resize-none" 
                       rows={2} 
                     />
                     <div className="flex justify-end gap-2">
@@ -158,13 +158,13 @@ export default function TeacherCMS() {
                     <div className="text-center p-4 text-erp-text/50 text-sm">No classes in this module yet.</div>
                   ) : (
                     mod.classes.map((cls: any) => (
-                      <div key={cls.id as string} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-3 rounded-lg border border-erp-border gap-3">
+                      <div key={cls.id as string} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-black p-3 rounded-lg border border-erp-border gap-3">
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${cls.type === 'live' ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-500'}`}>
                             {cls.type === 'live' ? <Radio className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           </div>
                           <div>
-                            <span className="font-bold text-sm text-slate-800">{cls.title}</span>
+                            <span className="font-bold text-sm text-slate-800 dark:text-white">{cls.title}</span>
                             <p className="text-xs text-slate-500 truncate max-w-sm">{cls.description}</p>
                           </div>
                         </div>
@@ -173,7 +173,7 @@ export default function TeacherCMS() {
                             <>
                               <Button 
                                 onClick={() => viewSlides(cls.id as string)}
-                                variant="ghost" className="h-9 px-3 text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200"
+                                variant="ghost" className="h-9 px-3 text-xs bg-green-50 text-green-700 dark:text-white hover:bg-green-100 border border-green-200"
                               >
                                 <FileText className="w-4 h-4 mr-2" /> View Slides
                               </Button>
@@ -211,7 +211,7 @@ export default function TeacherCMS() {
         {showAiSettings && (
           <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
             <div className="bg-erp-surface rounded-2xl w-full max-w-md border border-erp-border overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between p-5 border-b border-erp-border bg-white">
+              <div className="flex items-center justify-between p-5 border-b border-erp-border bg-white dark:bg-black">
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-indigo-500" />
                   <h3 className="font-bold text-erp-text">AI Generation Settings</h3>
@@ -220,13 +220,13 @@ export default function TeacherCMS() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="p-5 space-y-4 bg-slate-50/50">
+              <div className="p-5 space-y-4 bg-slate-50 dark:bg-zinc-900/50/50">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">PPT Theme Template</label>
                   <select
                     value={selectedTheme}
                     onChange={e => setSelectedTheme(e.target.value)}
-                    className="w-full bg-white border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="w-full bg-white dark:bg-black border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   >
                     <option value="modern-dark">Modern Dark (Sleek, tech-focused)</option>
                     <option value="glassmorphism">Glassmorphism (Vibrant, dynamic)</option>
@@ -239,7 +239,7 @@ export default function TeacherCMS() {
                   <select
                     value={selectedContentStyle}
                     onChange={e => setSelectedContentStyle(e.target.value)}
-                    className="w-full bg-white border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                    className="w-full bg-white dark:bg-black border border-erp-border rounded-lg px-4 py-3 font-medium text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                   >
                     <option value="storytelling">Storytelling (Narrative-driven, examples)</option>
                     <option value="technical">Technical (Precise, code-heavy)</option>
@@ -247,14 +247,14 @@ export default function TeacherCMS() {
                     <option value="standard">Standard (Clear & Informative)</option>
                   </select>
                 </div>
-                <div className="flex items-center justify-between bg-white border border-erp-border rounded-lg px-4 py-3">
+                <div className="flex items-center justify-between bg-white dark:bg-black border border-erp-border rounded-lg px-4 py-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Include Images</label>
+                    <label className="block text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider mb-1">Include Images</label>
                     <p className="text-xs text-slate-500">Auto-generate contextual layout imagery</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" checked={includeImages} onChange={e => setIncludeImages(e.target.checked)} className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 dark:bg-zinc-900/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white dark:bg-black after:border-gray-300 dark:border-white/10 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                   </label>
                 </div>
                 <p className="text-xs text-slate-500 font-medium">
@@ -262,7 +262,7 @@ export default function TeacherCMS() {
                   The generation takes about 5-10 seconds and happens in the background.
                 </p>
               </div>
-              <div className="p-4 border-t border-erp-border flex justify-end gap-2 bg-white">
+              <div className="p-4 border-t border-erp-border flex justify-end gap-2 bg-white dark:bg-black">
                 <Button variant="ghost" onClick={() => setShowAiSettings(null)}>Cancel</Button>
                 <Button onClick={() => generateAiContent(showAiSettings.id, showAiSettings.title, showAiSettings.description)} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6">
                   <Sparkles className="w-4 h-4 mr-2" /> Start Generation

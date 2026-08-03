@@ -217,7 +217,7 @@ export default function ClassFlow() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/10 transition-all candy-panel !border-2 !p-0 shadow-none"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:bg-zinc-900/50 dark:hover:bg-white dark:bg-black/10 transition-all candy-panel !border-2 !p-0 shadow-none"
         >
           <ArrowLeft className="w-4 h-4" />
         </button>
@@ -510,7 +510,7 @@ export default function ClassFlow() {
             <div className="candy-panel p-0 sticky top-8 flow-panel flex flex-col bg-white dark:bg-black overflow-hidden border border-slate-200 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
               
               {/* Header */}
-              <div className="p-5 border-b border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 flex items-center justify-between shrink-0">
+              <div className="p-5 border-b border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white dark:bg-black/5 flex items-center justify-between shrink-0">
                 <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
                     <BookOpen className="w-4 h-4 text-indigo-500" />
@@ -520,7 +520,7 @@ export default function ClassFlow() {
                 <button 
                   onClick={handleDownloadNotes} 
                   title="Download Notes"
-                  className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 flex items-center justify-center text-slate-600 dark:text-white/60 transition-all hover:scale-105 active:scale-95"
+                  className="w-8 h-8 rounded-full bg-slate-200/50 dark:bg-white/10 hover:bg-slate-200 dark:bg-zinc-900/50 dark:hover:bg-white dark:bg-black/20 flex items-center justify-center text-slate-600 dark:text-white/60 transition-all hover:scale-105 active:scale-95"
                 >
                   <Download className="w-4 h-4" />
                 </button>
@@ -541,7 +541,7 @@ export default function ClassFlow() {
                     li: ({node, ...props}) => <li className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed" {...props} />,
                     code: ({node, inline, className, children, ...props}: any) => {
                       return inline ? (
-                        <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/10 text-pink-600 dark:text-pink-400 text-xs font-mono font-bold" {...props}>
+                        <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white dark:bg-black/10 text-pink-600 dark:text-pink-400 text-xs font-mono font-bold" {...props}>
                           {children}
                         </code>
                       ) : (
@@ -576,40 +576,40 @@ export default function ClassFlow() {
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
         <div 
           ref={printRef} 
-          className="bg-white text-slate-900" 
+          className="bg-white dark:bg-black text-slate-900 dark:text-white" 
           style={{ width: '800px', padding: '40px', fontFamily: '"Inter", system-ui, sans-serif' }}
         >
           {/* Custom PDF Header */}
           <div className="border-b-4 border-indigo-600 pb-6 mb-8 text-center" style={{ pageBreakAfter: 'avoid' }}>
             <h1 className="text-4xl font-black text-indigo-600 tracking-tight mb-2">CYNEXAI Study Guide</h1>
-            <h2 className="text-2xl font-bold text-slate-800">{classData?.title}</h2>
+            <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{classData?.title}</h2>
           </div>
 
           <ReactMarkdown
             components={{
-              h1: ({node, ...props}) => <h1 className="text-3xl font-black text-slate-900 mb-6 tracking-tight mt-10" style={{ pageBreakAfter: 'avoid' }} {...props} />,
-              h2: ({node, ...props}) => <h2 className="text-2xl font-black text-slate-800 mt-10 mb-4 border-b border-slate-200 pb-2 tracking-tight" style={{ pageBreakAfter: 'avoid' }} {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-6 tracking-tight mt-10" style={{ pageBreakAfter: 'avoid' }} {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-2xl font-black text-slate-800 dark:text-white mt-10 mb-4 border-b border-slate-200 dark:border-white/10 pb-2 tracking-tight" style={{ pageBreakAfter: 'avoid' }} {...props} />,
               h3: ({node, ...props}) => <h3 className="text-xl font-bold text-indigo-600 mt-8 mb-3" style={{ pageBreakAfter: 'avoid' }} {...props} />,
-              p: ({node, ...props}) => <p className="text-base text-slate-700 leading-relaxed mb-5" {...props} />,
-              strong: ({node, ...props}) => <strong className="font-black text-slate-900" {...props} />,
+              p: ({node, ...props}) => <p className="text-base text-slate-700 dark:text-white leading-relaxed mb-5" {...props} />,
+              strong: ({node, ...props}) => <strong className="font-black text-slate-900 dark:text-white" {...props} />,
               ul: ({node, ...props}) => <ul className="list-disc pl-6 mb-5 space-y-2 marker:text-indigo-600" {...props} />,
               ol: ({node, ...props}) => <ol className="list-decimal pl-6 mb-5 space-y-2 marker:text-indigo-600 font-bold" {...props} />,
-              li: ({node, ...props}) => <li className="text-base text-slate-700 leading-relaxed" {...props} />,
+              li: ({node, ...props}) => <li className="text-base text-slate-700 dark:text-white leading-relaxed" {...props} />,
               code: ({node, inline, className, children, ...props}: any) => {
                 return inline ? (
-                  <code className="px-1.5 py-0.5 rounded-md bg-slate-100 text-pink-600 text-sm font-mono font-bold" {...props}>
+                  <code className="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-900/50 text-pink-600 text-sm font-mono font-bold" {...props}>
                     {children}
                   </code>
                 ) : (
-                  <div className="my-6 rounded-xl border border-slate-200 bg-[#f8fafc] shadow-sm overflow-hidden" style={{ pageBreakInside: 'avoid' }}>
-                    <div className="flex items-center px-4 py-2 bg-slate-200/50 border-b border-slate-200">
+                  <div className="my-6 rounded-xl border border-slate-200 dark:border-white/10 bg-[#f8fafc] shadow-sm overflow-hidden" style={{ pageBreakInside: 'avoid' }}>
+                    <div className="flex items-center px-4 py-2 bg-slate-200 dark:bg-zinc-900/50/50 border-b border-slate-200 dark:border-white/10">
                       <div className="flex gap-1.5">
                         <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
                         <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
                         <div className="w-2.5 h-2.5 rounded-full bg-slate-400" />
                       </div>
                     </div>
-                    <pre className="p-5 text-sm font-mono text-slate-800 whitespace-pre-wrap leading-relaxed break-words">
+                    <pre className="p-5 text-sm font-mono text-slate-800 dark:text-white whitespace-pre-wrap leading-relaxed break-words">
                       <code {...props}>{children}</code>
                     </pre>
                   </div>
@@ -617,7 +617,7 @@ export default function ClassFlow() {
               },
               blockquote: ({node, ...props}) => (
                 <blockquote 
-                  className="border-l-4 border-indigo-500 bg-indigo-50 p-5 rounded-r-xl my-6 text-slate-800 italic text-base" 
+                  className="border-l-4 border-indigo-500 bg-indigo-50 p-5 rounded-r-xl my-6 text-slate-800 dark:text-white italic text-base" 
                   style={{ pageBreakInside: 'avoid' }} 
                   {...props} 
                 />

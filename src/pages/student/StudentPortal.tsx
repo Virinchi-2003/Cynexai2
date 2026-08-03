@@ -120,7 +120,7 @@ function ProgressBar({
   height?: string;
 }) {
   return (
-    <div className={`w-full ${height} bg-slate-200 dark:bg-white/[0.06] rounded-full overflow-hidden`}>
+    <div className={`w-full ${height} bg-slate-200 dark:bg-white dark:bg-black/[0.06] rounded-full overflow-hidden`}>
       <div
         className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}

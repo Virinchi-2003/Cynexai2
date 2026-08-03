@@ -29,7 +29,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'compact', c
           transition-all duration-200
           group
           ${isDark
-            ? 'hover:bg-white/5'
+            ? 'hover:bg-white dark:bg-black/5'
             : 'hover:bg-[rgba(88,204,2,0.06)]'
           }
           ${className}
@@ -43,8 +43,8 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'compact', c
           <div className={`
             absolute top-0.5 w-4 h-4 rounded-full transition-all duration-300 shadow-sm
             ${isDark
-              ? 'translate-x-[18px] bg-white'
-              : 'translate-x-0.5 bg-white'
+              ? 'translate-x-[18px] bg-white dark:bg-black'
+              : 'translate-x-0.5 bg-white dark:bg-black'
             }
           `} />
         </div>
@@ -69,7 +69,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'compact', c
           transition-all duration-200 select-none
           ${isDark
             ? 'bg-erp-surface border-erp-border text-erp-text hover:border-erp-primary/40'
-            : 'bg-white border-erp-border text-erp-text hover:border-erp-primary/40'
+            : 'bg-white dark:bg-black border-erp-border text-erp-text hover:border-erp-primary/40'
           }
           ${className}
         `}
@@ -92,7 +92,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({ variant = 'compact', c
         border-2 transition-all duration-200
         ${isDark
           ? 'bg-erp-surface border-erp-border text-erp-text/70 hover:text-erp-primary hover:border-erp-primary/40'
-          : 'bg-white border-erp-border text-erp-text/70 hover:text-amber-500 hover:border-amber-200'
+          : 'bg-white dark:bg-black border-erp-border text-erp-text/70 hover:text-amber-500 hover:border-amber-200'
         }
         ${className}
       `}

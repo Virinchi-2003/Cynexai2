@@ -55,7 +55,7 @@ export const SaleForm: React.FC<SaleFormProps> = ({ isOpen, onClose, leadId, onS
 
       {activeAdmission && (
         <div className="bg-green-50 p-3 rounded-xl border border-green-200 mb-4">
-          <p className="text-xs font-bold text-green-700">✓ Active Admission Found!</p>
+          <p className="text-xs font-bold text-green-700 dark:text-white">✓ Active Admission Found!</p>
           <p className="text-xs text-green-600">Locked Discount: {activeAdmission.discount_locked}</p>
         </div>
       )}

@@ -105,7 +105,7 @@ export default function AttendancePage() {
           <Card className="bg-erp-surface border-erp-border p-6 shadow-md flex flex-col items-center">
             
             {result && (
-              <div className={`w-full p-4 mb-6 rounded-xl flex items-center gap-3 border ${result.success ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              <div className={`w-full p-4 mb-6 rounded-xl flex items-center gap-3 border ${result.success ? 'bg-green-50 border-green-200 text-green-700 dark:text-white' : 'bg-red-50 border-red-200 text-red-700 dark:text-white'}`}>
                 {result.success ? <CheckCircle className="w-6 h-6" /> : <AlertCircle className="w-6 h-6" />}
                 <p className="font-bold">{result.message}</p>
               </div>
@@ -134,7 +134,7 @@ export default function AttendancePage() {
                   <h3 className="font-bold text-erp-text">Scan QR Code</h3>
                   <Button variant="secondary" onClick={() => setScanning(false)} size="sm">Cancel</Button>
                 </div>
-                <div className="rounded-xl overflow-hidden border-4 border-slate-200 bg-black">
+                <div className="rounded-xl overflow-hidden border-4 border-slate-200 dark:border-white/10 bg-black">
                   <div id="qr-reader" className="w-full"></div>
                 </div>
               </div>

@@ -27,11 +27,11 @@ const PRIORITY_COLORS: Record<string, string> = {
   Urgent: 'text-red-600 bg-red-100 border-red-200',
   High: 'text-orange-600 bg-orange-100 border-orange-200',
   Medium: 'text-blue-600 bg-blue-100 border-blue-200',
-  Low: 'text-slate-600 bg-slate-100 border-slate-200',
+  Low: 'text-slate-600 bg-slate-100 dark:bg-zinc-900/50 border-slate-200 dark:border-white/10',
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  'To Do': 'text-slate-500 bg-slate-50 border-slate-200',
+  'To Do': 'text-slate-500 bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/10',
   'In Progress': 'text-blue-600 bg-blue-50 border-blue-200',
   'Review': 'text-purple-600 bg-purple-50 border-purple-200',
   'Done': 'text-emerald-600 bg-emerald-50 border-emerald-200',
@@ -51,11 +51,11 @@ function StatsBar({ tasks, isManagerOrAbove, onStatClick, activeFilter }: { task
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
       {[
-        { id: 'total', label: 'Total', value: total, icon: <Target className="w-3.5 h-3.5" />, color: 'text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100' },
+        { id: 'total', label: 'Total', value: total, icon: <Target className="w-3.5 h-3.5" />, color: 'text-slate-600 bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:bg-zinc-900/50' },
         { id: 'done', label: 'Done', value: `${done} (${pct}%)`, icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
         { id: 'in-progress', label: 'In Progress', value: inProgress, icon: <Circle className="w-3.5 h-3.5" />, color: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100' },
-        { id: 'overdue', label: 'Overdue', value: overdue, icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 border-slate-100' },
-        { id: 'urgent', label: 'Urgent', value: urgent, icon: <Zap className="w-3.5 h-3.5" />, color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' : 'text-slate-400 bg-slate-50 border-slate-100' },
+        { id: 'overdue', label: 'Overdue', value: overdue, icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
+        { id: 'urgent', label: 'Urgent', value: urgent, icon: <Zap className="w-3.5 h-3.5" />, color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
       ].map(s => (
         <button
           key={s.label}
@@ -117,7 +117,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 bg-white border-2 border-erp-primary/30 rounded-2xl shadow-lg overflow-hidden">
+    <form onSubmit={handleSubmit} className="mb-4 bg-white dark:bg-black border-2 border-erp-primary/30 rounded-2xl shadow-lg overflow-hidden">
       <div className="p-4 border-b border-erp-border/50">
         <input
           type="text"
@@ -142,7 +142,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
         <select
           value={assignee}
           onChange={e => setAssignee(e.target.value)}
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
         >
           <option value={currentUserId}>Assign to me</option>
           {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
@@ -153,14 +153,14 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
           type="date"
           value={dueDate}
           onChange={e => setDueDate(e.target.value)}
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
         />
 
         {/* Priority */}
         <select
           value={priority}
           onChange={e => setPriority(e.target.value as any)}
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
         >
           <option value="Low">🟢 Low</option>
           <option value="Medium">🔵 Medium</option>
@@ -172,7 +172,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
         <select
           value={taskType}
           onChange={e => setTaskType(e.target.value as any)}
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
         >
           <option value="One-Time">📌 One-Time</option>
           <option value="Daily">🔄 Daily</option>
@@ -187,13 +187,13 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
             value={targetNum}
             onChange={e => setTargetNum(e.target.value)}
             placeholder="Target #"
-            className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none w-24"
+            className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none w-24"
           />
         )}
 
         {/* Recurrence Days (for Daily type) */}
         {taskType === 'Daily' && (
-          <div className="flex gap-1 items-center bg-white border border-erp-border rounded-lg px-1.5 py-1">
+          <div className="flex gap-1 items-center bg-white dark:bg-black border border-erp-border rounded-lg px-1.5 py-1">
             {['S','M','T','W','T','F','S'].map((d, i) => (
               <button
                 key={i}
@@ -211,7 +211,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
         <select
           value={projectId}
           onChange={e => setProjectId(e.target.value)}
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none"
         >
           <option value="">No Project</option>
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -223,7 +223,7 @@ function NewTaskForm({ users, projects, currentProjectId, currentUserId, isManag
           value={tags}
           onChange={e => setTags(e.target.value)}
           placeholder="Tags (comma-sep)"
-          className="bg-white border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none w-36"
+          className="bg-white dark:bg-black border border-erp-border rounded-lg px-2 py-1.5 text-xs font-semibold text-erp-text outline-none w-36"
         />
 
         <div className="ml-auto flex gap-2">
@@ -455,7 +455,7 @@ export default function AsanaTaskApp() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search..."
-                className="bg-white border-2 border-erp-border rounded-xl pl-9 pr-3 py-2 text-sm w-36 focus:outline-none focus:border-erp-primary font-medium transition-all focus:w-48"
+                className="bg-white dark:bg-black border-2 border-erp-border rounded-xl pl-9 pr-3 py-2 text-sm w-36 focus:outline-none focus:border-erp-primary font-medium transition-all focus:w-48"
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery('')} className="absolute right-2 top-2.5 text-erp-text/40 hover:text-erp-text">
@@ -468,7 +468,7 @@ export default function AsanaTaskApp() {
             <select
               value={filterPriority}
               onChange={e => setFilterPriority(e.target.value)}
-              className="bg-white border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
+              className="bg-white dark:bg-black border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
             >
               <option value="">All Priority</option>
               <option value="Urgent">🔴 Urgent</option>
@@ -481,7 +481,7 @@ export default function AsanaTaskApp() {
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="bg-white border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
+              className="bg-white dark:bg-black border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
             >
               <option value="">All Status</option>
               <option value="To Do">To Do</option>
@@ -495,7 +495,7 @@ export default function AsanaTaskApp() {
               <select
                 value={filterAssignee}
                 onChange={e => setFilterAssignee(e.target.value)}
-                className="bg-white border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
+                className="bg-white dark:bg-black border-2 border-erp-border rounded-xl px-2 py-2 text-xs font-semibold text-erp-text outline-none"
               >
                 <option value="">All Employees</option>
                 {users.map(u => (
@@ -530,7 +530,7 @@ export default function AsanaTaskApp() {
 
         {/* Project Hierarchy Panel (CEO) */}
         {showHierarchyForProject && (
-          <div className="mb-4 bg-white border-2 border-erp-border rounded-2xl p-4">
+          <div className="mb-4 bg-white dark:bg-black border-2 border-erp-border rounded-2xl p-4">
             <ProjectHierarchyPanel project={showHierarchyForProject} />
           </div>
         )}

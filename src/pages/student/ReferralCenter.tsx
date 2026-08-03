@@ -183,7 +183,7 @@ export default function ReferralCenter() {
                       <p className="text-slate-800 dark:text-white font-black text-sm">
                         {nextTier.tier.count - completedCount} more for {nextTier.tier.emoji} {nextTier.tier.label}
                       </p>
-                      <div className="h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-white/10">
+                      <div className="h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-white dark:bg-black/10">
                         <div
                           className="h-full rounded-full transition-all duration-1000"
                           style={{ width: `${nextTier.progress}%`, background: 'linear-gradient(90deg, #10b981, #34d399)' }}
@@ -258,14 +258,14 @@ export default function ReferralCenter() {
               <div className="flex items-center gap-2 px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/30">
                 <Users className="w-4 h-4 text-slate-500 dark:text-white/40" />
                 <span className="text-sm font-black text-slate-900 dark:text-white">My Referrals</span>
-                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/60">
+                <span className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-white dark:bg-black/10 text-slate-600 dark:text-white/60">
                   {referrals.length} total
                 </span>
               </div>
 
               {referrals.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-6 text-center gap-3">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-slate-100 dark:bg-white dark:bg-black/5 border border-slate-200 dark:border-white/10">
                     <Gift className="w-7 h-7 text-slate-400 dark:text-white/30" />
                   </div>
                   <p className="text-slate-600 dark:text-white/60 font-black">No referrals yet</p>
@@ -274,7 +274,7 @@ export default function ReferralCenter() {
               ) : (
                 <div className="divide-y divide-slate-200 dark:divide-white/10">
                   {referrals.map(ref => (
-                    <div key={ref.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white/[0.02] transition-colors ref-item">
+                    <div key={ref.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-white dark:bg-black/[0.02] transition-colors ref-item">
                       <div
                         className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0"
                         style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}

@@ -121,7 +121,7 @@ export const MobileNavigation: React.FC = () => {
             <span className="font-display font-bold text-lg text-slate-800 dark:text-white">Navigation</span>
             <button 
               onClick={() => setMenuOpen(false)}
-              className="p-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white"
+              className="p-2 rounded-full bg-slate-100 dark:bg-white dark:bg-black/10 text-slate-600 dark:text-white"
             >
               <X className="w-5 h-5" />
             </button>

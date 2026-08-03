@@ -201,7 +201,7 @@ function NodePopup({
           <div className="flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 py-3 rounded-2xl text-sm font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors dark:text-white/60 dark:border-white/10 dark:hover:bg-white/5"
+              className="flex-1 py-3 rounded-2xl text-sm font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 dark:bg-zinc-900/50 transition-colors dark:text-white/60 dark:border-white/10 dark:hover:bg-white dark:bg-black/5"
             >
               Close
             </button>
@@ -427,7 +427,7 @@ export default function ModuleMap() {
         <div className="max-w-4xl mx-auto flex items-center gap-3">
           <button
             onClick={() => navigate('/student')}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/10 transition-all candy-panel !border-2 !p-0"
+            className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:bg-zinc-900/50 dark:hover:bg-white dark:bg-black/10 transition-all candy-panel !border-2 !p-0"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <polyline points="15,18 9,12 15,6" />
@@ -528,7 +528,7 @@ export default function ModuleMap() {
                   onClick={() => handleNodeClick(node)}
                   className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${isCurrent ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]' : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'}`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-white/40'}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-black/5 dark:text-white/40'}`}>
                     {isCompleted ? <NodeIcons.check size={24} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
                   </div>
                   

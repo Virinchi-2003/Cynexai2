@@ -287,7 +287,7 @@ const Contact = () => {
                   initial={{ opacity: 0, y: -20, rotateX: -10 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className={`mt-4 p-4 rounded-lg text-center ${submitStatus === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  className={`mt-4 p-4 rounded-lg text-center ${submitStatus === 'success' ? 'bg-green-100 text-green-700 dark:text-white' : 'bg-red-100 text-red-700 dark:text-white'
                     }`}
                 >
                   {statusMessage}

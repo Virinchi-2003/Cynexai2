@@ -461,7 +461,7 @@ export default function TimetableManager() {
                     <td className="p-4 text-sm font-medium text-erp-text/80">{leave.reason}</td>
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-wide flex items-center gap-1.5 w-fit ${
-                        leave.status === 'Approved' ? 'bg-red-100 text-red-700 animate-pulse border border-red-200' :
+                        leave.status === 'Approved' ? 'bg-red-100 text-red-700 dark:text-white animate-pulse border border-red-200' :
                         leave.status === 'Substitute Assigned' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' :
                         'bg-amber-100 text-amber-700 border border-amber-200'
                       }`}>

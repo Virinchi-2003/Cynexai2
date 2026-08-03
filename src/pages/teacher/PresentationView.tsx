@@ -500,7 +500,7 @@ export default function PresentationView() {
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
         <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-4000" />
         
-        <div className="relative w-full h-full bg-white/20 backdrop-blur-2xl border border-white/40 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-12 md:p-16 z-10 overflow-y-auto">
+        <div className="relative w-full h-full bg-white dark:bg-black/20 backdrop-blur-2xl border border-white/40 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-12 md:p-16 z-10 overflow-y-auto">
           <div className="flex-1 flex flex-col justify-center items-center text-center max-w-5xl mx-auto">
             <ReactMarkdown
               components={{
@@ -509,8 +509,8 @@ export default function PresentationView() {
                 p: ({node, ...props}) => <p className="text-xl md:text-3xl text-white/90 leading-relaxed mb-6 font-medium" {...props} />,
                 ul: ({node, ...props}) => <ul className="space-y-6 mb-6 text-left inline-block" {...props} />,
                 li: ({node, ...props}) => (
-                  <li className="flex items-start text-xl md:text-3xl text-white font-medium bg-white/10 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-sm">
-                    <span className="w-3 h-3 rounded-full bg-white mt-3 mr-4 flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                  <li className="flex items-start text-xl md:text-3xl text-white font-medium bg-white dark:bg-black/10 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-sm">
+                    <span className="w-3 h-3 rounded-full bg-white dark:bg-black mt-3 mr-4 flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                     <span {...props} />
                   </li>
                 ),
@@ -544,15 +544,15 @@ export default function PresentationView() {
           <div className="h-10 bg-[#000080] flex items-center justify-between px-3 select-none">
             <span className="text-white font-bold text-lg tracking-wider">CynexOS - Presentation.exe</span>
             <div className="flex gap-1">
-              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">-</div>
-              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">□</div>
-              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">x</div>
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white dark:bg-black active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">-</div>
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white dark:bg-black active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">□</div>
+              <div className="w-6 h-6 bg-[#c0c0c0] border-2 border-t-white border-l-white border-b-[#808080] border-r-[#808080] flex items-center justify-center font-bold text-xs pb-1 cursor-pointer hover:bg-white dark:bg-black active:border-t-[#808080] active:border-l-[#808080] active:border-b-white active:border-r-white">x</div>
             </div>
           </div>
           
           <div className="flex-1 flex flex-row overflow-hidden">
             {imgSrc && (
-              <div className="w-[35%] h-full border-r-[6px] border-r-[#808080] p-6 bg-white flex items-center justify-center">
+              <div className="w-[35%] h-full border-r-[6px] border-r-[#808080] p-6 bg-white dark:bg-black flex items-center justify-center">
                 <img src={imgSrc} className="w-full max-h-full object-cover border-[4px] border-t-[#808080] border-l-[#808080] border-b-white border-r-white shadow-[2px_2px_0px_rgba(0,0,0,1)]" alt="Retro visual" />
               </div>
             )}
@@ -565,7 +565,7 @@ export default function PresentationView() {
                   ul: ({node, ...props}) => <ul className="space-y-4 mb-6" {...props} />,
                   li: ({node, ...props}) => (
                     <li className="flex items-start text-xl md:text-2xl text-black font-medium">
-                      <span className="text-blue-700 font-bold mr-3">►</span>
+                      <span className="text-blue-700 dark:text-white font-bold mr-3">►</span>
                       <span {...props} />
                     </li>
                   ),
@@ -599,12 +599,12 @@ export default function PresentationView() {
         <div className={`flex-1 px-16 md:px-24 py-20 flex flex-col justify-center items-start text-left relative z-10 overflow-y-auto ${imgSrc ? 'w-[55%]' : 'w-full'}`}>
           <ReactMarkdown
             components={{
-              h1: ({node, ...props}) => <h1 className="text-5xl md:text-7xl font-display font-light text-slate-900 mb-10 tracking-tight" {...props} />,
-              h2: ({node, ...props}) => <h2 className="text-3xl md:text-5xl font-display text-slate-800 mb-8 font-light" {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-5xl md:text-7xl font-display font-light text-slate-900 dark:text-white mb-10 tracking-tight" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-3xl md:text-5xl font-display text-slate-800 dark:text-white mb-8 font-light" {...props} />,
               p: ({node, ...props}) => <p className="text-xl md:text-2xl text-slate-600 leading-relaxed mb-8 font-light max-w-4xl" {...props} />,
               ul: ({node, ...props}) => <ul className="space-y-6 mb-8 w-full" {...props} />,
               li: ({node, ...props}) => (
-                <li className="flex items-start text-xl md:text-2xl text-slate-600 font-light border-l-2 border-slate-200 pl-6 ml-2">
+                <li className="flex items-start text-xl md:text-2xl text-slate-600 font-light border-l-2 border-slate-200 dark:border-white/10 pl-6 ml-2">
                   <span {...props} />
                 </li>
               ),
@@ -628,20 +628,20 @@ export default function PresentationView() {
       {/* Minimal control bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-slate-900/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-30">
         <div className="flex gap-2 items-center">
-          <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}>
             <BookOpen className="w-4 h-4" /> Slides
           </button>
-          <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+          <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}>
             <Code className="w-4 h-4" /> Code & Draw
           </button>
 
-          <div className="w-px h-5 bg-white/10 mx-1" />
+          <div className="w-px h-5 bg-white dark:bg-black/10 mx-1" />
 
           {/* Cast / Screen Share */}
           <button
             onClick={handleCast}
             title={isCasting ? 'Stop casting' : 'Cast / Share this screen'}
-            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}
           >
             {isCasting ? <><MonitorPlay className="w-4 h-4" /> Casting…</> : <><Cast className="w-4 h-4" /> Cast</>}
           </button>
@@ -649,11 +649,11 @@ export default function PresentationView() {
 
         {mode === 'slides' && slides.length > 0 && (
           <div className="flex items-center gap-3">
-            <button onClick={() => changeSlide(slide - 1)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <button onClick={() => changeSlide(slide - 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center transition-colors">
               <ArrowLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-bold text-slate-300 w-20 text-center font-mono">{slide} / {slides.length}</span>
-            <button onClick={() => changeSlide(slide + 1)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
+            <button onClick={() => changeSlide(slide + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center transition-colors">
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -684,16 +684,16 @@ export default function PresentationView() {
             <div className="flex items-center gap-2">
               {/* Undo / Redo */}
               <div className="flex items-center gap-1 border-r border-white/10 pr-2 mr-1">
-                <button onClick={undoDraw} disabled={!canUndo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canUndo ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 cursor-not-allowed'}`} title="Undo">
+                <button onClick={undoDraw} disabled={!canUndo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canUndo ? 'text-slate-300 hover:text-white hover:bg-white dark:bg-black/10' : 'text-slate-600 cursor-not-allowed'}`} title="Undo">
                   <Undo2 className="w-4 h-4" />
                 </button>
-                <button onClick={redoDraw} disabled={!canRedo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canRedo ? 'text-slate-300 hover:text-white hover:bg-white/10' : 'text-slate-600 cursor-not-allowed'}`} title="Redo">
+                <button onClick={redoDraw} disabled={!canRedo} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${canRedo ? 'text-slate-300 hover:text-white hover:bg-white dark:bg-black/10' : 'text-slate-600 cursor-not-allowed'}`} title="Redo">
                   <Redo2 className="w-4 h-4" />
                 </button>
               </div>
 
               {/* Type vs Draw toggle */}
-              <button onClick={() => setIsDrawMode(false)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${!isDrawMode ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white/5'}`} title="Type Mode">
+              <button onClick={() => setIsDrawMode(false)} className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${!isDrawMode ? 'bg-indigo-500/20 text-indigo-400' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`} title="Type Mode">
                 <MousePointer2 className="w-4 h-4" />
               </button>
               
@@ -770,7 +770,7 @@ export default function PresentationView() {
             <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 z-20">
               {slides.map((_, i) => (
                 <button key={i} onClick={() => changeSlide(i + 1)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${slide === i + 1 ? 'w-8 bg-indigo-500' : 'w-2.5 bg-white/20'}`}
+                  className={`h-2.5 rounded-full transition-all duration-300 ${slide === i + 1 ? 'w-8 bg-indigo-500' : 'w-2.5 bg-white dark:bg-black/20'}`}
                 />
               ))}
             </div>
@@ -797,7 +797,7 @@ export default function PresentationView() {
                 {/* Main Script */}
                 <div 
                   onClick={() => updateActiveFile(null)} 
-                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${activeFile === null ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white/5 text-slate-300'}`}
+                  className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-colors ${activeFile === null ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white dark:bg-black/5 text-slate-300'}`}
                 >
                   <FileText className="w-4 h-4 flex-shrink-0" />
                   <span className="text-sm truncate">main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : language === 'java' ? 'java' : 'sql'}</span>
@@ -814,7 +814,7 @@ export default function PresentationView() {
                     <div 
                       key={f.name} 
                       onClick={() => updateActiveFile(f.name)}
-                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-colors ${activeFile === f.name ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white/5 text-slate-300'}`}
+                      className={`flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-colors ${activeFile === f.name ? 'bg-indigo-600/20 text-indigo-300' : 'hover:bg-white dark:bg-black/5 text-slate-300'}`}
                     >
                       <div className="flex items-center gap-2 overflow-hidden">
                         <FileCode2 className="w-4 h-4 flex-shrink-0 opacity-70" />

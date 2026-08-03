@@ -184,7 +184,7 @@ export default function TeacherDashboard() {
 
               {nextClass ? (
                 <div className="relative z-10">
-                  <div className="bg-white/5 border border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
+                  <div className="bg-white dark:bg-black/5 border border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
                       <p className="text-xs font-bold text-indigo-300 uppercase tracking-widest">{nextClass.batchName || 'Unassigned Batch'}</p>
                       <span className="text-xs font-bold text-white bg-indigo-600 px-3 py-1 rounded-full">{nextClass.time}</span>
@@ -350,7 +350,7 @@ export default function TeacherDashboard() {
                     }
 
                     return (
-                      <div key={i} className={`border-l-4 ${status === 'Live Now' ? 'border-green-500' : status === 'Completed' ? 'border-slate-300 opacity-60' : 'border-indigo-500'} bg-erp-background border border-erp-border border-l-4 rounded-xl p-4 hover:shadow-md transition-shadow`}>
+                      <div key={i} className={`border-l-4 ${status === 'Live Now' ? 'border-green-500' : status === 'Completed' ? 'border-slate-300 dark:border-white/10 opacity-60' : 'border-indigo-500'} bg-erp-background border border-erp-border border-l-4 rounded-xl p-4 hover:shadow-md transition-shadow`}>
                         <div className="flex justify-between items-start mb-2">
                           <span className="text-xs font-bold text-erp-text/50">{slot.time}</span>
                           <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${statusColor}`}>{status}</span>

@@ -344,7 +344,7 @@ const AdminPanel = () => {
               className="bg-green-50 border-l-4 border-green-400 p-4 mb-8 rounded-r-xl shadow-sm flex items-center gap-3"
             >
               <CheckCircle2 className="w-5 h-5 text-green-400" />
-              <p className="text-sm text-green-700 font-medium">{success}</p>
+              <p className="text-sm text-green-700 dark:text-white font-medium">{success}</p>
             </motion.div>
           )}
           {error && (
@@ -355,7 +355,7 @@ const AdminPanel = () => {
               className="bg-red-50 border-l-4 border-red-400 p-4 mb-8 rounded-r-xl shadow-sm flex items-center gap-3"
             >
               <AlertCircle className="w-5 h-5 text-red-400" />
-              <p className="text-sm text-red-700 font-medium">{error}</p>
+              <p className="text-sm text-red-700 dark:text-white font-medium">{error}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -392,7 +392,7 @@ const AdminPanel = () => {
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#41c8df] rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-4 border-gray-200 dark:border-white/10 border-t-[#41c8df] rounded-full animate-spin" />
                         <span className="text-sm font-medium">Loading articles...</span>
                       </div>
                     </td>

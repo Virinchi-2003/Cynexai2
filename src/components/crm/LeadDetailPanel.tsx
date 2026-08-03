@@ -183,7 +183,7 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate, onRequestOnboard }:
                 {lead.course_interest}
               </div>
               {(user?.role === 'CEO' || user?.role === 'Manager') && !isEditing && (
-                <Button variant="ghost" onClick={handleDeleteLead} className="text-xs px-3 text-red-500 hover:text-red-700 hover:bg-red-50 mt-1">
+                <Button variant="ghost" onClick={handleDeleteLead} className="text-xs px-3 text-red-500 hover:text-red-700 dark:text-white hover:bg-red-50 mt-1">
                   <Trash2 className="w-3.5 h-3.5 mr-1 inline" /> Delete
                 </Button>
               )}
@@ -191,7 +191,7 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate, onRequestOnboard }:
           </div>
 
           {isEditing && (
-            <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+            <div className="grid grid-cols-2 gap-4 mt-4 bg-gray-50 dark:bg-zinc-900/50 p-4 rounded-xl border border-gray-200 dark:border-white/10">
               <div><label className="text-xs font-bold">Email</label><input className="w-full p-2 border rounded-md" value={editForm.email ?? lead.email ?? ''} onChange={e => setEditForm({...editForm, email: e.target.value})} /></div>
               <div><label className="text-xs font-bold">Course</label><input className="w-full p-2 border rounded-md" value={editForm.course_interest ?? lead.course_interest} onChange={e => setEditForm({...editForm, course_interest: e.target.value})} /></div>
               <div><label className="text-xs font-bold">Grad Year</label><input className="w-full p-2 border rounded-md" value={editForm.grad_year ?? lead.grad_year ?? ''} onChange={e => setEditForm({...editForm, grad_year: e.target.value})} /></div>
@@ -220,17 +220,17 @@ export function LeadDetailPanel({ leadId, onClose, onUpdate, onRequestOnboard }:
           
           {sale && (
             <div className="mb-4 bg-green-50 rounded-xl p-4 border border-green-200">
-              <h3 className="text-sm font-bold text-green-900 mb-2 uppercase tracking-wider">Financials</h3>
+              <h3 className="text-sm font-bold text-green-900 dark:text-white mb-2 uppercase tracking-wider">Financials</h3>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-green-800">Total Fee</span>
-                <span className="font-bold text-green-900">₹{sale.total_fee}</span>
+                <span className="text-sm text-green-800 dark:text-white">Total Fee</span>
+                <span className="font-bold text-green-900 dark:text-white">₹{sale.total_fee}</span>
               </div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-green-800">Amount Paid</span>
-                <span className="font-bold text-green-900">₹{sale.amount_paid}</span>
+                <span className="text-sm text-green-800 dark:text-white">Amount Paid</span>
+                <span className="font-bold text-green-900 dark:text-white">₹{sale.amount_paid}</span>
               </div>
               <div className="flex justify-between items-center border-t border-green-200 pt-1 mt-1">
-                <span className="text-sm font-bold text-green-800">Amount Due</span>
+                <span className="text-sm font-bold text-green-800 dark:text-white">Amount Due</span>
                 <span className="font-bold text-red-600">₹{Math.max(0, sale.total_fee - sale.amount_paid)}</span>
               </div>
             </div>

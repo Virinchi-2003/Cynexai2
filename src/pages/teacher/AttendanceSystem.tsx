@@ -93,7 +93,7 @@ export default function AttendanceSystem() {
           <h2 className="text-2xl font-bold font-display text-erp-text mb-2">Offline Attendance</h2>
           <p className="text-erp-text/60 mb-8">Project this QR code on the screen for students in the classroom to scan.</p>
           
-          <div className="bg-white p-4 rounded-xl border-4 border-slate-200 mb-6 flex flex-col items-center justify-center">
+          <div className="bg-white dark:bg-black p-4 rounded-xl border-4 border-slate-200 dark:border-white/10 mb-6 flex flex-col items-center justify-center">
             {qrData ? (
               <>
                 <QRCodeSVG 
@@ -106,7 +106,7 @@ export default function AttendanceSystem() {
                 </div>
               </>
             ) : (
-              <div className="w-40 h-40 bg-slate-100 flex items-center justify-center rounded">
+              <div className="w-40 h-40 bg-slate-100 dark:bg-zinc-900/50 flex items-center justify-center rounded">
                 <QrCode className="w-10 h-10 text-slate-300" />
               </div>
             )}

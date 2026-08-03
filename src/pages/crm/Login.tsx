@@ -50,7 +50,7 @@ export default function CrmLogin() {
       </div>
 
       {/* Main login card */}
-      <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur">
+      <div className="w-full max-w-sm bg-white dark:bg-black/5 border border-white/10 rounded-2xl p-6 backdrop-blur">
         <h2 className="text-lg font-bold text-white mb-5">Sign in to your portal</h2>
 
         <form onSubmit={handleLogin} className="flex flex-col gap-3">
@@ -59,7 +59,7 @@ export default function CrmLogin() {
             placeholder="Email address"
             autoComplete="email"
             required
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 font-medium text-white text-sm outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
+            className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 font-medium text-white text-sm outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
             value={email}
             onChange={e => setEmail(e.target.value)}
           />
@@ -69,7 +69,7 @@ export default function CrmLogin() {
               placeholder="Password"
               autoComplete="current-password"
               required
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-10 font-medium text-white text-sm outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
+              className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 pr-10 font-medium text-white text-sm outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />

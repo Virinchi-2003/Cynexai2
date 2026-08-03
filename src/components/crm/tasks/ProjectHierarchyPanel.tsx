@@ -18,7 +18,7 @@ const ROLE_LABELS: Record<string, string> = {
 const ROLE_COLORS: Record<string, string> = {
   general_manager: 'bg-orange-100 text-orange-700 border-orange-200',
   manager: 'bg-sky-100 text-sky-700 border-sky-200',
-  member: 'bg-slate-100 text-slate-600 border-slate-200',
+  member: 'bg-slate-100 dark:bg-zinc-900/50 text-slate-600 border-slate-200 dark:border-white/10',
 };
 
 const ROLE_ICONS: Record<string, React.ReactNode> = {

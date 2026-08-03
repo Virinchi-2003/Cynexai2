@@ -131,7 +131,7 @@ export default function GamificationSettings() {
                           onClick={() => toggleSetting(setting.task_type, setting.is_enabled)}
                           className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${setting.is_enabled ? 'bg-green-500' : 'bg-slate-700'}`}
                         >
-                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${setting.is_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-black transition-transform ${setting.is_enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                       </div>
                     </div>

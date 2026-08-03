@@ -92,7 +92,7 @@ export const TaskCalendarView: React.FC<Props> = ({ tasks, onTaskClick }) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-erp-border p-4 overflow-hidden" style={{ height: '700px' }}>
+    <div className="bg-white dark:bg-black rounded-2xl border-2 border-erp-border p-4 overflow-hidden" style={{ height: '700px' }}>
       <style>{`
         .rbc-calendar { font-family: inherit; }
         .rbc-header { font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: 10px 4px; background: #f9fafb; border-bottom: 2px solid #e5e7eb; }

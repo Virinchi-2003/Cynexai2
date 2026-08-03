@@ -195,7 +195,7 @@ export default function ChatPortal() {
               
               {waStatus === 'needs_login' && qrCode && (
                 <div className="flex flex-col items-center gap-4">
-                  <div className="bg-white p-4 rounded-xl inline-block shadow-lg">
+                  <div className="bg-white dark:bg-black p-4 rounded-xl inline-block shadow-lg">
                     <QRCodeSVG value={qrCode} size={256} />
                   </div>
                   <p className="text-erp-text font-bold animate-pulse flex items-center gap-2">
@@ -366,7 +366,7 @@ export default function ChatPortal() {
                     <label className="block text-sm font-bold text-erp-text/70 mb-1">Template Name</label>
                     <input 
                       type="text"
-                      className="w-full bg-white border-2 border-erp-border rounded-xl px-4 py-2 font-bold focus:border-erp-primary outline-none"
+                      className="w-full bg-white dark:bg-black border-2 border-erp-border rounded-xl px-4 py-2 font-bold focus:border-erp-primary outline-none"
                       value={editingTemplate.name || ''}
                       onChange={e => setEditingTemplate({...editingTemplate, name: e.target.value})}
                       placeholder="e.g. Initial Welcome"
@@ -376,7 +376,7 @@ export default function ChatPortal() {
                     <label className="block text-sm font-bold text-erp-text/70 mb-1">Message Body</label>
                     <p className="text-xs text-erp-text/50 mb-2">Use [Name] and [Course] for dynamic variables.</p>
                     <textarea 
-                      className="w-full bg-white border-2 border-erp-border rounded-xl px-4 py-2 font-medium focus:border-erp-primary outline-none min-h-[150px]"
+                      className="w-full bg-white dark:bg-black border-2 border-erp-border rounded-xl px-4 py-2 font-medium focus:border-erp-primary outline-none min-h-[150px]"
                       value={editingTemplate.body || ''}
                       onChange={e => setEditingTemplate({...editingTemplate, body: e.target.value})}
                       placeholder="Hi [Name], thanks for your interest in [Course]..."

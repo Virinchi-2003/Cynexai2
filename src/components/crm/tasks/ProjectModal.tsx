@@ -62,7 +62,7 @@ export function ProjectModal({ onClose, onSuccess, project }: ProjectModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md bg-erp-background rounded-2xl shadow-2xl border-2 border-erp-border overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between p-4 border-b border-erp-border bg-white">
+        <div className="flex items-center justify-between p-4 border-b border-erp-border bg-white dark:bg-black">
           <h2 className="text-xl font-display font-bold text-erp-text">{project ? 'Edit Project' : 'New Project'}</h2>
           <button onClick={onClose} className="p-1 text-erp-text/50 hover:text-erp-text hover:bg-erp-surface rounded-lg transition-colors">
             <X className="w-5 h-5" />
@@ -77,7 +77,7 @@ export function ProjectModal({ onClose, onSuccess, project }: ProjectModalProps)
               autoFocus
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full bg-white border-2 border-erp-border rounded-xl px-3 py-2.5 text-sm font-semibold text-erp-text focus:outline-none focus:border-erp-primary"
+              className="w-full bg-white dark:bg-black border-2 border-erp-border rounded-xl px-3 py-2.5 text-sm font-semibold text-erp-text focus:outline-none focus:border-erp-primary"
               placeholder="e.g., Marketing Q3 Launch"
               required
             />
@@ -88,7 +88,7 @@ export function ProjectModal({ onClose, onSuccess, project }: ProjectModalProps)
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
-              className="w-full bg-white border-2 border-erp-border rounded-xl px-3 py-2.5 text-sm font-medium text-erp-text focus:outline-none focus:border-erp-primary min-h-[80px] resize-none"
+              className="w-full bg-white dark:bg-black border-2 border-erp-border rounded-xl px-3 py-2.5 text-sm font-medium text-erp-text focus:outline-none focus:border-erp-primary min-h-[80px] resize-none"
               placeholder="What's this project about?"
             />
           </div>

@@ -229,7 +229,7 @@ export default function LiveStreamDashboard() {
             {/* Header */}
             <div className="p-5 border-b border-white/5 relative">
               <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">{classData.module_title || 'Active Class'}</div>
-              <div className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 group relative cursor-pointer" onClick={() => setShowEditModal(true)}>
+              <div className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 group relative cursor-pointer" onClick={() => setShowEditModal(true)}>
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full shrink-0 ${isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-500'}`} />
                   <span className="font-bold text-base text-white truncate pr-6">{classData.title}</span>
@@ -270,7 +270,7 @@ export default function LiveStreamDashboard() {
                   </h3>
                   <div className="space-y-2">
                     {attendance.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                      <div key={i} className="flex items-center justify-between bg-white dark:bg-black/5 rounded-lg px-3 py-2">
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-white">{a.student_name}</span>
                           <span className="text-[10px] text-slate-400">{a.batch_name} • {a.course_name}</span>
@@ -295,9 +295,9 @@ export default function LiveStreamDashboard() {
                       className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all capitalize ${
                         slideTheme === t
                           ? t === 'retro' ? 'bg-[#f4a7a1] text-black border-black'
-                            : t === 'minimal' ? 'bg-white text-black border-black'
+                            : t === 'minimal' ? 'bg-white dark:bg-black text-black border-black'
                             : 'bg-slate-800 text-white border-indigo-500'
-                          : 'bg-white/5 text-slate-400 border-white/10 hover:border-white/30'
+                          : 'bg-white dark:bg-black/5 text-slate-400 border-white/10 hover:border-white/30'
                       }`}>{t}
                     </button>
                   ))}
@@ -309,7 +309,7 @@ export default function LiveStreamDashboard() {
                   {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Generate AI Slides
                 </Button>
               ) : !isLive ? (
-                <div className="flex flex-col gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
+                <div className="flex flex-col gap-3 p-3 bg-white dark:bg-black/5 border border-white/10 rounded-xl">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Step 1: Start Recording</div>
                   <Button 
                     onClick={() => {
@@ -363,7 +363,7 @@ export default function LiveStreamDashboard() {
         {/* Topbar */}
         <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-[#111118]/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-50">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 rounded-lg transition-colors">
               {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
             <div className="flex gap-1 bg-black/30 rounded-lg p-1">
@@ -379,16 +379,16 @@ export default function LiveStreamDashboard() {
           <div className="flex items-center gap-3">
             {panelMode === 'slides' && hasAI && (
               <div className="flex items-center gap-2">
-                <button onClick={() => changeSlide(Math.max(1, slide - 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                <button onClick={() => changeSlide(Math.max(1, slide - 1))} className="w-7 h-7 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center">
                   <ArrowLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="text-xs font-bold text-slate-300 w-16 text-center">{slide} / {slides.length}</span>
-                <button onClick={() => changeSlide(Math.min(slides.length, slide + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center">
+                <button onClick={() => changeSlide(Math.min(slides.length, slide + 1))} className="w-7 h-7 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center">
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
-            <button onClick={openPopOut} className="flex items-center gap-1.5 text-xs font-bold bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={openPopOut} className="flex items-center gap-1.5 text-xs font-bold bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 px-3 py-1.5 rounded-lg transition-colors">
               <Maximize2 className="w-3.5 h-3.5" /> Pop-Out Screen
             </button>
           </div>
@@ -430,7 +430,7 @@ export default function LiveStreamDashboard() {
                   transition={{ duration: 0.3 }}
                   style={{ width: '1600px', height: '900px', position: 'absolute', top: 0, left: 0 }}
                   className={`border-4 border-black shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden p-8 ${
-                    slideTheme === 'dark' ? 'bg-[#0f172a]' : slideTheme === 'minimal' ? 'bg-white' : 'bg-[#f5e4dd]'
+                    slideTheme === 'dark' ? 'bg-[#0f172a]' : slideTheme === 'minimal' ? 'bg-white dark:bg-black' : 'bg-[#f5e4dd]'
                   }`}
                 >
                   {/* Retro Background Grid */}
@@ -451,11 +451,11 @@ export default function LiveStreamDashboard() {
                   }`}>
                     {/* Window Titlebar */}
                     <div className={`h-10 border-b-4 border-black flex items-center justify-end px-4 gap-2 ${
-                      slideTheme === 'dark' ? 'bg-indigo-900' : slideTheme === 'minimal' ? 'bg-gray-100' : 'bg-[#f4a7a1]'
+                      slideTheme === 'dark' ? 'bg-indigo-900' : slideTheme === 'minimal' ? 'bg-gray-100 dark:bg-zinc-900/50' : 'bg-[#f4a7a1]'
                     }`}>
-                      <div className="w-5 h-5 border-2 border-black bg-white" />
-                      <div className="w-5 h-5 border-2 border-black bg-white" />
-                      <div className="w-5 h-5 border-2 border-black bg-white flex items-center justify-center font-bold text-xs">X</div>
+                      <div className="w-5 h-5 border-2 border-black bg-white dark:bg-black" />
+                      <div className="w-5 h-5 border-2 border-black bg-white dark:bg-black" />
+                      <div className="w-5 h-5 border-2 border-black bg-white dark:bg-black flex items-center justify-center font-bold text-xs">X</div>
                     </div>
 
                      {/* Content Area — justify-start prevents top overflow */}
@@ -499,7 +499,7 @@ export default function LiveStreamDashboard() {
               <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-20">
                 {slides.map((_, i) => (
                   <button key={i} onClick={() => changeSlide(i + 1)}
-                    className={`h-2 rounded-full transition-all ${slide === i + 1 ? 'bg-[#e77a71] w-6' : 'bg-white/30 w-2 hover:bg-white/50'}`}
+                    className={`h-2 rounded-full transition-all ${slide === i + 1 ? 'bg-[#e77a71] w-6' : 'bg-white dark:bg-black/30 w-2 hover:bg-white dark:bg-black/50'}`}
                   />
                 ))}
               </div>
@@ -538,7 +538,7 @@ export default function LiveStreamDashboard() {
               ) : (
                 <ul className="space-y-4">
                   {currentKeypoints.map((kp: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-200 leading-relaxed bg-white/5 p-4 rounded-xl border border-white/5">
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-200 leading-relaxed bg-white dark:bg-black/5 p-4 rounded-xl border border-white/5">
                       <ArrowRight className="w-4 h-4 text-green-400 mt-1 shrink-0" />
                       <ReactMarkdown>{kp}</ReactMarkdown>
                     </li>
@@ -558,15 +558,15 @@ export default function LiveStreamDashboard() {
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">Class Title</label>
-                <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500" />
+                <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500" />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">Description / Topics</label>
-                <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500 resize-none" placeholder="What will you teach today?" />
+                <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500 resize-none" placeholder="What will you teach today?" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
+              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
               <button onClick={handleUpdateDetails} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm">Save & Update</button>
             </div>
           </div>
@@ -579,9 +579,9 @@ export default function LiveStreamDashboard() {
           <div className="bg-[#1a1a28] border border-white/10 rounded-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><CheckCircle className="w-6 h-6 text-green-400"/> End Class</h2>
             <p className="text-slate-400 text-sm mb-4">Paste YouTube recording URL so students can replay. AI summary will be auto-generated.</p>
-            <input type="url" placeholder="https://youtube.com/watch?v=..." value={ytUrl} onChange={e => setYtUrl(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 outline-none focus:border-indigo-500" />
+            <input type="url" placeholder="https://youtube.com/watch?v=..." value={ytUrl} onChange={e => setYtUrl(e.target.value)} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 outline-none focus:border-indigo-500" />
             <div className="flex gap-3">
-              <button onClick={() => setShowEndModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
+              <button onClick={() => setShowEndModal(false)} className="flex-1 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
               <button onClick={handleEndClass} disabled={ending} className="flex-1 bg-green-600 hover:bg-green-500 flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl text-sm">
                 {ending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'End & Generate Summary'}
               </button>

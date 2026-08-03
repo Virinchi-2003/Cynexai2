@@ -52,13 +52,13 @@ export default function SalesList() {
                 placeholder="Search sales..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-2 w-full md:w-64 bg-white border-2 border-erp-border rounded-xl text-sm font-medium focus:outline-none focus:border-erp-primary"
+                className="pl-9 pr-4 py-2 w-full md:w-64 bg-white dark:bg-black border-2 border-erp-border rounded-xl text-sm font-medium focus:outline-none focus:border-erp-primary"
               />
             </div>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="px-4 py-2 bg-white border-2 border-erp-border rounded-xl text-sm font-medium focus:outline-none focus:border-erp-primary appearance-none cursor-pointer"
+              className="px-4 py-2 bg-white dark:bg-black border-2 border-erp-border rounded-xl text-sm font-medium focus:outline-none focus:border-erp-primary appearance-none cursor-pointer"
             >
               <option value="All">All Statuses</option>
               <option value="Sale Completed">Sale Completed</option>
@@ -108,7 +108,7 @@ export default function SalesList() {
                     <td className="p-4">
                       <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wide font-bold inline-flex items-center gap-1.5 ${
                         sale.status?.toLowerCase().includes('completed') || sale.status === 'Sale Completed' 
-                          ? 'bg-green-100 text-green-700 border border-green-200' 
+                          ? 'bg-green-100 text-green-700 dark:text-white border border-green-200' 
                           : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                       }`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${sale.status?.toLowerCase().includes('completed') ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
@@ -152,7 +152,7 @@ export default function SalesList() {
                     <p className="text-erp-text/50 font-bold text-xs">{sale.course_name || sale.course_id}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
-                    sale.status?.toLowerCase().includes('completed') ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                    sale.status?.toLowerCase().includes('completed') ? 'bg-green-100 text-green-700 dark:text-white' : 'bg-yellow-100 text-yellow-700'
                   }`}>
                     {sale.status}
                   </span>

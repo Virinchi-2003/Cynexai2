@@ -136,8 +136,8 @@ export default function SalesDashboard() {
                 <TrendingUp className="w-8 h-8" />
               </div>
               <div>
-                <p className="text-xs font-bold text-green-700/70 uppercase tracking-wider">Total Pipeline Value</p>
-                <h3 className="text-3xl font-display font-bold text-green-800">₹{metrics.totalRevenue.toLocaleString()}</h3>
+                <p className="text-xs font-bold text-green-700 dark:text-white/70 uppercase tracking-wider">Total Pipeline Value</p>
+                <h3 className="text-3xl font-display font-bold text-green-800 dark:text-white">₹{metrics.totalRevenue.toLocaleString()}</h3>
               </div>
             </Card>
             
@@ -146,8 +146,8 @@ export default function SalesDashboard() {
                 <TrendingUp className="w-8 h-8" />
               </div>
               <div>
-                <p className="text-xs font-bold text-blue-700/70 uppercase tracking-wider">Revenue Collected</p>
-                <h3 className="text-3xl font-display font-bold text-blue-800">₹{metrics.collectedRevenue.toLocaleString()}</h3>
+                <p className="text-xs font-bold text-blue-700 dark:text-white/70 uppercase tracking-wider">Revenue Collected</p>
+                <h3 className="text-3xl font-display font-bold text-blue-800 dark:text-white">₹{metrics.collectedRevenue.toLocaleString()}</h3>
               </div>
             </Card>
           </div>
@@ -183,25 +183,25 @@ export default function SalesDashboard() {
               <div className="flex flex-col items-center">
                 <div className="w-full bg-erp-surface border-2 border-erp-border rounded-xl p-3 flex justify-between items-center relative z-10 shadow-sm">
                   <span className="font-bold text-erp-text/70 text-sm">1. Leads Generated</span>
-                  <span className="font-bold text-erp-text bg-white px-2 py-1 rounded-md">{metrics.totalLeads}</span>
+                  <span className="font-bold text-erp-text bg-white dark:bg-black px-2 py-1 rounded-md">{metrics.totalLeads}</span>
                 </div>
                 <div className="w-0.5 h-6 bg-erp-border"></div>
                 
                 <div className="w-5/6 bg-erp-surface border-2 border-erp-border rounded-xl p-3 flex justify-between items-center relative z-10 shadow-sm">
                   <span className="font-bold text-erp-text/70 text-sm">2. Demo Scheduled</span>
-                  <span className="font-bold text-erp-text bg-white px-2 py-1 rounded-md">{metrics.demoScheduled}</span>
+                  <span className="font-bold text-erp-text bg-white dark:bg-black px-2 py-1 rounded-md">{metrics.demoScheduled}</span>
                 </div>
                 <div className="w-0.5 h-6 bg-erp-border"></div>
                 
                 <div className="w-4/6 bg-erp-surface border-2 border-erp-border rounded-xl p-3 flex justify-between items-center relative z-10 shadow-sm">
                   <span className="font-bold text-erp-text/70 text-sm">3. Demo Completed</span>
-                  <span className="font-bold text-erp-text bg-white px-2 py-1 rounded-md">{metrics.demoCompleted}</span>
+                  <span className="font-bold text-erp-text bg-white dark:bg-black px-2 py-1 rounded-md">{metrics.demoCompleted}</span>
                 </div>
                 <div className="w-0.5 h-6 bg-erp-border"></div>
                 
                 <div className="w-3/6 bg-erp-primary text-white border-2 border-erp-primary rounded-xl p-3 flex justify-between items-center relative z-10 shadow-md transform hover:scale-105 transition-transform">
                   <span className="font-bold text-sm">4. Admissions</span>
-                  <span className="font-bold bg-white text-erp-primary px-2 py-1 rounded-md">{metrics.activeAdmissions}</span>
+                  <span className="font-bold bg-white dark:bg-black text-erp-primary px-2 py-1 rounded-md">{metrics.activeAdmissions}</span>
                 </div>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function SalesDashboard() {
             <div className="flex flex-col gap-6">
               <div className="bg-erp-surface border-2 border-erp-border rounded-xl p-6 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <div className="bg-blue-100 p-3 rounded-xl text-blue-700">
+                  <div className="bg-blue-100 p-3 rounded-xl text-blue-700 dark:text-white">
                     <Percent className="w-6 h-6" />
                   </div>
                   <div>
@@ -275,7 +275,7 @@ export default function SalesDashboard() {
         {/* Executive Performance Table */}
         {(user?.role === 'Manager' || user?.role === 'CEO') && metrics.executivePerformance.length > 0 && (
           <Card className="mb-8 p-0 overflow-hidden border-2 border-erp-border">
-            <div className="p-6 border-b-2 border-erp-border bg-slate-50">
+            <div className="p-6 border-b-2 border-erp-border bg-slate-50 dark:bg-zinc-900/50">
               <h3 className="text-xl font-bold font-display text-erp-text">Sales Executive Performance</h3>
             </div>
             <div className="overflow-x-auto">

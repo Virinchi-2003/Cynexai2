@@ -27,8 +27,8 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
       case 'Urgent': return 'text-red-600 bg-red-100 border-red-200';
       case 'High': return 'text-orange-600 bg-orange-100 border-orange-200';
       case 'Medium': return 'text-blue-600 bg-blue-100 border-blue-200';
-      case 'Low': return 'text-gray-600 bg-gray-100 border-gray-200';
-      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+      case 'Low': return 'text-gray-600 bg-gray-100 dark:bg-zinc-900/50 border-gray-200 dark:border-white/10';
+      default: return 'text-gray-600 bg-gray-100 dark:bg-zinc-900/50 border-gray-200 dark:border-white/10';
     }
   };
 
@@ -45,7 +45,7 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
   }
 
   return (
-    <div className="bg-white border-2 border-erp-border rounded-xl overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-black border-2 border-erp-border rounded-xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[800px]">
           <thead className="bg-erp-surface border-b border-erp-border text-xs font-bold text-erp-text/60 uppercase tracking-wider">
@@ -128,10 +128,10 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
               </td>
               <td className="p-3">
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  task.status === 'Done' ? 'bg-green-100 text-green-700' :
-                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                  task.status === 'Done' ? 'bg-green-100 text-green-700 dark:text-white' :
+                  task.status === 'In Progress' ? 'bg-blue-100 text-blue-700 dark:text-white' :
                   task.status === 'Review' ? 'bg-purple-100 text-purple-700' :
-                  'bg-gray-100 text-gray-700'
+                  'bg-gray-100 dark:bg-zinc-900/50 text-gray-700 dark:text-white'
                 }`}>
                   {task.status}
                 </span>

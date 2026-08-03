@@ -235,7 +235,7 @@ export default function TeacherTimetable() {
                           
                           let bgStyle = 'bg-indigo-50 border-indigo-200';
                           if (isOnline) bgStyle = 'bg-emerald-50 border-emerald-200';
-                          if (statusColor === 'past') bgStyle = 'bg-slate-100 border-slate-300 opacity-60 grayscale';
+                          if (statusColor === 'past') bgStyle = 'bg-slate-100 dark:bg-zinc-900/50 border-slate-300 dark:border-white/10 opacity-60 grayscale';
                           if (statusColor === 'live') bgStyle = 'bg-red-50 border-red-400 animate-pulse ring-2 ring-red-400/50';
 
                           return (

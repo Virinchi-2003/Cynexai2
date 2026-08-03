@@ -206,7 +206,7 @@ export default function SalesPitchPage() {
             <div className="xl:col-span-2 space-y-6">
               
               {/* Course Selection */}
-              <Card className="bg-white">
+              <Card className="bg-white dark:bg-black">
                 <h2 className="text-xl font-bold font-display mb-4 text-erp-text">1. Select Course Target</h2>
                 <div className="flex gap-3 mb-6 overflow-x-auto pb-2 no-scrollbar">
                   {courses.map(course => (
@@ -227,13 +227,13 @@ export default function SalesPitchPage() {
                       <ClipboardList className="w-6 h-6 text-indigo-600" /> Calling Script
                     </h3>
                     {canEdit && !isEditing && (
-                      <button onClick={() => setIsEditing(true)} className="bg-white px-3 py-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-2 font-bold shadow-sm border border-indigo-100 transition-colors">
+                      <button onClick={() => setIsEditing(true)} className="bg-white dark:bg-black px-3 py-1.5 rounded-lg text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-2 font-bold shadow-sm border border-indigo-100 transition-colors">
                         <Edit2 className="w-4 h-4" /> Edit Script
                       </button>
                     )}
                     {isEditing && (
                       <div className="flex gap-2">
-                        <button onClick={() => setIsEditing(false)} className="bg-white px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-700 text-sm flex items-center gap-2 font-bold shadow-sm border border-gray-200 transition-colors">
+                        <button onClick={() => setIsEditing(false)} className="bg-white dark:bg-black px-3 py-1.5 rounded-lg text-gray-500 hover:text-gray-700 dark:text-white text-sm flex items-center gap-2 font-bold shadow-sm border border-gray-200 dark:border-white/10 transition-colors">
                           <X className="w-4 h-4" /> Cancel
                         </button>
                         <button onClick={handleSave} disabled={saving} className="bg-indigo-600 px-4 py-1.5 rounded-lg text-white hover:bg-indigo-700 text-sm flex items-center gap-2 font-bold shadow-sm transition-colors">
@@ -248,7 +248,7 @@ export default function SalesPitchPage() {
                       ref={scriptTextareaRef}
                       value={editScript}
                       onChange={handleScriptChange}
-                      className="w-full min-h-[200px] p-4 rounded-xl border-2 border-indigo-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none bg-white font-medium text-indigo-900 text-lg resize-none shadow-inner"
+                      className="w-full min-h-[200px] p-4 rounded-xl border-2 border-indigo-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 outline-none bg-white dark:bg-black font-medium text-indigo-900 text-lg resize-none shadow-inner"
                       placeholder="Enter the sales script here..."
                     />
                   ) : (
@@ -288,7 +288,7 @@ export default function SalesPitchPage() {
                   <textarea 
                     value={editSummary}
                     onChange={(e) => setEditSummary(e.target.value)}
-                    className="w-full min-h-[100px] p-3 rounded-xl border-2 border-slate-200 focus:border-slate-400 focus:outline-none bg-erp-surface font-medium text-sm text-erp-text/80 resize-y"
+                    className="w-full min-h-[100px] p-3 rounded-xl border-2 border-slate-200 dark:border-white/10 focus:border-slate-400 focus:outline-none bg-erp-surface font-medium text-sm text-erp-text/80 resize-y"
                   />
                 ) : (
                   <p className="text-erp-text/70 font-medium text-sm leading-relaxed">{selectedData.sales_pitch_summary}</p>
@@ -309,19 +309,19 @@ export default function SalesPitchPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div className="relative col-span-2">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <input type="text" required placeholder="Full Name *" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 placeholder-gray-500" />
+                      <input type="text" required placeholder="Full Name *" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <input type="tel" required minLength={10} maxLength={15} pattern="[0-9\+\-\s]+" title="Valid phone number required" placeholder="Phone *" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 placeholder-gray-500" />
+                      <input type="tel" required minLength={10} maxLength={15} pattern="[0-9\+\-\s]+" title="Valid phone number required" placeholder="Phone *" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <input type="email" required placeholder="Email *" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 placeholder-gray-500" />
+                      <input type="email" required placeholder="Email *" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                     <div className="relative">
                       <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <select required value={newLead.source} onChange={e => setNewLead({...newLead, source: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900">
+                      <select required value={newLead.source} onChange={e => setNewLead({...newLead, source: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900 dark:text-white">
                         <option value="" disabled className="text-gray-500">Source *</option>
                         <option value="Walk-in">Walk-in</option>
                         <option value="Facebook Ad">Facebook Ad</option>
@@ -333,7 +333,7 @@ export default function SalesPitchPage() {
                     </div>
                     <div className="relative">
                       <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <select value={newLead.course_interest} onChange={e => setNewLead({...newLead, course_interest: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900">
+                      <select value={newLead.course_interest} onChange={e => setNewLead({...newLead, course_interest: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900 dark:text-white">
                         <option value="" disabled className="text-gray-500">Course Interest</option>
                         {courses.map(course => (
                           <option key={course.id} value={course.title}>{course.title}</option>
@@ -342,11 +342,11 @@ export default function SalesPitchPage() {
                     </div>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <input type="text" placeholder="Location" value={newLead.location} onChange={e => setNewLead({...newLead, location: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 placeholder-gray-500" />
+                      <input type="text" placeholder="Location" value={newLead.location} onChange={e => setNewLead({...newLead, location: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                     <div className="relative">
                       <Monitor className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <select value={newLead.preferred_mode} onChange={e => setNewLead({...newLead, preferred_mode: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900">
+                      <select value={newLead.preferred_mode} onChange={e => setNewLead({...newLead, preferred_mode: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900 dark:text-white">
                         <option value="" disabled className="text-gray-500">Pref. Mode</option>
                         <option value="Online">Online</option>
                         <option value="Offline">Offline</option>
@@ -354,7 +354,7 @@ export default function SalesPitchPage() {
                     </div>
                     <div className="relative">
                       <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <select value={newLead.qualification} onChange={e => setNewLead({...newLead, qualification: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900">
+                      <select value={newLead.qualification} onChange={e => setNewLead({...newLead, qualification: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900 dark:text-white">
                         <option value="" disabled className="text-gray-500">Qualification</option>
                         <option value="B.Tech/BE">B.Tech/BE</option>
                         <option value="M.Tech/ME">M.Tech/ME</option>
@@ -371,17 +371,17 @@ export default function SalesPitchPage() {
                     </div>
                     <div className="relative">
                       <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-erp-text/40" />
-                      <input type="text" placeholder="Grad Year" value={newLead.grad_year} onChange={e => setNewLead({...newLead, grad_year: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 placeholder-gray-500" />
+                      <input type="text" placeholder="Grad Year" value={newLead.grad_year} onChange={e => setNewLead({...newLead, grad_year: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg pl-10 pr-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                     <div className="relative col-span-2">
-                      <select value={newLead.it_background} onChange={e => setNewLead({...newLead, it_background: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg px-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900">
+                      <select value={newLead.it_background} onChange={e => setNewLead({...newLead, it_background: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg px-4 py-2 font-bold focus:border-erp-primary outline-none transition-colors appearance-none text-gray-900 dark:text-white">
                         <option value="" disabled className="text-gray-500">IT Background?</option>
                         <option value="Yes">Yes</option>
                         <option value="No">No</option>
                       </select>
                     </div>
                     <div className="relative col-span-2">
-                      <textarea placeholder="Additional Notes..." value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg px-4 py-2 font-medium focus:border-erp-primary outline-none transition-colors min-h-[60px] resize-y text-sm text-gray-900 placeholder-gray-500" />
+                      <textarea placeholder="Additional Notes..." value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} className="w-full bg-erp-surface border border-erp-border rounded-lg px-4 py-2 font-medium focus:border-erp-primary outline-none transition-colors min-h-[60px] resize-y text-sm text-gray-900 dark:text-white placeholder-gray-500" />
                     </div>
                   </div>
                   
@@ -410,7 +410,7 @@ export default function SalesPitchPage() {
                     <p className="text-indigo-100 text-sm">Download or share course materials.</p>
                   </div>
                   {canEdit && (
-                    <button onClick={() => setIsAddingMaterial(!isAddingMaterial)} className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg transition-colors">
+                    <button onClick={() => setIsAddingMaterial(!isAddingMaterial)} className="bg-white dark:bg-black/20 hover:bg-white dark:bg-black/30 p-1.5 rounded-lg transition-colors">
                       <Plus className="w-4 h-4 text-white" />
                     </button>
                   )}
@@ -418,24 +418,24 @@ export default function SalesPitchPage() {
 
                 {isAddingMaterial && (
                   <div className="bg-black/20 p-3 rounded-lg mb-4 space-y-2">
-                    <input type="text" placeholder="Material Title (e.g. PDF Brochure)" value={newMaterial.title} onChange={e => setNewMaterial({...newMaterial, title: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded px-3 py-1.5 text-sm text-white placeholder-white/50 focus:outline-none" />
-                    <input type="url" placeholder="URL Link (Drive, DropBox, etc)" value={newMaterial.url} onChange={e => setNewMaterial({...newMaterial, url: e.target.value})} className="w-full bg-white/10 border border-white/20 rounded px-3 py-1.5 text-sm text-white placeholder-white/50 focus:outline-none" />
+                    <input type="text" placeholder="Material Title (e.g. PDF Brochure)" value={newMaterial.title} onChange={e => setNewMaterial({...newMaterial, title: e.target.value})} className="w-full bg-white dark:bg-black/10 border border-white/20 rounded px-3 py-1.5 text-sm text-white placeholder-white/50 focus:outline-none" />
+                    <input type="url" placeholder="URL Link (Drive, DropBox, etc)" value={newMaterial.url} onChange={e => setNewMaterial({...newMaterial, url: e.target.value})} className="w-full bg-white dark:bg-black/10 border border-white/20 rounded px-3 py-1.5 text-sm text-white placeholder-white/50 focus:outline-none" />
                     <div className="flex gap-2">
-                      <Button variant="info" className="flex-1 py-1 h-auto text-xs bg-white text-indigo-700 font-bold" onClick={handleAddMaterial}>Add</Button>
-                      <Button variant="ghost" className="flex-1 py-1 h-auto text-xs text-white hover:bg-white/20" onClick={() => setIsAddingMaterial(false)}>Cancel</Button>
+                      <Button variant="info" className="flex-1 py-1 h-auto text-xs bg-white dark:bg-black text-indigo-700 font-bold" onClick={handleAddMaterial}>Add</Button>
+                      <Button variant="ghost" className="flex-1 py-1 h-auto text-xs text-white hover:bg-white dark:bg-black/20" onClick={() => setIsAddingMaterial(false)}>Cancel</Button>
                     </div>
                   </div>
                 )}
 
                 <div className="space-y-3">
                   {materials.length === 0 ? (
-                    <div className="bg-white/10 border border-white/20 border-dashed p-4 rounded-xl text-center text-sm font-medium text-white/70">
+                    <div className="bg-white dark:bg-black/10 border border-white/20 border-dashed p-4 rounded-xl text-center text-sm font-medium text-white/70">
                       No materials assigned yet.
                     </div>
                   ) : (
                     materials.map(mat => (
                       <div key={mat.id} className="flex gap-2 items-stretch">
-                        <Button variant="info" className="flex-1 flex flex-col items-center justify-center gap-1 bg-white text-indigo-700 hover:bg-indigo-50 font-bold border-none shadow-md py-3 h-auto" onClick={() => window.open(mat.url, '_blank')}>
+                        <Button variant="info" className="flex-1 flex flex-col items-center justify-center gap-1 bg-white dark:bg-black text-indigo-700 hover:bg-indigo-50 font-bold border-none shadow-md py-3 h-auto" onClick={() => window.open(mat.url, '_blank')}>
                           <Download className="w-4 h-4" />
                           <span className="text-xs truncate max-w-full px-1">{mat.title}</span>
                         </Button>

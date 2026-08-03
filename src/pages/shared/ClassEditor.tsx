@@ -358,7 +358,7 @@ export default function ClassEditor() {
                 {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><Sparkles className="w-4 h-4" /> Generate All Materials</>}
               </Button>
 
-              <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+              <div className="bg-white dark:bg-black/10 rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center gap-2"><Video className="w-4 h-4 text-blue-300" /> Presentation (PPT)</h3>
                   {aiStatus.ppt ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}
@@ -366,7 +366,7 @@ export default function ClassEditor() {
                 <p className="text-xs text-indigo-200 mb-3">{aiStatus.ppt ? 'Slides generated for teacher Live Dashboard.' : 'Pending generation.'}</p>
               </div>
 
-              <div className="bg-white/10 rounded-xl p-4 border border-white/10">
+              <div className="bg-white dark:bg-black/10 rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center gap-2"><PenTool className="w-4 h-4 text-purple-300" /> Teacher Script & Keypoints</h3>
                   {aiStatus.script ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}

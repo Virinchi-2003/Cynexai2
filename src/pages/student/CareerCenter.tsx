@@ -156,7 +156,7 @@ function JobBoard() {
       
       {filtered.length === 0 ? (
         <div className="py-20 text-center space-y-3 candy-panel !border-2 bg-white/70 dark:bg-black/30">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/5 mx-auto flex items-center justify-center text-slate-400 dark:text-white/30 border border-slate-200 dark:border-white/10">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white dark:bg-black/5 mx-auto flex items-center justify-center text-slate-400 dark:text-white/30 border border-slate-200 dark:border-white/10">
             <Briefcase className="w-8 h-8" />
           </div>
           <p className="text-slate-600 dark:text-white/60 font-black">No job listings found.</p>
@@ -205,7 +205,7 @@ function ResumeBuilder() {
 
       {/* Preview (Printable area) */}
       <div className="lg:col-span-8">
-        <div className="bg-white text-slate-900 shadow-xl rounded-3xl border border-slate-200 overflow-hidden print:shadow-none print:rounded-none">
+        <div className="bg-white dark:bg-black text-slate-900 dark:text-white shadow-xl rounded-3xl border border-slate-200 dark:border-white/10 overflow-hidden print:shadow-none print:rounded-none">
           {/* Header */}
           <div className="bg-slate-900 text-white p-8">
             <h1 className="text-3xl font-serif font-black mb-1">{data.name || 'Your Name'}</h1>
@@ -219,25 +219,25 @@ function ResumeBuilder() {
           {/* Body */}
           <div className="p-8 space-y-6">
             <section className="resume-section">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 pb-1">Profile</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 dark:border-white/10 pb-1">Profile</h2>
               <p className="text-sm text-slate-600 leading-relaxed">{data.summary}</p>
             </section>
             
             <section className="resume-section">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 pb-1">Experience</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 dark:border-white/10 pb-1">Experience</h2>
               <div className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{data.exp}</div>
             </section>
 
             <section className="resume-section">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 pb-1">Education</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 dark:border-white/10 pb-1">Education</h2>
               <div className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{data.edu}</div>
             </section>
 
             <section className="resume-section">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 pb-1">Skills</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-blue-600 mb-2 border-b border-slate-200 dark:border-white/10 pb-1">Skills</h2>
               <div className="flex flex-wrap gap-2 pt-1">
                 {data.skills.split(',').map((s, i) => s.trim() ? (
-                  <span key={i} className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs font-semibold">{s.trim()}</span>
+                  <span key={i} className="px-2 py-1 bg-slate-100 dark:bg-zinc-900/50 text-slate-600 rounded text-xs font-semibold">{s.trim()}</span>
                 ) : null)}
               </div>
             </section>
@@ -267,9 +267,9 @@ function LinkedInOptimizer() {
   return (
     <div className="max-w-3xl mx-auto space-y-6" ref={container}>
       <div className="candy-panel p-8 !border-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white relative overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white dark:bg-black opacity-10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
-          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border border-white/30">
+          <div className="w-12 h-12 bg-white dark:bg-black/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm border border-white/30">
             <Linkedin className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-2xl font-black mb-2">LinkedIn Profile Optimizer</h2>
@@ -346,13 +346,13 @@ export default function CareerCenter() {
           </div>
           
           <div className="flex gap-2 p-1.5 candy-panel !border-2 bg-slate-100/50 dark:bg-black/30 overflow-x-auto shadow-none">
-            <button onClick={() => setTab('jobs')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'jobs' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('jobs')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'jobs' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:text-white dark:hover:text-white'}`}>
               <Briefcase className="w-4 h-4" /> Jobs
             </button>
-            <button onClick={() => setTab('resume')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'resume' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('resume')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'resume' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:text-white dark:hover:text-white'}`}>
               <FileText className="w-4 h-4" /> Resume Builder
             </button>
-            <button onClick={() => setTab('linkedin')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'linkedin' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:hover:text-white'}`}>
+            <button onClick={() => setTab('linkedin')} className={`flex items-center gap-2 px-4 py-2 min-h-[44px] rounded-xl text-sm font-bold transition-all whitespace-nowrap ${tab === 'linkedin' ? 'candy-btn-blue' : 'text-slate-500 dark:text-white/60 hover:text-slate-900 dark:text-white dark:hover:text-white'}`}>
               <Linkedin className="w-4 h-4" /> LinkedIn Optimizer
             </button>
           </div>
