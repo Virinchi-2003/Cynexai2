@@ -112,19 +112,23 @@ export const MobileNavigation: React.FC = () => {
         
         {/* Drawer */}
         <div 
-          className={`absolute top-0 left-0 bottom-0 w-[80%] max-w-sm candy-panel !rounded-l-none !border-y-0 !border-l-0 transform transition-transform duration-300 ease-in-out ${
+          className={`absolute top-0 left-0 bottom-0 w-[80%] max-w-sm bg-white dark:bg-zinc-950 flex flex-col transform transition-transform duration-300 ease-in-out shadow-2xl ${
             menuOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          {/* Close button fixed to viewport */}
-          <button 
-            onClick={() => setMenuOpen(false)}
-            className="fixed top-4 right-4 p-2 bg-white dark:bg-black rounded-full shadow-lg z-[120] text-slate-800 dark:text-white"
-          >
-            <X className="w-6 h-6" />
-          </button>
-          
-          <div className="h-full w-full overflow-hidden relative">
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-white/10 flex-shrink-0">
+            <span className="font-display font-bold text-lg text-slate-800 dark:text-white">Navigation</span>
+            <button 
+              onClick={() => setMenuOpen(false)}
+              className="p-2 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Scrollable nav links */}
+          <div className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch py-4 px-3">
             <Sidebar onNavClick={() => setMenuOpen(false)} isMobile={true} />
           </div>
         </div>

@@ -127,12 +127,12 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
         </div>
       )}
       
-      <div className="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+      <div className={isMobile ? '' : 'flex-1 overflow-y-auto py-6 px-4 space-y-6'}>
         {loading ? (
           <div className="flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-erp-primary" /></div>
         ) : (
           Object.entries(groupedNavs).map(([section, items]) => (
-            <div key={section} className="space-y-2">
+            <div key={section} className="space-y-2 mb-6">
               <div className="text-xs font-bold text-erp-text/50 uppercase mb-2 px-2 tracking-wider">
                 {section}
               </div>
@@ -158,7 +158,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
         )}
       </div>
 
-      <div className="p-4 border-t-2 border-erp-border space-y-1">
+      <div className={`${isMobile ? 'mt-4 pt-4 border-t border-slate-200 dark:border-white/10' : 'p-4 border-t-2 border-erp-border'} space-y-1`}>
         {/* Theme Toggle */}
         <ThemeToggle variant="sidebar" />
 
