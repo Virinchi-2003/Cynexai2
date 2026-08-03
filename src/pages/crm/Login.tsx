@@ -26,7 +26,7 @@ export default function CrmLogin() {
         else if (user.role === 'DM') navigate('/dm/dashboard');
         else if (user.role === 'Teacher') navigate('/teacher');
         else if (user.role === 'Student') navigate('/student');
-        else navigate('/sales/pipeline');
+        else navigate('/sales/dashboard');
       } else {
         setError('Invalid email or password.');
       }

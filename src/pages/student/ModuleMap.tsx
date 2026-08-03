@@ -581,7 +581,6 @@ export default function ModuleMap() {
           onGo={handleGo}
         />
       )}
-      </div>
     </div>
   );
 }
