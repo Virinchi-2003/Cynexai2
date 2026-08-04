@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Task, getTasksForUser, getAllTasks, getTasksByCreator,
-  createTask, getTasksByProject, updateTaskStatus, deleteTask
+  createTask, getTasksByProject, updateTaskStatus, deleteTask, ensureDailyTasks
 } from '../../../lib/api/tasks';
 import { Project, getProjects } from '../../../lib/api/projects';
 import { getCurrentUser } from '../../../lib/auth';
@@ -275,6 +275,12 @@ export default function AsanaTaskApp() {
       let fetched: Task[] = [];
       if (currentView === 'my-tasks') {
         fetched = await getTasksForUser(user.id);
+        // Run daily task maintenance: marks past incomplete → Missed, creates today's copies
+        const newCreated = await ensureDailyTasks(fetched, user.id);
+        if (newCreated) {
+          // Re-fetch so the newly created today-copies appear
+          fetched = await getTasksForUser(user.id);
+        }
       } else if (currentView === 'delegated') {
         fetched = await getTasksByCreator(user.id);
         fetched = fetched.filter(t => t.assignee_id !== user.id);
@@ -290,17 +296,17 @@ export default function AsanaTaskApp() {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
       // ── Daily task smart filtering for My Tasks view ──
-      // - Hide old completed/missed daily tasks (keep history clean)
-      // - Keep: today's daily tasks (any status)
-      // - Keep: yesterday's Missed daily tasks (as a warning)
-      // - Hide: everything older that is Done/Missed/Excused (no point showing)
+      // Rules:
+      // - Today's daily tasks → ALWAYS visible regardless of status (done or not)
+      // - Yesterday's Missed daily tasks → visible as a warning until tomorrow
+      // - Anything older (done, missed, excused) → hidden to keep list clean
       if (currentView === 'my-tasks') {
         fetched = fetched.filter(t => {
           if (t.task_type !== 'Daily') return true; // non-daily always show
           const taskDate = t.due_date ? t.due_date.split('T')[0] : '';
-          if (taskDate === today) return true; // today's daily always show
-          if (taskDate === yesterday && t.status === 'Missed') return true; // show yesterday's missed as warning
-          return false; // hide everything else (old done, old missed beyond yesterday)
+          if (taskDate === today) return true; // today's daily: always show (even if Done)
+          if (taskDate === yesterday && t.status === 'Missed') return true; // warning for missed yesterday
+          return false; // everything older → hidden
         });
       }
 
