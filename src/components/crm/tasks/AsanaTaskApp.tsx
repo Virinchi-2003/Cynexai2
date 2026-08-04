@@ -44,18 +44,20 @@ function StatsBar({ tasks, isManagerOrAbove, onStatClick, activeFilter }: { task
   const done = tasks.filter(t => t.status === 'Done').length;
   const inProgress = tasks.filter(t => t.status === 'In Progress').length;
   const today = new Date().toISOString().split('T')[0];
-  const overdue = tasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done' && t.status !== 'Excused').length;
+  const overdue = tasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done' && t.status !== 'Excused' && t.status !== 'Missed').length;
+  const missed = tasks.filter(t => t.status === 'Missed').length;
   const urgent = tasks.filter(t => t.priority === 'Urgent' && t.status !== 'Done').length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
+    <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-4">
       {[
-        { id: 'total', label: 'Total', value: total, icon: <Target className="w-3.5 h-3.5" />, color: 'text-slate-600 bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:bg-zinc-900/50' },
-        { id: 'done', label: 'Done', value: `${done} (${pct}%)`, icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
-        { id: 'in-progress', label: 'In Progress', value: inProgress, icon: <Circle className="w-3.5 h-3.5" />, color: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100' },
-        { id: 'overdue', label: 'Overdue', value: overdue, icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
-        { id: 'urgent', label: 'Urgent', value: urgent, icon: <Zap className="w-3.5 h-3.5" />, color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
+        { id: 'total',       label: 'Total',       value: total,               icon: <Target className="w-3.5 h-3.5" />,        color: 'text-slate-600 bg-slate-50 dark:bg-zinc-900/50 border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:bg-zinc-900/50' },
+        { id: 'done',        label: 'Done',        value: `${done} (${pct}%)`, icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
+        { id: 'in-progress', label: 'In Progress', value: inProgress,          icon: <Circle className="w-3.5 h-3.5" />,       color: 'text-blue-600 bg-blue-50 border-blue-200 hover:bg-blue-100' },
+        { id: 'overdue',     label: 'Overdue',     value: overdue,             icon: <AlertTriangle className="w-3.5 h-3.5" />, color: overdue > 0 ? 'text-red-600 bg-red-50 border-red-200 hover:bg-red-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
+        { id: 'missed',      label: 'Missed',      value: missed,              icon: <AlertTriangle className="w-3.5 h-3.5" />, color: missed > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100 animate-pulse' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
+        { id: 'urgent',      label: 'Urgent',      value: urgent,              icon: <Zap className="w-3.5 h-3.5" />,           color: urgent > 0 ? 'text-orange-600 bg-orange-50 border-orange-200 hover:bg-orange-100' : 'text-slate-400 bg-slate-50 dark:bg-zinc-900/50 border-slate-100' },
       ].map(s => (
         <button
           key={s.label}
@@ -284,17 +286,35 @@ export default function AsanaTaskApp() {
         fetched = await getTasksForUser(user.id);
       }
 
-      // Sort tasks: Incomplete Overdue tasks first, then by due date
       const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+      // ── Daily task smart filtering for My Tasks view ──
+      // - Hide old completed/missed daily tasks (keep history clean)
+      // - Keep: today's daily tasks (any status)
+      // - Keep: yesterday's Missed daily tasks (as a warning)
+      // - Hide: everything older that is Done/Missed/Excused (no point showing)
+      if (currentView === 'my-tasks') {
+        fetched = fetched.filter(t => {
+          if (t.task_type !== 'Daily') return true; // non-daily always show
+          const taskDate = t.due_date ? t.due_date.split('T')[0] : '';
+          if (taskDate === today) return true; // today's daily always show
+          if (taskDate === yesterday && t.status === 'Missed') return true; // show yesterday's missed as warning
+          return false; // hide everything else (old done, old missed beyond yesterday)
+        });
+      }
+
+      // Sort tasks: Missed daily first, then Incomplete Overdue, then by due date
       fetched.sort((a, b) => {
+        const aMissed = a.status === 'Missed' ? 2 : 0;
+        const bMissed = b.status === 'Missed' ? 2 : 0;
+        if (aMissed !== bMissed) return bMissed - aMissed;
+
         const aOverdue = a.due_date && a.due_date < today && a.status !== 'Done' && a.status !== 'Excused' ? 1 : 0;
         const bOverdue = b.due_date && b.due_date < today && b.status !== 'Done' && b.status !== 'Excused' ? 1 : 0;
-        
-        if (aOverdue !== bOverdue) return bOverdue - aOverdue; // Overdue tasks come first
-        
-        if (a.due_date && b.due_date) {
-          return a.due_date.localeCompare(b.due_date);
-        }
+        if (aOverdue !== bOverdue) return bOverdue - aOverdue;
+
+        if (a.due_date && b.due_date) return a.due_date.localeCompare(b.due_date);
         return 0;
       });
 
@@ -330,7 +350,8 @@ export default function AsanaTaskApp() {
     const today = new Date().toISOString().split('T')[0];
     if (customFilter === 'done') filteredTasks = filteredTasks.filter(t => t.status === 'Done');
     else if (customFilter === 'in-progress') filteredTasks = filteredTasks.filter(t => t.status === 'In Progress');
-    else if (customFilter === 'overdue') filteredTasks = filteredTasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done');
+    else if (customFilter === 'overdue') filteredTasks = filteredTasks.filter(t => t.due_date && t.due_date < today && t.status !== 'Done' && t.status !== 'Missed');
+    else if (customFilter === 'missed') filteredTasks = filteredTasks.filter(t => t.status === 'Missed');
     else if (customFilter === 'urgent') filteredTasks = filteredTasks.filter(t => t.priority === 'Urgent' && t.status !== 'Done');
   }
 

@@ -99,42 +99,74 @@ export const getTasksByProject = async (projectId: string): Promise<Task[]> => {
 export const ensureDailyTasks = async (tasks: Task[], userId: string) => {
   const today = new Date().toISOString().split('T')[0];
   const dailyTasks = tasks.filter(t => t.task_type === 'Daily');
-  
+
+  // Group daily tasks by title (each unique title = one recurring task template)
   const grouped = new Map<string, Task[]>();
   dailyTasks.forEach(t => {
     const arr = grouped.get(t.title) || [];
     arr.push(t);
     grouped.set(t.title, arr);
   });
-  
+
   let newTasksCreated = false;
-  for (const [title, groupTasks] of grouped.entries()) {
+
+  for (const [, groupTasks] of grouped.entries()) {
+    // Sort descending — latest first
     groupTasks.sort((a, b) => new Date(b.due_date || '').getTime() - new Date(a.due_date || '').getTime());
-    const latestTask = groupTasks[0];
-    const latestDateStr = latestTask.due_date ? latestTask.due_date.split('T')[0] : '';
-    
-    if (latestDateStr && latestDateStr < today) {
+
+    // Auto-mark ALL past incomplete daily tasks as Missed (anything before today, not Done/Excused/Missed)
+    for (const t of groupTasks) {
+      const taskDate = t.due_date ? t.due_date.split('T')[0] : '';
+      if (taskDate && taskDate < today && t.status !== 'Done' && t.status !== 'Excused' && t.status !== 'Missed') {
+        if (isTursoConfigured && client) {
+          try {
+            await client.execute({
+              sql: `UPDATE tasks SET status = 'Missed' WHERE id = ?`,
+              args: [t.id]
+            });
+            t.status = 'Missed'; // update in-memory too
+          } catch (e) {
+            console.error('Failed to mark task as Missed', e);
+          }
+        }
+      }
+    }
+
+    // Check if today's copy already exists
+    const todayExists = groupTasks.some(t => {
+      const d = t.due_date ? t.due_date.split('T')[0] : '';
+      return d === today;
+    });
+
+    if (!todayExists) {
+      // Use the most recent task as the template for today's new copy
+      const template = groupTasks[0];
+      if (!template) continue;
+
       const newTask = {
-        title: latestTask.title,
-        description: latestTask.description,
-        assignee_id: latestTask.assignee_id,
-        priority: latestTask.priority,
+        title: template.title,
+        description: template.description,
+        assignee_id: template.assignee_id,
+        priority: template.priority,
         due_date: today,
-        related_entity: latestTask.related_entity,
-        task_type: 'Daily',
-        target_number: latestTask.target_number,
+        related_entity: template.related_entity,
+        task_type: 'Daily' as const,
+        target_number: template.target_number,
         current_number: 0,
-        tags: latestTask.tags,
-        created_by: latestTask.created_by,
-        lead_id: latestTask.lead_id,
-        student_id: latestTask.student_id
+        tags: template.tags,
+        created_by: template.created_by,
+        lead_id: template.lead_id,
+        student_id: template.student_id,
+        recurrence_rule: template.recurrence_rule,
       };
       await createTask(newTask as any);
       newTasksCreated = true;
     }
   }
+
   return newTasksCreated;
 };
+
 
 export const getTasksByLead = async (leadId: string): Promise<Task[]> => {
   if (isTursoConfigured && client) {

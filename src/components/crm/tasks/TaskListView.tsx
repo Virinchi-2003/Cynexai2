@@ -1,6 +1,6 @@
 import React from 'react';
 import { Task, updateTaskStatus } from '../../../lib/api/tasks';
-import { CheckCircle, Circle, MoreVertical, Clock } from 'lucide-react';
+import { CheckCircle, Circle, MoreVertical, Clock, AlertTriangle } from 'lucide-react';
 
 interface Props {
   tasks: Task[];
@@ -44,6 +44,9 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
     );
   }
 
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
   return (
     <div className="bg-white dark:bg-black border-2 border-erp-border rounded-xl overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
@@ -63,11 +66,17 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
           {tasks.map(task => {
             const assigneeName = getUserName(task.assignee_id);
             const creatorName = task.created_by ? getUserName(task.created_by) : assigneeName;
+            const isMissed = task.status === 'Missed';
+            const isYesterdayMissed = isMissed && task.due_date && task.due_date.split('T')[0] === yesterday;
             return (
             <tr 
               key={task.id} 
               onClick={() => onTaskClick(task)}
-              className="group hover:bg-erp-background transition-colors cursor-pointer"
+              className={`group transition-colors cursor-pointer ${
+                isYesterdayMissed
+                  ? 'bg-orange-50 dark:bg-orange-950/20 hover:bg-orange-100 dark:hover:bg-orange-950/30 border-l-4 border-l-orange-500'
+                  : 'hover:bg-erp-background'
+              }`}
             >
               <td className="p-3 text-center align-middle" onClick={(e) => handleToggleStatus(e, task)}>
                 <button className="text-erp-text/30 hover:text-erp-primary transition-colors focus:outline-none">
@@ -75,14 +84,21 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
                     <CheckCircle className="w-5 h-5 text-green-500" />
                   ) : task.status === 'Excused' ? (
                     <Circle className="w-5 h-5 text-yellow-500" />
+                  ) : task.status === 'Missed' ? (
+                    <AlertTriangle className="w-5 h-5 text-orange-500 animate-pulse" />
                   ) : (
                     <Circle className="w-5 h-5" />
                   )}
                 </button>
               </td>
               <td className="p-3">
-                <div className={`font-bold text-sm ${task.status === 'Done' || task.status === 'Excused' ? 'text-erp-text/50 line-through' : 'text-erp-text'}`}>
+                <div className={`font-bold text-sm ${task.status === 'Done' || task.status === 'Excused' ? 'text-erp-text/50 line-through' : isMissed ? 'text-orange-700 dark:text-orange-400' : 'text-erp-text'}`}>
                   {task.title}
+                  {isYesterdayMissed && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-500 text-white animate-pulse">
+                      <AlertTriangle className="w-2.5 h-2.5" /> MISSED YESTERDAY
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-erp-background border border-erp-border text-erp-text/60">
@@ -128,9 +144,10 @@ export const TaskListView: React.FC<Props> = ({ tasks, users, onTaskClick, onUpd
               </td>
               <td className="p-3">
                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                  task.status === 'Done' ? 'bg-green-100 text-green-700 dark:text-white' :
+                  task.status === 'Done'        ? 'bg-green-100 text-green-700 dark:text-white' :
                   task.status === 'In Progress' ? 'bg-blue-100 text-blue-700 dark:text-white' :
-                  task.status === 'Review' ? 'bg-purple-100 text-purple-700' :
+                  task.status === 'Review'      ? 'bg-purple-100 text-purple-700' :
+                  task.status === 'Missed'      ? 'bg-orange-100 text-orange-700 font-black animate-pulse' :
                   'bg-gray-100 dark:bg-zinc-900/50 text-gray-700 dark:text-white'
                 }`}>
                   {task.status}
