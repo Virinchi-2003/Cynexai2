@@ -80,6 +80,11 @@ import PresentationView from './pages/teacher/PresentationView';
 import TeacherTimetable from './pages/teacher/TeacherTimetable';
 import TeacherSettings from './pages/teacher/TeacherSettings';
 
+// Test Imports
+import TestLogin from './pages/test/TestLogin';
+import TestAttempt from './pages/test/TestAttempt';
+import TestResults from './pages/test/TestResults';
+
 // Security Imports
 import { RequireAuth } from './components/layout/RequireAuth';
 
@@ -195,6 +200,11 @@ function App() {
     <Router>
       <ScrollToTop />
       <Routes>
+        {/* Assessment Portal */}
+        <Route path="/test" element={<TestLogin />} />
+        <Route path="/test/attempt" element={<TestAttempt />} />
+        <Route path="/test/result" element={<TestResults />} />
+
         <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
         <Route path="/course/:courseId" element={<MainLayout><CourseDetail /></MainLayout>} />
         <Route path="/apply/:courseId" element={<MainLayout><ApplicationForm /></MainLayout>} />

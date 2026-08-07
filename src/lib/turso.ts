@@ -1145,6 +1145,28 @@ export const initTursoDB = async () => {
         )
       `);
 
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS support_tickets (
+          id TEXT PRIMARY KEY,
+          student_id TEXT,
+          subject TEXT,
+          message TEXT,
+          status TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      await client.execute(`
+        CREATE TABLE IF NOT EXISTS sql_test_results (
+          id TEXT PRIMARY KEY,
+          student_name TEXT,
+          batch TEXT,
+          score INTEGER,
+          answers_json TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
       // Project hierarchy members (General Manager, Manager, Member)
       await client.execute(`
         CREATE TABLE IF NOT EXISTS project_members (
