@@ -85,7 +85,12 @@ export default function StudentsPage() {
   const [approvingStudentId, setApprovingStudentId] = useState<string | null>(null);
   const [approveForm, setApproveForm] = useState({ student_id: '', password: '', portalId: '', batch: '' });
 
-  useEffect(() => { loadData(); }, [courseFilter, batchFilter, statusFilter, search, activeTab]);
+  useEffect(() => { 
+    const timer = setTimeout(() => {
+      loadData(); 
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [courseFilter, batchFilter, statusFilter, search, activeTab]);
 
   const loadData = async () => {
     setLoading(true);
@@ -137,7 +142,7 @@ export default function StudentsPage() {
       const cRes = await client.execute({ sql: `SELECT title FROM courses ORDER BY title`, args: [] }).catch(() => ({ rows: [] }));
       const bRes = await client.execute({ sql: `SELECT name FROM batches ORDER BY name`, args: [] }).catch(() => ({ rows: [] }));
       setCourses(cRes.rows.map((r: any) => r.title).filter(Boolean));
-      setBatches(bRes.rows.map((r: any) => r.batch_number).filter(Boolean));
+      setBatches(bRes.rows.map((r: any) => r.name).filter(Boolean));
     } catch (e) { console.error(e); }
   };
 
