@@ -2,9 +2,6 @@
 import { motion, Variants } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
-import { useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import {
   ArrowRight,
   Sparkles,
@@ -17,59 +14,6 @@ import TiltCard from './TiltCard';
 import studentsIcon from '../assets/students.png';
 import jobPlacementIcon from '../assets/job-placement.png';
 import partnersIcon from '../assets/partners.png';
-
-// ─── 3D floating shapes mini-scene ───────────────────────────────────────────
-const FloatingShape = ({ position, shape, color, speed }: {
-  position: [number, number, number];
-  shape: 'icosa' | 'torus' | 'box';
-  color: string;
-  speed: number;
-}) => {
-  const ref = useRef<THREE.Mesh>(null!);
-  useFrame((state) => {
-    if (!ref.current) return;
-    const t = state.clock.getElapsedTime() * speed;
-    ref.current.rotation.x = t * 0.4;
-    ref.current.rotation.y = t * 0.6;
-    ref.current.position.y = position[1] + Math.sin(t * 0.5) * 0.3;
-  });
-
-  const geometry = shape === 'icosa'
-    ? <icosahedronGeometry args={[0.6, 0]} />
-    : shape === 'torus'
-      ? <torusGeometry args={[0.5, 0.2, 12, 24]} />
-      : <boxGeometry args={[0.7, 0.7, 0.7]} />;
-
-  return (
-    <mesh ref={ref} position={position}>
-      {geometry}
-      <meshStandardMaterial
-        color={color}
-        wireframe
-        transparent
-        opacity={0.6}
-      />
-    </mesh>
-  );
-};
-
-const HeroScene = () => (
-  <Canvas
-    camera={{ position: [0, 0, 6], fov: 50 }}
-    className="absolute inset-0 pointer-events-none"
-    gl={{ alpha: true, antialias: false }}
-    dpr={Math.min(window.devicePixelRatio, 1.5)}
-  >
-    <ambientLight intensity={0.5} />
-    <pointLight position={[5, 5, 5]} color="#41c8df" intensity={2} />
-    <FloatingShape position={[-3.5, 0.5, 0]} shape="icosa" color="#41c8df" speed={0.5} />
-    <FloatingShape position={[3.5, -0.5, -1]} shape="torus" color="#8b5cf6" speed={0.4} />
-    <FloatingShape position={[0, 2.2, -2]} shape="box" color="#06b6d4" speed={0.3} />
-    <FloatingShape position={[-1.5, -2, -1]} shape="icosa" color="#a78bfa" speed={0.6} />
-    <FloatingShape position={[2, 2, -3]} shape="torus" color="#41c8df" speed={0.35} />
-  </Canvas>
-);
-
 
 const Hero = () => {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -91,11 +35,6 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 transition-colors duration-500">
-
-      {/* 3D floating shapes layer */}
-      <div className="absolute inset-0 z-0">
-        <HeroScene />
-      </div>
 
       {/* Glowing blobs */}
       <div className="absolute inset-0 z-0 pointer-events-none">
