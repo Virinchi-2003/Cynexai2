@@ -1190,6 +1190,7 @@ export const initTursoDB = async () => {
       await addColumn('admissions', 'referred_by_student_id TEXT');
       await addColumn('sales', 'referred_by_student_id TEXT');
       await addColumn('sales', 'payment_mode TEXT');
+      await addColumn('sales', 'timestamp TEXT DEFAULT CURRENT_TIMESTAMP');
       await addColumn('tasks', 'description TEXT');
       await addColumn('tasks', 'created_by TEXT');
       
