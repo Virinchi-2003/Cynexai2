@@ -3,12 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { batch1Questions, batch23Questions, AssessmentData } from '../../data/sqlAssessment';
 import { submitSQLTest } from '../../lib/api/assessment';
 import Editor from '@monaco-editor/react';
+import { initSQLSandbox } from '../../lib/alasqlSandbox';
 
 export default function TestAttempt() {
   const navigate = useNavigate();
   const [studentName, setStudentName] = useState('');
   const [batch, setBatch] = useState('');
   const [data, setData] = useState<AssessmentData | null>(null);
+  const [db, setDb] = useState<any>(null);
+  const [queryResults, setQueryResults] = useState<Record<string, { columns: string[], data: any[], error: string }>>({});
   
   const [activeSection, setActiveSection] = useState<'A' | 'B' | 'C'>('A');
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -39,8 +42,45 @@ export default function TestAttempt() {
       });
     }, 1000);
     
+    setDb(initSQLSandbox());
+
     return () => clearInterval(timer);
   }, [navigate]);
+
+  const handleRunQuery = (qId: string) => {
+    if (!db) return;
+    const query = answers[qId];
+    if (!query || !query.trim()) {
+      setQueryResults(prev => ({ ...prev, [qId]: { columns: [], data: [], error: 'Please enter a SQL query first.' } }));
+      return;
+    }
+    
+    try {
+      const res = db.exec(query);
+      if (Array.isArray(res) && res.length > 0) {
+        setQueryResults(prev => ({ 
+          ...prev, 
+          [qId]: { columns: Object.keys(res[0]), data: res, error: '' } 
+        }));
+      } else if (Array.isArray(res) && res.length === 0) {
+        setQueryResults(prev => ({ 
+          ...prev, 
+          [qId]: { columns: [], data: [], error: 'Query executed successfully. 0 rows returned.' } 
+        }));
+      } else {
+        // For updates, inserts, etc.
+        setQueryResults(prev => ({ 
+          ...prev, 
+          [qId]: { columns: [], data: [], error: `Query executed successfully. Result: ${res}` } 
+        }));
+      }
+    } catch (e: any) {
+      setQueryResults(prev => ({ 
+        ...prev, 
+        [qId]: { columns: [], data: [], error: e.message || 'Syntax error or invalid query.' } 
+      }));
+    }
+  };
 
   const handleAnswer = (qId: string, val: string) => {
     setAnswers(prev => ({ ...prev, [qId]: val }));
@@ -236,6 +276,47 @@ export default function TestAttempt() {
                         }}
                       />
                     </div>
+                    <div className="p-3 bg-gray-100 flex justify-end border-b border-gray-200">
+                      <button 
+                        onClick={() => handleRunQuery(q.id)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-1.5 px-4 rounded shadow-sm flex items-center gap-2 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z" /></svg>
+                        Run Query
+                      </button>
+                    </div>
+                    {queryResults[q.id] && (
+                      <div className="p-4 bg-white max-h-64 overflow-auto">
+                        {queryResults[q.id].error ? (
+                          <div className="text-red-600 font-mono text-sm p-3 bg-red-50 rounded border border-red-200">
+                            {queryResults[q.id].error}
+                          </div>
+                        ) : queryResults[q.id].data.length === 0 ? (
+                          <div className="text-gray-500 font-mono text-sm p-3 bg-gray-50 rounded border border-gray-200">
+                            No data returned.
+                          </div>
+                        ) : (
+                          <table className="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                {queryResults[q.id].columns.map(col => (
+                                  <th key={col} className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{col}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {queryResults[q.id].data.map((row, rIdx) => (
+                                <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                  {queryResults[q.id].columns.map(col => (
+                                    <td key={col} className="px-3 py-2 whitespace-nowrap text-gray-900 font-mono text-xs">{row[col] !== null ? String(row[col]) : 'NULL'}</td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
