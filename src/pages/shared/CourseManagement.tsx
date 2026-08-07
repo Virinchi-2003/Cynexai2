@@ -85,28 +85,28 @@ export default function CourseManagement() {
         });
       });
 
-      const moduleMap = new Map();
+      const classesByModuleId = new Map();
+      clsRows.forEach((cls: any) => {
+        if (!classesByModuleId.has(cls.module_id)) {
+          classesByModuleId.set(cls.module_id, []);
+        }
+        classesByModuleId.get(cls.module_id).push({
+          id: cls.id,
+          title: cls.title,
+          type: cls.type
+        });
+      });
+
       mRows.forEach((m: any) => {
         const mod = {
           id: m.id,
           course_id: m.course_id,
           name: m.title,
-          classes: [],
+          classes: classesByModuleId.get(m.id) || [],
           completedBy: 0
         };
-        moduleMap.set(m.id, mod);
         if (courseMap.has(m.course_id as string)) {
           courseMap.get(m.course_id as string).modules.push(mod);
-        }
-      });
-
-      clsRows.forEach((cls: any) => {
-        if (moduleMap.has(cls.module_id)) {
-          moduleMap.get(cls.module_id).classes.push({
-            id: cls.id,
-            title: cls.title,
-            type: cls.type
-          });
         }
       });
 
