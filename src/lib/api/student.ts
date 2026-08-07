@@ -581,7 +581,16 @@ export async function getAnnouncements(): Promise<Announcement[]> {
     const res = await executeWithRetry(
       "SELECT * FROM announcements WHERE is_active = 1 ORDER BY created_at DESC LIMIT 10"
     );
-    return res.rows as Announcement[];
+    
+    const now = new Date().getTime();
+    return (res.rows as Announcement[]).filter(a => {
+      // Auto-hide reschedule popups after 48 hours so they don't pop forever
+      if (a.title?.startsWith('⏰')) {
+        const created = new Date(a.created_at).getTime();
+        if (now - created > 172800000) return false;
+      }
+      return true;
+    });
   } catch (e) {
     console.error(e);
     return [];
