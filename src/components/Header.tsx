@@ -85,7 +85,7 @@ export default function Header() {
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       // Ultra-premium glassmorphism based on scroll state
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 border-b border-black/10 bg-[#41c8df] shadow-lg ${scrolled ? 'py-0' : 'py-2'}`}
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 border-b border-border bg-background/80 backdrop-blur-md shadow-sm ${scrolled ? 'py-0' : 'py-2'}`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* HEADER CONTAINER: Fixed height back to original compact size */}
@@ -123,8 +123,8 @@ export default function Header() {
                   onClick={(e) => handleNavClick(href, e)}
                   className={`relative font-bold tracking-wide transition-all duration-300 px-6 py-2.5 rounded-full text-sm uppercase
                     ${isActive
-                      ? 'bg-background text-secondary shadow-lg'
-                      : 'text-black hover:bg-background/10'
+                      ? 'bg-cyan-500/10 text-cyan-500 shadow-sm border border-cyan-500/20'
+                      : 'text-foreground hover:bg-muted'
                     }`}
                 >
                   {name}
@@ -153,7 +153,7 @@ export default function Header() {
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="lg:hidden overflow-hidden bg-[#41c8df] rounded-lg mt-2 shadow-2xl border border-black/10"
+              className="lg:hidden overflow-hidden bg-background/95 backdrop-blur-lg rounded-lg mt-2 shadow-2xl border border-border"
             >
               <div className="px-4 py-4 space-y-3">
                 {navItems.map(({ name, href }) => {
@@ -171,8 +171,8 @@ export default function Header() {
                       onClick={(e) => handleNavClick(href, e)}
                       className={`block py-3 px-6 rounded-xl text-lg font-bold transition-all duration-300
                         ${isActive
-                          ? 'bg-background text-secondary shadow-md'
-                          : 'text-black hover:bg-background/5'
+                          ? 'bg-cyan-500/10 text-cyan-500 shadow-sm border border-cyan-500/20'
+                          : 'text-foreground hover:bg-muted'
                         }`}
                     >
                       {name}

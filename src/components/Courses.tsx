@@ -1,10 +1,7 @@
-
-
 import { motion, easeOut } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Users, Star } from 'lucide-react';
-import TiltCard from './TiltCard';
 
 const Courses = () => {
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 });
@@ -91,125 +88,95 @@ const Courses = () => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.12 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
   const itemVariants = {
-    hidden: { y: 60, opacity: 0, rotateY: -15, scale: 0.95 },
+    hidden: { y: 20, opacity: 0, scale: 0.98 },
     visible: {
       y: 0,
       opacity: 1,
-      rotateY: 0,
       scale: 1,
-      transition: { duration: 0.7, ease: easeOut }
+      transition: { duration: 0.5, ease: easeOut }
     }
   };
 
-  const headerVariants = {
-    hidden: { opacity: 0, y: 40, rotateX: 20 },
-    visible: { opacity: 1, y: 0, rotateX: 0, transition: { duration: 0.9, ease: easeOut } }
-  };
-
   return (
-    <section id="courses" className="py-20 bg-transparent text-secondary relative z-10">
+    <section id="courses" className="py-24 bg-background transition-colors duration-500 border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section header with 3D entrance */}
         <motion.div
           ref={ref}
-          variants={headerVariants}
-          initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}
-
-          className="text-center mb-16 courses-header"
-        >
-          <motion.h2
-            className="text-4xl md:text-5xl font-display font-bold mb-6"
-          >
-            <span className="text-[#41c8df]">Transform Your Skills</span>
-          </motion.h2>
-          <motion.p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Choose from our comprehensive range of courses designed to prepare you for the future of technology
-          </motion.p>
-        </motion.div>
-
-        {/* Course cards grid with 3D tilt */}
-        <motion.div
           variants={containerVariants}
           initial="hidden"
           animate={inView ? 'visible' : 'hidden'}
-
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 courses-grid"
         >
-          {courses.map((course) => (
-            <motion.div key={course.id} variants={itemVariants} className="h-full">
-              <TiltCard
-                scale={1.05}
-                tiltMaxAngleX={15}
-                tiltMaxAngleY={15}
-                glareEnable={true}
-                className="h-full rounded-2xl group/card"
-              >
-                <div className="relative bg-background/40 backdrop-blur-xl rounded-2xl overflow-hidden border border-secondary/10 group-hover/card:border-[#41c8df]/80 transition-all duration-500 shadow-xl group-hover/card:shadow-[0_20px_50px_rgba(65,200,223,0.3)] h-full flex flex-col transform-style-3d">
-                  <div className="relative overflow-hidden w-full h-48 shrink-0 transform transition-transform duration-500 group-hover/card:translate-z-[40px] rounded-t-2xl">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <motion.h2 variants={itemVariants} className="text-3xl md:text-5xl font-display font-bold mb-6 text-foreground">
+              Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-600">Courses</span>
+            </motion.h2>
+            <motion.p variants={itemVariants} className="text-lg text-muted-foreground">
+              Industry-aligned curriculum designed to make you job-ready from day one.
+            </motion.p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {courses.map((course) => (
+              <motion.div key={course.id} variants={itemVariants} className="h-full">
+                <div
+                  className="w-full h-full bg-surface rounded-2xl overflow-hidden border border-border shadow-sm hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 flex flex-col group cursor-pointer"
+                >
+                  <div className="relative h-48 overflow-hidden">
                     <img
                       src={course.image}
                       alt={course.title}
-                      className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-700 ease-out"
+                      className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105"
                     />
-                    {/* Gradient overlay on image */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute top-4 right-4 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-cyan-600 dark:text-cyan-400 border border-border shadow-sm">
+                      {course.level}
+                    </div>
                   </div>
 
-                  <div className="p-6 flex-grow flex flex-col transform-style-3d">
-                    <h3 className="text-xl font-bold text-secondary mb-3 group-hover/card:text-[#41c8df] transition-colors duration-300 transform transition-transform duration-500 group-hover/card:translate-z-[50px]">
-                      {course.title}
-                    </h3>
-                    <p className="text-gray-300 mb-4 line-clamp-2 text-sm transform transition-transform duration-500 group-hover/card:translate-z-[30px]">
-                      {course.description}
-                    </p>
-
-                    <div className="flex items-center justify-between mb-4 text-sm font-medium text-gray-300 bg-secondary/5 p-3 rounded-xl border border-secondary/10 transform transition-transform duration-500 group-hover/card:translate-z-[40px] shadow-lg">
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
                       <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1.5 text-[#41c8df]" />{course.duration}
+                        <Clock className="w-4 h-4 mr-1 text-cyan-500" />
+                        {course.duration}
                       </div>
                       <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1.5 text-[#41c8df]" />{course.students}
-                      </div>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-1.5 text-yellow-400" />{course.rating}
+                        <Users className="w-4 h-4 mr-1 text-cyan-500" />
+                        {course.students}
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2 mb-6 mt-auto transform transition-transform duration-500 group-hover/card:translate-z-[30px]">
-                      {course.skills.slice(0, 3).map((skill, skillIndex) => (
-                        <span key={skillIndex} className="px-2.5 py-1 bg-gradient-to-r from-[#41c8df]/10 to-blue-500/10 text-[#41c8df] font-semibold tracking-wide rounded-md text-xs border border-[#41c8df]/20 shadow-sm">
+                    <h3 className="text-xl font-bold text-foreground mb-3 line-clamp-2">{course.title}</h3>
+                    <p className="text-muted-foreground text-sm mb-6 line-clamp-3 flex-1">{course.description}</p>
+
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {course.skills.map(skill => (
+                        <span key={skill} className="px-2.5 py-1 text-xs font-medium bg-secondary text-secondary-foreground rounded-md border border-border/50">
                           {skill}
                         </span>
                       ))}
-                      {course.skills.length > 3 && (
-                        <span className="px-2.5 py-1 bg-secondary/5 text-gray-400 font-medium rounded-md text-xs border border-secondary/10 shadow-sm">
-                          +{course.skills.length - 3}
-                        </span>
-                      )}
                     </div>
 
-                    <div className="transform transition-transform duration-500 group-hover/card:translate-z-[60px]">
-                      <Link
+                    <div className="mt-auto pt-4 border-t border-border flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                        <span className="ml-1 font-bold text-foreground">{course.rating}</span>
+                      </div>
+                      
+                      <Link 
                         to={`/course/${course.id}`}
-                        className="w-full relative overflow-hidden group/btn bg-[#41c8df] text-black py-3.5 px-4 rounded-xl font-bold text-center transition-all duration-300 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-[0_10px_20px_rgba(65,200,223,0.4)]"
+                        className="text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 font-semibold flex items-center text-sm transition-colors"
                       >
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-[#41c8df] to-blue-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                        <span className="relative z-10 flex items-center justify-center group-hover/btn:text-secondary transition-colors duration-300">
-                          Learn More
-                          <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover/btn:translate-x-1" />
-                        </span>
+                        Learn More <ArrowRight className="ml-1 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Link>
                     </div>
                   </div>
                 </div>
-              </TiltCard>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       </div>
     </section>
