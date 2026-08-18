@@ -2,6 +2,11 @@ require('dotenv').config({path: require('fs').existsSync('.env.prod') ? '.env.pr
 // To sync to prod, run this with the PROD credentials in .env or pass them directly.
 // Example: VITE_TURSO_DATABASE_URL=... VITE_TURSO_AUTH_TOKEN=... node scripts/sync_prod_schema.cjs
 
+if (!process.env.VITE_TURSO_DATABASE_URL) {
+  console.log('Skipping schema sync: VITE_TURSO_DATABASE_URL is not set.');
+  process.exit(0);
+}
+
 const { createClient } = require('@libsql/client');
 const fs = require('fs');
 const path = require('path');
@@ -15,6 +20,10 @@ const schemaPath = path.join(__dirname, '..', 'schema.json');
 const idealSchema = JSON.parse(fs.readFileSync(schemaPath, 'utf8'));
 
 async function sync() {
+  if (!process.env.VITE_TURSO_DATABASE_URL) {
+    console.log('Skipping schema sync: VITE_TURSO_DATABASE_URL is not set.');
+    return;
+  }
   console.log('Starting sync with database:', process.env.VITE_TURSO_DATABASE_URL.substring(0, 30) + '...');
   const tablesRes = await client.execute("SELECT name FROM sqlite_master WHERE type = 'table'");
   const existingTables = tablesRes.rows.map(r => r.name);
