@@ -284,16 +284,19 @@ export const getEmployeeReports = async (
   await autoCleanupAttendance();
 
   try {
-    // Build date filter
-    let dateFilter = '';
-    const dateArgs: string[] = [];
-    if (dateFrom) {
-      dateFilter += ` AND t.created_at >= ?`;
-      dateArgs.push(dateFrom);
+    const effectiveDateFrom = dateFrom ? (dateFrom.length === 10 ? dateFrom + 'T00:00:00.000Z' : dateFrom) : undefined;
+    const effectiveDateTo = dateTo ? (dateTo.length === 10 ? dateTo + 'T23:59:59.999Z' : dateTo) : undefined;
+
+    // Build task date filter
+    let taskDateFilter = '';
+    const taskDateArgs: string[] = [];
+    if (effectiveDateFrom) {
+      taskDateFilter += ` AND (t.created_at >= ? OR t.created_at >= ?)`;
+      taskDateArgs.push(effectiveDateFrom, dateFrom!);
     }
-    if (dateTo) {
-      dateFilter += ` AND t.created_at <= ?`;
-      dateArgs.push(dateTo);
+    if (effectiveDateTo) {
+      taskDateFilter += ` AND (t.created_at <= ? OR t.created_at <= ?)`;
+      taskDateArgs.push(effectiveDateTo, dateTo!);
     }
 
     // Fetch all staff users
@@ -302,6 +305,7 @@ export const getEmployeeReports = async (
     );
 
     const reports: EmployeeReport[] = [];
+    const todayStr = new Date().toISOString().split('T')[0];
 
     for (const userRow of usersRes.rows) {
       const userId = userRow.id as string;
@@ -315,8 +319,8 @@ export const getEmployeeReports = async (
                 SUM(CASE WHEN due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as tasks_overdue,
                 SUM(CASE WHEN task_type = 'Daily' AND due_date < ? AND status NOT IN ('Done', 'Excused') THEN 1 ELSE 0 END) as daily_tasks_missed
               FROM tasks t
-              WHERE assignee_id = ? ${dateFilter}`,
-        args: [new Date().toISOString().split('T')[0], new Date().toISOString().split('T')[0], userId, ...dateArgs]
+              WHERE (assignee_id = ? OR created_by = ?) ${taskDateFilter}`,
+        args: [todayStr, todayStr, userId, userId, ...taskDateArgs]
       });
 
       const taskRow = taskRes.rows[0] || {};
@@ -324,50 +328,80 @@ export const getEmployeeReports = async (
       const tasksCompleted = Number(taskRow.tasks_completed) || 0;
 
       // Subtasks stats
-      const subtaskRes = await client.execute({
-        sql: `SELECT COUNT(*) as subtasks_completed
-              FROM task_subtasks ts
-              JOIN tasks t ON ts.task_id = t.id
-              WHERE t.assignee_id = ? AND ts.status = 'Done' ${dateFilter}`,
-        args: [userId, ...dateArgs]
-      });
-      const subtasksCompleted = Number(subtaskRes.rows[0]?.subtasks_completed) || 0;
+      let subtasksCompleted = 0;
+      try {
+        const subtaskRes = await client.execute({
+          sql: `SELECT COUNT(*) as subtasks_completed
+                FROM task_subtasks ts
+                JOIN tasks t ON ts.task_id = t.id
+                WHERE (t.assignee_id = ? OR t.created_by = ?) AND ts.status = 'Done' ${taskDateFilter}`,
+          args: [userId, userId, ...taskDateArgs]
+        });
+        subtasksCompleted = Number(subtaskRes.rows[0]?.subtasks_completed) || 0;
+      } catch { /* ignore if task_subtasks missing */ }
 
       // Call stats (from CRM activities)
-      const callRes = await client.execute({
-        sql: `SELECT COUNT(*) as total_calls FROM crm_activities WHERE user_id = ? AND type = 'Call'`,
-        args: [userId]
-      });
-      const totalCalls = Number(callRes.rows[0]?.total_calls) || 0;
+      let totalCalls = 0;
+      try {
+        const callRes = await client.execute({
+          sql: `SELECT COUNT(*) as total_calls FROM crm_activities WHERE user_id = ? AND (LOWER(type) = 'call' OR type = 'Call' OR type LIKE '%call%')`,
+          args: [userId]
+        });
+        totalCalls = Number(callRes.rows[0]?.total_calls) || 0;
+      } catch { /* crm_activities error fallback */ }
 
       // Time spent
-      const timeRes = await client.execute({
-        sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total_time FROM time_logs WHERE user_id = ? AND ended_at IS NOT NULL`,
-        args: [userId]
-      });
-      const totalTimeMinutes = Number(timeRes.rows[0]?.total_time) || 0;
+      let totalTimeMinutes = 0;
+      try {
+        const timeRes = await client.execute({
+          sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total_time FROM time_logs WHERE user_id = ? AND ended_at IS NOT NULL`,
+          args: [userId]
+        });
+        totalTimeMinutes = Number(timeRes.rows[0]?.total_time) || 0;
+      } catch { /* time_logs error fallback */ }
 
       // Conversions (leads assigned to this user that became admissions)
       let conversions = 0;
       try {
         const convRes = await client.execute({
-          sql: `SELECT COUNT(*) as cnt FROM admissions a 
-                JOIN leads l ON a.lead_id = l.id 
-                WHERE l.assigned_to = ?`,
-          args: [userId]
+          sql: `SELECT COUNT(*) as cnt FROM sales s 
+                LEFT JOIN crm_leads l ON s.lead_id = l.id 
+                WHERE (s.sales_exec_id = ? OR s.sales_rep_id = ? OR l.assigned_to = ?)`,
+          args: [userId, userId, userId]
         });
         conversions = Number(convRes.rows[0]?.cnt) || 0;
-      } catch { /* table may not exist */ }
+      } catch {
+        try {
+          const leadConv = await client.execute({
+            sql: `SELECT COUNT(*) as cnt FROM crm_leads WHERE assigned_to = ? AND (status IN ('Admission Completed', 'Converted', 'Admission') OR stage IN ('Admission Completed', 'Admission'))`,
+            args: [userId]
+          });
+          conversions = Number(leadConv.rows[0]?.cnt) || 0;
+        } catch { /* fallback 0 */ }
+      }
 
       // Attendance stats
       let login_time = null;
       let logout_time = null;
       try {
+        const dateOnlyFrom = dateFrom ? dateFrom.split('T')[0] : undefined;
+        const dateOnlyTo = dateTo ? dateTo.split('T')[0] : undefined;
+        let attFilter = '';
+        const attArgs: string[] = [userId];
+        if (dateOnlyFrom) {
+          attFilter += ` AND date >= ?`;
+          attArgs.push(dateOnlyFrom);
+        }
+        if (dateOnlyTo) {
+          attFilter += ` AND date <= ?`;
+          attArgs.push(dateOnlyTo);
+        }
+
         const attRes = await client.execute({
           sql: `SELECT login_time, logout_time FROM employee_attendance 
-                WHERE user_id = ? ${dateFilter.replace(/t\.created_at/g, 'date')} 
+                WHERE user_id = ? ${attFilter} 
                 ORDER BY date DESC LIMIT 1`,
-          args: [userId, ...dateArgs]
+          args: attArgs
         });
         if (attRes.rows.length > 0) {
           login_time = attRes.rows[0].login_time as string;

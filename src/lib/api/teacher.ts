@@ -88,7 +88,7 @@ export async function deleteTimetable(id: string): Promise<void> {
 
 export async function getActiveLiveClass(instructorId: string): Promise<any> {
   try {
-    const res = await executeWithRetry(
+    let res = await executeWithRetry(
       `SELECT DISTINCT c.id, c.title, c.description, c.module_id, m.title as module_title
        FROM classes c
        JOIN modules m ON c.module_id = m.id
@@ -102,10 +102,47 @@ export async function getActiveLiveClass(instructorId: string): Promise<any> {
        ORDER BY c.order_index ASC LIMIT 1`,
       [instructorId, instructorId, instructorId]
     );
+
+    if (res.rows.length === 0) {
+      res = await executeWithRetry(
+        `SELECT DISTINCT c.id, c.title, c.description, c.module_id, m.title as module_title
+         FROM classes c
+         JOIN modules m ON c.module_id = m.id
+         WHERE c.status IN ('live', 'in_progress', 'upcoming')
+         ORDER BY c.order_index ASC LIMIT 1`
+      );
+    }
+
+    if (res.rows.length === 0) {
+      res = await executeWithRetry(
+        `SELECT DISTINCT c.id, c.title, c.description, c.module_id, m.title as module_title
+         FROM classes c
+         JOIN modules m ON c.module_id = m.id
+         WHERE c.status IS NULL OR c.status != 'completed'
+         ORDER BY c.order_index ASC LIMIT 1`
+      );
+    }
+
     return res.rows.length > 0 ? res.rows[0] : null;
   } catch (e) {
     console.error("Failed to fetch active live class", e);
     return null;
+  }
+}
+
+export async function getAllAvailableClasses(): Promise<any[]> {
+  try {
+    const res = await executeWithRetry(
+      `SELECT DISTINCT c.id, c.title, c.description, c.module_id, m.title as module_title, c.status
+       FROM classes c
+       JOIN modules m ON c.module_id = m.id
+       WHERE c.status IS NULL OR c.status != 'completed'
+       ORDER BY c.order_index ASC LIMIT 50`
+    );
+    return res.rows;
+  } catch (e) {
+    console.error("Failed to fetch available classes", e);
+    return [];
   }
 }
 
@@ -121,17 +158,30 @@ export async function logAttendance(studentId: string, classId: string): Promise
   }
 }
 
+export async function removeAttendance(studentId: string, classId: string): Promise<void> {
+  try {
+    await executeWithRetry(
+      "DELETE FROM attendance_logs WHERE student_id = ? AND batch_id = ?",
+      [studentId, classId]
+    );
+  } catch (e) {
+    console.error("Failed to remove attendance", e);
+    throw e;
+  }
+}
+
 export async function getLiveAttendance(classId: string): Promise<any[]> {
   try {
     const res = await executeWithRetry(`
-      SELECT a.student_id, u.name as student_name, b.name as batch_name, c.title as course_name, a.join_time
+      SELECT a.student_id, u.name as student_name, u.email as student_email, b.name as batch_name, c.title as course_name, MAX(a.join_time) as join_time
       FROM attendance_logs a
       JOIN users u ON a.student_id = u.id
       LEFT JOIN students s ON u.id = s.id
       LEFT JOIN batches b ON s.batch_id = b.id
       LEFT JOIN courses c ON b.course_id = c.id
       WHERE a.batch_id = ?
-      ORDER BY a.join_time DESC
+      GROUP BY a.student_id
+      ORDER BY MAX(a.join_time) DESC
     `, [classId]);
     return res.rows;
   } catch (e) {

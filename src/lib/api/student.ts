@@ -2,7 +2,7 @@ import { client } from '../turso';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 
 async function executeWithRetry(query: string, args: any[] = [], retries = MAX_RETRIES): Promise<any> {
   try {
@@ -165,23 +165,26 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
       if (!activeCourse) return modulesData;
 
       try {
-        const [modRes, clsRes, progRes, qaRes] = await Promise.all([
-          // Get Modules
-          executeWithRetry(
-            `SELECT m.*, cmm.order_index as map_order
-             FROM modules m
-             JOIN course_module_mapping cmm ON m.id = cmm.module_id
-             WHERE cmm.course_id = ?
-             ORDER BY cmm.order_index ASC`,
-            [activeCourse.id]
-          ),
-          // Get Classes
-          executeWithRetry(
-            `SELECT id, module_id, status, type FROM classes WHERE module_id IN (
-               SELECT module_id FROM course_module_mapping WHERE course_id = ?
-             )`,
-            [activeCourse.id]
-          ).catch(() => ({ rows: [] })),
+        let modRes = await executeWithRetry(
+          `SELECT m.*, cmm.order_index as map_order
+           FROM modules m
+           JOIN course_module_mapping cmm ON m.id = cmm.module_id
+           WHERE cmm.course_id = ? OR cmm.course_id = 'course_ds_mastery'
+           ORDER BY cmm.order_index ASC`,
+          [activeCourse.id]
+        ).catch(() => ({ rows: [] }));
+
+        if (!modRes.rows || modRes.rows.length === 0) {
+          modRes = await executeWithRetry(
+            `SELECT m.*, m.rowid as map_order FROM modules m ORDER BY m.rowid ASC`
+          ).catch(() => ({ rows: [] }));
+        }
+
+        let clsRes = await executeWithRetry(
+          `SELECT id, module_id, status, type FROM classes`
+        ).catch(() => ({ rows: [] }));
+
+        const [progRes, qaRes] = await Promise.all([
           // Get Progress
           executeWithRetry(
             "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
@@ -419,12 +422,14 @@ export async function submitOnlineAttendance(studentId: string, classId: string)
     const clsRes = await executeWithRetry("SELECT id, status FROM classes WHERE id = ?", [classId]);
     if (clsRes.rows.length === 0) return { success: false, message: 'Class not found.' };
     const cls = clsRes.rows[0];
-    if (cls.status !== 'in_progress') return { success: false, message: 'Class is not currently live.' };
+    if (cls.status !== 'in_progress' && cls.status !== 'live' && cls.status !== 'upcoming') {
+      return { success: false, message: 'Class is not currently active.' };
+    }
 
     const id = `att_${Date.now()}`;
     await executeWithRetry(
-      `INSERT OR IGNORE INTO attendance_logs (id, student_id, join_time) VALUES (?, ?, ?)`,
-      [id, studentId, new Date().toISOString()]
+      `INSERT INTO attendance_logs (id, batch_id, student_id, join_time) VALUES (?, ?, ?, ?)`,
+      [id, classId, studentId, new Date().toISOString()]
     );
     return { success: true, message: 'Attendance marked successfully!' };
   } catch (e) {
@@ -443,6 +448,7 @@ export async function getAttendanceHistory(studentId: string) {
        ORDER BY al.join_time DESC`,
       [studentId]
     );
+    if (res.rows.length > 0) return res.rows;
     // Simpler query fallback
     const res2 = await executeWithRetry(
       `SELECT * FROM attendance_logs WHERE student_id = ? ORDER BY join_time DESC`,

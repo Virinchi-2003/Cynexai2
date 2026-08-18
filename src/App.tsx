@@ -218,7 +218,7 @@ function App() {
         <Route path="/sales/pipeline" element={<SalesLayout><LeadPipeline /></SalesLayout>} />
         <Route path="/sales/leads/new" element={<SalesLayout><LeadCapture /></SalesLayout>} />
         <Route path="/sales/leads/:id" element={<SalesLayout><LeadDetail /></SalesLayout>} />
-        {/* /sales/history removed, now handled by /ceo/history */}
+        <Route path="/sales/history" element={<SalesLayout><HistoryPage /></SalesLayout>} />
         <Route path="/crm/leads/new" element={<Navigate to="/sales/leads/new" replace />} />
         <Route path="/crm/leads" element={<Navigate to="/sales/pipeline" replace />} />
         
@@ -272,7 +272,10 @@ function App() {
         <Route path="/ceo/sales-pipeline" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><LeadPipeline /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/history" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><HistoryPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/dm-dashboard" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><DMDashboard /></CEOLayout></RequireAuth>} />
-        <Route path="/ceo/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><CRMLayout><ReportsPage /></CRMLayout></RequireAuth>} />
+        <Route path="/ceo/sales-pitch" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><SalesPitchPage /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/ai-settings" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><TeacherSettings /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/gamification" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><GamificationSettings /></CEOLayout></RequireAuth>} />
+        <Route path="/ceo/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><CEOLayout><ReportsPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/students" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentsPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/student-progress" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentProgress /></CEOLayout></RequireAuth>} />
         <Route path="/manager/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><ManagerLayout><ReportsPage /></ManagerLayout></RequireAuth>} />

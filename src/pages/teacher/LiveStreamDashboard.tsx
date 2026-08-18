@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '../../components/ui/erp/Button';
 import {
   StopCircle, ArrowRight, ArrowLeft, Maximize2, Play,
@@ -15,25 +15,6 @@ import { CodeWorkspace } from './CodeWorkspace';
 import { SqlWorkspace } from './SqlWorkspace';
 import { DataWorkspace } from './DataWorkspace';
 
-const parseTimeString = (timingStr: string) => {
-  const [startStr, endStr] = timingStr.toLowerCase().split('-');
-  if (!startStr || !endStr) return { start: 0, end: 0 };
-  const isPm = endStr.includes('pm');
-  const parsePart = (part: string) => {
-    let raw = part.replace(/[a-z]/g, '');
-    let [h, m] = raw.split(':');
-    let hr = parseInt(h);
-    let min = m ? parseInt(m) : 0;
-    let isThisPm = isPm;
-    if (part.includes('am')) isThisPm = false;
-    if (part.includes('pm')) isThisPm = true;
-    if (hr === 12 && !isThisPm) hr = 0;
-    if (hr < 12 && isThisPm) hr += 12;
-    return hr + min / 60;
-  };
-  return { start: parsePart(startStr), end: parsePart(endStr) };
-};
-
 const parseKeypoints = (raw: string) => {
   if (!raw) return [];
   if (!raw.toLowerCase().includes('[slide')) {
@@ -47,8 +28,6 @@ export default function LiveStreamDashboard() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const classIdParam = searchParams.get('classId');
-  const classTimeParam = searchParams.get('time');
-  const classDayParam = searchParams.get('day');
   const user = getCurrentUser();
 
   // ── State ──
@@ -229,7 +208,7 @@ export default function LiveStreamDashboard() {
             {/* Header */}
             <div className="p-5 border-b border-white/5 relative">
               <div className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1.5">{classData.module_title || 'Active Class'}</div>
-              <div className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 group relative cursor-pointer" onClick={() => setShowEditModal(true)}>
+              <div className="w-full bg-white/10 dark:bg-black/20 border border-white/10 rounded-xl px-4 py-3 group relative cursor-pointer" onClick={() => setShowEditModal(true)}>
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full shrink-0 ${isLive ? 'bg-red-500 animate-pulse' : 'bg-slate-500'}`} />
                   <span className="font-bold text-base text-white truncate pr-6">{classData.title}</span>
@@ -538,7 +517,7 @@ export default function LiveStreamDashboard() {
               ) : (
                 <ul className="space-y-4">
                   {currentKeypoints.map((kp: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-200 leading-relaxed bg-white dark:bg-black/5 p-4 rounded-xl border border-white/5">
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-100 leading-relaxed bg-white/10 dark:bg-black/20 p-4 rounded-xl border border-white/10">
                       <ArrowRight className="w-4 h-4 text-green-400 mt-1 shrink-0" />
                       <ReactMarkdown>{kp}</ReactMarkdown>
                     </li>

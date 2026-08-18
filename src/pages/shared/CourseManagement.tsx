@@ -5,7 +5,7 @@ import { ConfirmModal } from '../../components/ui/erp/ConfirmModal';
 import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X, Trash2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
-import { client, isTursoConfigured } from '../../lib/turso';
+import { client } from '../../lib/turso';
 import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse, deleteCourse, removeModuleFromCourse } from '../../lib/api/cms';
 
 export default function CourseManagement() {
@@ -299,20 +299,39 @@ export default function CourseManagement() {
                       </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {course.modules.map((mod: any) => (
-                          <div key={mod.id} className="bg-erp-surface border border-erp-border rounded-lg p-4 flex flex-col justify-between hover:border-indigo-400 transition-colors cursor-pointer" onClick={() => navigate(`${basePath}/courses/${course.id}/modules/${mod.id}`)}>
+                          <div 
+                            key={mod.id} 
+                            className="bg-erp-surface border border-erp-border rounded-xl p-4 flex flex-col justify-between hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/5 transition-all cursor-pointer group" 
+                            onClick={() => navigate(`${basePath}/courses/${course.id}/modules/${mod.id}`)}
+                          >
                             <div className="mb-4">
-                              <h5 className="font-bold text-erp-text truncate">{mod.name}</h5>
-                              <p className="text-xs text-erp-text/60 mt-1">{mod.classes.length} Classes</p>
+                              <h5 className="font-bold text-erp-text text-base group-hover:text-indigo-400 transition-colors truncate">{mod.name}</h5>
+                              <p className="text-xs text-erp-text/60 mt-1 font-medium flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"></span>
+                                {mod.classes.length} {mod.classes.length === 1 ? 'Class' : 'Classes'}
+                              </p>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <div className="text-xs font-bold text-green-400">{mod.completedBy}% Completion</div>
-                              <div className="flex items-center gap-2">
-                                <Button variant="ghost" onClick={(e) => handleRemoveModule(course.id, mod.id, e)} className="h-6 px-2 text-xs text-red-500 hover:bg-red-500/10 border border-erp-border">
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                                <Button variant="ghost" className="h-6 px-2 text-xs flex items-center gap-1 border border-erp-border">
-                                  Edit Classes <ArrowRight className="w-3 h-3" />
-                                </Button>
+                            <div className="flex justify-between items-center pt-3 border-t border-erp-border/50">
+                              <div className="text-xs font-bold text-emerald-400">{mod.completedBy}% Completion</div>
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => handleRemoveModule(course.id, mod.id, e)} 
+                                  className="h-8 w-8 rounded-lg flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 border border-red-500/20 transition-all cursor-pointer"
+                                  title="Remove Module from Course"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`${basePath}/courses/${course.id}/modules/${mod.id}`);
+                                  }}
+                                  className="h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 transition-all cursor-pointer shadow-sm"
+                                >
+                                  Edit Classes <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
                           </div>

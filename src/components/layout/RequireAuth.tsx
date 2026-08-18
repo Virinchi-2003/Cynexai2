@@ -13,7 +13,11 @@ interface RequireAuthProps {
 export const RequireAuth: React.FC<RequireAuthProps> = ({ children, allowedRoles }) => {
   const user = getCurrentUser();
   const location = useLocation();
-  const [accessLevels, setAccessLevels] = useState<string[] | null>(null);
+  const [accessLevels, setAccessLevels] = useState<string[] | null>(() => {
+    if (!user) return [];
+    if (user.role === 'CEO') return ['CEO', 'Manager', 'Teacher', 'Sales/HR', 'DM', 'Student'];
+    return computeAccessiblePortals(user.role, false);
+  });
 
   useEffect(() => {
     if (!user) {

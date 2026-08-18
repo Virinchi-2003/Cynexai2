@@ -93,29 +93,29 @@ body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* ── ERP Dark Mode Overrides ─────────────────────────────────────────────── */
-/* Override white/gray backgrounds in components that use literal colors */
+/* ── ERP Theme Overrides & Safeguards ─────────────────────────────────── */
+/* Override white/gray backgrounds in components that use literal colors in dark mode */
 [data-theme="dark"] .bg-white:not([class*="dark:bg-"]) { background-color: var(--erp-surface) !important; }
 [data-theme="dark"] .border-white:not([class*="dark:border-"]) { border-color: var(--erp-border) !important; }
 
-/* Global fix for light-mode text colors that are invisible in dark mode */
-[data-theme="dark"] .text-slate-900:not([class*="dark:text-"]),
-[data-theme="dark"] .text-slate-800:not([class*="dark:text-"]),
-[data-theme="dark"] .text-slate-700:not([class*="dark:text-"]),
-[data-theme="dark"] .text-gray-900:not([class*="dark:text-"]),
-[data-theme="dark"] .text-gray-800:not([class*="dark:text-"]),
-[data-theme="dark"] .text-zinc-900:not([class*="dark:text-"]) {
+/* Global fix for dark text colors that are invisible in dark mode */
+[data-theme="dark"] .text-slate-900,
+[data-theme="dark"] .text-slate-800,
+[data-theme="dark"] .text-slate-700,
+[data-theme="dark"] .text-gray-900,
+[data-theme="dark"] .text-gray-800,
+[data-theme="dark"] .text-zinc-900 {
   color: var(--erp-text) !important;
 }
 
-[data-theme="dark"] .text-slate-600:not([class*="dark:text-"]),
-[data-theme="dark"] .text-slate-500:not([class*="dark:text-"]),
-[data-theme="dark"] .text-gray-600:not([class*="dark:text-"]),
-[data-theme="dark"] .text-gray-500:not([class*="dark:text-"]) {
+[data-theme="dark"] .text-slate-600,
+[data-theme="dark"] .text-slate-500,
+[data-theme="dark"] .text-gray-600,
+[data-theme="dark"] .text-gray-500 {
   color: var(--erp-text-muted) !important;
 }
 
-/* Global fix for light-mode backgrounds */
+/* Global fix for light-mode backgrounds in dark mode */
 [data-theme="dark"] .bg-slate-50:not([class*="dark:bg-"]),
 [data-theme="dark"] .bg-slate-100:not([class*="dark:bg-"]),
 [data-theme="dark"] .bg-gray-50:not([class*="dark:bg-"]),
@@ -123,11 +123,21 @@ body {
   background-color: var(--erp-sidebar-bg) !important;
 }
 
-/* Global fix for light-mode borders */
+/* Global fix for light-mode borders in dark mode */
 [data-theme="dark"] .border-slate-200:not([class*="dark:border-"]),
 [data-theme="dark"] .border-slate-100:not([class*="dark:border-"]),
 [data-theme="dark"] .border-gray-200:not([class*="dark:border-"]) {
   border-color: var(--erp-border) !important;
+}
+
+/* Light mode safeguard: Ensure elements inside dark banners maintain white text */
+.bg-slate-900 .text-white,
+.bg-slate-950 .text-white,
+.bg-slate-800 .text-white,
+[class*="from-slate-900"] .text-white,
+[class*="from-indigo-900"] .text-white,
+.bg-black .text-white {
+  color: #ffffff !important;
 }
 
 /* Input & form overrides for dark mode */
@@ -139,8 +149,16 @@ body {
   border-color: var(--erp-border) !important;
 }
 
-/* Placeholder color in dark mode */
+/* Light mode input defaults */
+[data-theme="light"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  color: #09090B !important;
+}
+
+/* Placeholder color */
 [data-theme="dark"] ::placeholder { color: color-mix(in srgb, var(--erp-text) 40%, transparent) !important; }
+[data-theme="light"] ::placeholder { color: #71717A !important; }
 
 /* Dark mode table rows */
 [data-theme="dark"] tr:hover { background-color: var(--erp-hover) !important; }
@@ -329,6 +347,15 @@ button, [role="button"] {
   border-radius: 8px;
 }
 
+/* Hide scrollbar for clean corporate sidebars */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Mobile page container — never overflows horizontally */
 .page-container {
   width: 100%;
@@ -353,79 +380,84 @@ button, [role="button"] {
   box-shadow: 0 4px 16px rgba(0,0,0,0.35);
 }
 
-/* ── Gamified UI (Mimo / Duolingo Style) ─────────────────────────────────────── */
-/* Clean, flat, chunky 3D buttons and cards */
+/* ── Corporate Student Portal UI ─────────────────────────────────────── */
+/* Professional, executive cards and buttons */
 
 .candy-btn {
   @apply relative inline-flex items-center justify-center font-bold text-white transition-all active:scale-95;
-  border-radius: 16px;
-  min-height: 48px;
-  background-color: #58cc02;
-  box-shadow: 0 4px 0 #58a700;
-  border: 2px solid transparent;
+  border-radius: 12px;
+  min-height: 40px;
+  background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .candy-btn:hover {
-  background-color: #61e002;
+  background: linear-gradient(135deg, #4338ca 0%, #2563eb 100%);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+  transform: translateY(-1px);
 }
 .candy-btn:active {
-  box-shadow: 0 0px 0 #58a700;
-  transform: translateY(4px);
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+  transform: translateY(0);
 }
 
 .candy-btn-blue {
   @apply relative inline-flex items-center justify-center font-bold text-white transition-all active:scale-95;
-  border-radius: 16px;
-  min-height: 48px;
-  background-color: #1cb0f6;
-  box-shadow: 0 4px 0 #1899d6;
-  border: 2px solid transparent;
+  border-radius: 12px;
+  min-height: 40px;
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .candy-btn-blue:hover {
-  background-color: #1fc1ff;
+  background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.35);
+  transform: translateY(-1px);
 }
 .candy-btn-blue:active {
-  box-shadow: 0 0px 0 #1899d6;
-  transform: translateY(4px);
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);
+  transform: translateY(0);
 }
 
 .candy-btn-green {
   @apply relative inline-flex items-center justify-center font-bold text-white transition-all active:scale-95;
-  border-radius: 16px;
-  min-height: 48px;
-  background-color: #58cc02;
-  box-shadow: 0 4px 0 #58a700;
-  border: 2px solid transparent;
+  border-radius: 12px;
+  min-height: 40px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .candy-btn-green:hover {
-  background-color: #61e002;
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
 }
 .candy-btn-green:active {
-  box-shadow: 0 0px 0 #58a700;
-  transform: translateY(4px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+  transform: translateY(0);
 }
 
-/* Gamified Panel (Clean White + Chunky Border/Shadow) */
+/* Corporate Panel (Sleek Border + Modern Shadow) */
 .candy-panel {
   @apply relative overflow-hidden bg-white;
-  border-radius: 24px;
-  border: 2px solid #e5e5e5;
-  box-shadow: 0 4px 0 #e5e5e5;
-  transition: all 0.2s ease;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 [data-theme="dark"] .candy-panel {
-  @apply bg-[#0a0a0a];
-  border-color: #1a1a1a;
-  box-shadow: 0 4px 0 #1a1a1a;
+  @apply bg-slate-900;
+  border-color: #1e293b;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
-/* Gamified Background (Clean, soft dots or solid) */
+/* Corporate Page Background */
 .candy-map-bg {
-  background-color: #f7f7f7;
-  /* Optional subtle grid/dots for that learning app vibe */
-  background-image: radial-gradient(#e5e5e5 2px, transparent 2px);
-  background-size: 32px 32px;
+  background-color: #f8fafc;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 [data-theme="dark"] .candy-map-bg {
-  background-color: #000000;
-  background-image: radial-gradient(#111111 2px, transparent 2px);
+  background-color: #030712;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
 }

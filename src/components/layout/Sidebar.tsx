@@ -12,8 +12,16 @@ type NavItem = { to: string, icon: any, label: string, section: string };
 
 export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> = ({ onNavClick, isMobile }) => {
   const user = getCurrentUser();
-  const [accessLevels, setAccessLevels] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [accessLevels, setAccessLevels] = useState<string[]>(() => {
+    if (!user) return [];
+    if (user.role === 'CEO') return ['CEO', 'Manager', 'Teacher', 'Sales/HR', 'DM', 'Student'];
+    return computeAccessiblePortals(user.role, false);
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (!user) return false;
+    if (user.role === 'CEO' || user.role === 'Manager') return false;
+    return true;
+  });
   const [extraNavItems, setExtraNavItems] = useState<NavItem[]>([]);
 
   useEffect(() => {
@@ -99,11 +107,11 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
       { to: '/ceo/sales-dashboard',  icon: DollarSign,      label: 'Sales Hub',         section: 'CEO' },
       { to: '/ceo/sales-pipeline',   icon: Users,           label: 'CRM Pipeline',      section: 'CEO' },
       { to: '/ceo/history',          icon: History,         label: 'Master History',    section: 'CEO' },
-      { to: '/sales/pitch',          icon: BookOpen,        label: 'Sales Pitch',       section: 'CEO' },
+      { to: '/ceo/sales-pitch',      icon: BookOpen,        label: 'Sales Pitch',       section: 'CEO' },
       { to: '/ceo/dm-dashboard',     icon: LayoutDashboard, label: 'Marketing Hub',     section: 'CEO' },
       { to: '/ceo/ai-voice',         icon: Bot,             label: 'AI Voice Gen',      section: 'CEO' },
-      { to: '/teacher/settings',     icon: Settings,        label: 'AI Settings',       section: 'CEO' },
-      { to: '/manager/gamification', icon: Zap,             label: 'Game Config',       section: 'CEO' },
+      { to: '/ceo/ai-settings',      icon: Settings,        label: 'AI Settings',       section: 'CEO' },
+      { to: '/ceo/gamification',     icon: Zap,             label: 'Game Config',       section: 'CEO' },
       { to: '/ceo/student-settings', icon: Settings,        label: 'Student Portal',    section: 'CEO' },
       { to: '/ceo/reports',          icon: BarChart2,       label: 'Reports',           section: 'CEO' },
       { to: '/ceo/settings',         icon: Settings,        label: 'ERP Config',        section: 'CEO' }
@@ -160,7 +168,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
                     `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black min-h-[44px] ${
                       isActive 
                         ? 'candy-btn-blue shadow-md' 
-                        : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
+                        : 'text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-black/5 active:scale-95'
                     }`
                   }
                 >
@@ -182,7 +190,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
             `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all font-black min-h-[44px] ${
               isActive 
                 ? 'candy-btn-blue shadow-md' 
-                : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
+                : 'text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-black/5 active:scale-95'
             }`
           }
         >

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
-import { TrendingUp, Users, DollarSign, Target, Settings, Building2, BrainCircuit, Gift, BookOpen } from 'lucide-react';
+import { Settings, BrainCircuit, Gift, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { getManagerAnalytics } from '../../../lib/api/manager';
@@ -110,8 +110,8 @@ export default function CEODashboard() {
               <BrainCircuit className="w-5 h-5 text-blue-400" /> AI Strategic Advisory
             </h2>
             <div className="space-y-4">
-              <div className="bg-white dark:bg-black/10 p-3 rounded-xl border border-white/20">
-                <p className="text-sm text-blue-100 italic leading-relaxed">
+              <div className="bg-white/10 dark:bg-black/30 backdrop-blur-sm p-4 rounded-xl border border-white/10">
+                <p className="text-sm text-blue-100 italic leading-relaxed font-medium">
                   "Based on last week's data, conversion rate is currently {conversionRate}%. I recommend assigning more tasks to follow up with Demo Leads to increase conversions, as there is a backlog in the 'Demo Scheduled' bucket."
                 </p>
               </div>

@@ -1,4 +1,5 @@
 require('dotenv').config({ path: '../.env' }); // load parent .env
+require('dotenv').config(); // load local .env if present
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -16,10 +17,19 @@ app.use(cors());
 app.use(bodyParser.json());
 
 // --- Turso Database ---
-const db = createClient({
-  url: process.env.VITE_TURSO_DATABASE_URL || '',
-  authToken: process.env.VITE_TURSO_AUTH_TOKEN || '',
+const tursoUrl = process.env.VITE_TURSO_DATABASE_URL || 'libsql://cynexai-portal-cynexai-new.aws-ap-south-1.turso.io';
+const tursoAuthToken = process.env.VITE_TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODQxOTUyNjcsImlkIjoiMDE5ZjZhNTItN2IwMS03Mzc2LWExMGUtNTViZGRiMzAwZTdlIiwia2lkIjoieUdPOElXY1J5RC1VX2J3UFlHWUJJMmlKZEp1R21CSDY5QzJQZzJUWmZhQSIsInJpZCI6IjcxYmEzODM5LTAyZDEtNDJiNS1hNDM5LTVlOWM4MGJkNGRhNSJ9.O2do8U63KLbS_pXwqivQRIYK1SncnMa1VRuePw6UFagpIIFodykzhY2cr6C_iYE83O86fUXhErbRPKfBMZtUAA';
+
+let db = createClient({
+  url: tursoUrl,
+  authToken: tursoAuthToken,
 });
+
+db.execute('SELECT 1').catch((err) => {
+  console.warn('[Backend DB] Cloud database BLOCKED/unreachable. Falling back to local SQLite file:cynexai.db');
+  db = createClient({ url: 'file:cynexai.db' });
+});
+
 
 // --- WhatsApp Client ---
 let qrCodeData = null;
@@ -66,7 +76,9 @@ whatsapp.on('message', async (message) => {
     }
 });
 
-whatsapp.initialize();
+whatsapp.initialize().catch(err => {
+    console.error('WhatsApp client initialization failed:', err.message);
+});
 
 // --- API Endpoints ---
 app.get('/api/whatsapp/status', (req, res) => {

@@ -30,10 +30,10 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/student',             icon: Home,           label: 'Dashboard',    short: 'Home'      },
   { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',   short: 'Attend'    },
-  { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank', comingSoon: true },
-  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview', comingSoon: true },
-  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards', comingSoon: true },
-  { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career', comingSoon: true },
+  { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank'      },
+  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview' },
+  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards'   },
+  { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career'    },
 ];
 
 const BOTTOM_NAV = NAV_ITEMS.slice(0, 5);
@@ -84,38 +84,38 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // ── Theme-aware palette ────────────────────────────────────────────────────
   const T = isDark ? {
-    pageBg:      '#000000',
-    sidebarBg:   '#0a0a0a',
-    border:      'rgba(255,255,255,0.05)',
-    tabBarBg:    'rgba(10,10,10,0.97)',
-    profileCard: 'rgba(255,255,255,0.02)',
-    profileBorder: 'rgba(255,255,255,0.05)',
-    navSectionLabel: 'rgba(255,255,255,0.2)',
-    navMuted:    'rgba(255,255,255,0.35)',
-    navActive:   '#06b6d4',
-    navActiveBg: 'rgba(6,182,212,0.12)',
-    text:        '#ffffff',
-    textMuted:   'rgba(255,255,255,0.4)',
-    avatarBorder: '#0a0a0a',
+    pageBg:      '#030712',
+    sidebarBg:   '#0f172a',
+    border:      'rgba(255,255,255,0.08)',
+    tabBarBg:    'rgba(15,23,42,0.97)',
+    profileCard: 'rgba(79,70,229,0.08)',
+    profileBorder: 'rgba(79,70,229,0.2)',
+    navSectionLabel: '#64748b',
+    navMuted:    '#94a3b8',
+    navActive:   '#6366f1',
+    navActiveBg: 'rgba(99,102,241,0.15)',
+    text:        '#f8fafc',
+    textMuted:   '#64748b',
+    avatarBorder: '#0f172a',
     xpTrack:     'rgba(255,255,255,0.08)',
-    closeBtn:    'rgba(255,255,255,0.07)',
-    closeBtnTxt: 'rgba(255,255,255,0.6)',
-    inactiveTab: 'rgba(255,255,255,0.3)',
+    closeBtn:    'rgba(255,255,255,0.1)',
+    closeBtnTxt: 'rgba(255,255,255,0.8)',
+    inactiveTab: 'rgba(255,255,255,0.4)',
   } : {
-    pageBg:      '#f1f5f9',
+    pageBg:      '#f8fafc',
     sidebarBg:   '#ffffff',
-    border:      'rgba(0,0,0,0.07)',
+    border:      '#e2e8f0',
     tabBarBg:    'rgba(255,255,255,0.97)',
-    profileCard: 'rgba(6,182,212,0.05)',
-    profileBorder: 'rgba(6,182,212,0.15)',
+    profileCard: 'rgba(79,70,229,0.04)',
+    profileBorder: 'rgba(79,70,229,0.12)',
     navSectionLabel: '#94a3b8',
-    navMuted:    '#64748b',
-    navActive:   '#0891b2',
-    navActiveBg: 'rgba(8,145,178,0.08)',
+    navMuted:    '#475569',
+    navActive:   '#4f46e5',
+    navActiveBg: 'rgba(79,70,229,0.08)',
     text:        '#0f172a',
     textMuted:   '#64748b',
     avatarBorder: '#ffffff',
-    xpTrack:     'rgba(0,0,0,0.08)',
+    xpTrack:     '#e2e8f0',
     closeBtn:    'rgba(0,0,0,0.05)',
     closeBtnTxt: '#475569',
     inactiveTab: '#94a3b8',
@@ -123,117 +123,115 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // ── Sidebar content (shared between desktop + mobile overlay) ─────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
 
       {/* Logo */}
-      <div className="px-5 pt-6 pb-5 flex items-center gap-3 flex-shrink-0"
+      <div className="px-4 py-4 flex items-center gap-3 flex-shrink-0"
         style={{ borderBottom: `1px solid ${T.border}` }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)', boxShadow: '0 4px 16px rgba(6,182,212,0.35)' }}>
+        <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20"
+          style={{ background: 'linear-gradient(135deg, #4f46e5, #3b82f6)' }}>
           <GraduationCap className="w-5 h-5 text-white" />
         </div>
         <div>
-          <p className="font-black text-base leading-tight" style={{ color: '#06b6d4' }}>CynexAI</p>
-          <p className="text-[10px] font-bold" style={{ color: T.textMuted }}>Student Portal</p>
+          <p className="font-black text-base leading-tight tracking-tight text-slate-900 dark:text-white">Cynex<span className="text-indigo-600 dark:text-indigo-400">AI</span></p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Student Portal</p>
         </div>
       </div>
 
-      {/* Profile card */}
-      <div className="mx-3 mt-4 p-4 rounded-2xl"
-        style={{ background: T.profileCard, border: `1px solid ${T.profileBorder}` }}>
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-black flex-shrink-0 relative"
-            style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 16px rgba(6,182,212,0.4)' }}>
-            {initials}
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2"
-              style={{ borderColor: T.avatarBorder }} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-sm truncate" style={{ color: T.text }}>{user?.name ?? 'Student'}</p>
-            <span className="text-[10px] font-black px-1.5 py-0.5 rounded-md text-white inline-block mt-0.5"
-              style={{ background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }}>
-              LVL {data.level}
-            </span>
-          </div>
-          {data.notifications > 0 && (
-            <div className="relative flex-shrink-0">
-              <Bell className="w-4 h-4" style={{ color: T.navMuted }} />
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-black flex items-center justify-center">
-                {data.notifications}
+      {/* Scrollable middle content (scrollbar hidden) */}
+      <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-3 space-y-3 min-h-0">
+        {/* Compact Profile & Stats Card */}
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 relative shadow-sm"
+              style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)' }}>
+              {initials}
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-xs truncate text-slate-900 dark:text-white">{user?.name ?? 'Student'}</p>
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white inline-block mt-0.5 shadow-sm"
+                style={{ background: 'linear-gradient(90deg, #4f46e5, #3b82f6)' }}>
+                LVL {data.level}
               </span>
             </div>
-          )}
-        </div>
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] font-bold" style={{ color: T.textMuted }}>
-            <span>Level Progress</span>
-            <span>{data.completedClasses % 10}/10 classes</span>
+            {data.notifications > 0 && (
+              <div className="relative flex-shrink-0">
+                <Bell className="w-4 h-4 text-slate-400" />
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
+                  {data.notifications}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: T.xpTrack }}>
-            <div className="h-full rounded-full transition-all duration-700"
-              style={{ width: `${data.xpPct}%`, background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)' }} />
+
+          <div className="space-y-1 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+              <span>Level Progress</span>
+              <span>{data.completedClasses % 10}/10 classes</span>
+            </div>
+            <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${data.xpPct}%`, background: 'linear-gradient(90deg, #4f46e5, #3b82f6)' }} />
+            </div>
+          </div>
+
+          {/* Embedded Stat Bar */}
+          <div className="grid grid-cols-3 gap-1 pt-1">
+            {[
+              { icon: Flame,  value: data.streak,     label: 'Streak', color: '#f97316' },
+              { icon: Coins,  value: data.coins,       label: 'Coins',  color: '#f59e0b' },
+              { icon: Shield, value: data.badgeCount,  label: 'Badges', color: '#6366f1' },
+            ].map(({ icon: Icon, value, label, color }) => (
+              <div key={label} className="rounded-lg py-1 px-1 text-center bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+                <div className="flex items-center justify-center gap-1">
+                  <Icon className="w-3 h-3" style={{ color }} />
+                  <span className="text-xs font-black tabular-nums" style={{ color }}>{value}</span>
+                </div>
+                <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">{label}</div>
+              </div>
+            ))}
           </div>
         </div>
+
+        {/* Navigation */}
+        <nav className="space-y-1 pt-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest px-2 mb-1.5 text-slate-400">Navigation</p>
+          {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
+            const active = isActive(to);
+            return (
+              <button key={to}
+                onClick={() => { navigate(to); setMobileMenuOpen(false); }}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
+                  active 
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-bold' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white active:scale-[0.98]'
+                }`}
+              >
+                <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={active ? 2.5 : 2} />
+                <span className="flex-1 text-left flex items-center justify-between">
+                  <span>{label}</span>
+                  {comingSoon && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Soon</span>
+                  )}
+                </span>
+                {active && !comingSoon && <ChevronRight className="w-3.5 h-3.5 opacity-80" />}
+              </button>
+            );
+          })}
+        </nav>
       </div>
 
-      {/* Stat chips */}
-      <div className="mx-3 mt-3 grid grid-cols-3 gap-2">
-        {[
-          { icon: Flame,  value: data.streak,     label: 'Streak', color: '#f97316' },
-          { icon: Coins,  value: data.coins,       label: 'Coins',  color: '#f59e0b' },
-          { icon: Shield, value: data.badgeCount,  label: 'Badges', color: '#8b5cf6' },
-        ].map(({ icon: Icon, value, label, color }) => (
-          <div key={label} className="rounded-xl py-2.5 text-center"
-            style={{ background: `${color}12`, border: `1px solid ${color}28` }}>
-            <Icon className="w-4 h-4 mx-auto mb-0.5" style={{ color }} />
-            <div className="text-sm font-black leading-none" style={{ color }}>{value}</div>
-            <div className="text-[9px] font-bold uppercase tracking-wider mt-0.5" style={{ color: T.textMuted }}>{label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 px-3 mt-4 space-y-2 min-h-0">
-        <p className="text-[10px] font-black uppercase tracking-widest px-3 mb-3 text-slate-400 dark:text-slate-500">Navigation</p>
-        {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
-          const active = isActive(to);
-          return (
-            <button key={to}
-              onClick={() => { if (!comingSoon) { navigate(to); setMobileMenuOpen(false); } }}
-              disabled={comingSoon}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all duration-150 min-h-[44px] ${
-                comingSoon
-                  ? 'opacity-60 cursor-not-allowed text-slate-400 dark:text-white/30 hover:bg-transparent'
-                  : active 
-                    ? 'candy-btn-blue shadow-md text-white' 
-                    : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white hover:bg-black/5 active:scale-95'
-              }`}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={active ? 3 : 2} />
-              <span className="flex-1 text-left flex items-center gap-2">
-                {label}
-                {comingSoon && (
-                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-white dark:bg-black/10 font-bold uppercase tracking-wider text-slate-500 dark:text-white/60">Soon</span>
-                )}
-              </span>
-              {active && !comingSoon && <ChevronRight className="w-4 h-4 opacity-60" />}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Bottom actions */}
-      <div className="p-3 space-y-1 flex-shrink-0" style={{ borderTop: `1px solid ${T.border}` }}>
+      {/* Bottom actions (Fixed at bottom, no overlap) */}
+      <div className="p-3 space-y-1 flex-shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <button onClick={toggleTheme}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium"
-          style={{ color: T.navMuted }}>
-          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
           {isDark ? 'Light Mode' : 'Dark Mode'}
         </button>
         <button
           onClick={() => { localStorage.removeItem('cynexai_user'); navigate('/login'); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium hover:text-red-400 transition-colors"
-          style={{ color: T.navMuted }}>
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors">
           <LogOut className="w-4 h-4" />
           Sign Out
         </button>
@@ -245,7 +243,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <div className="flex h-screen w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col candy-panel !rounded-l-none !border-y-0 !border-l-0 bg-white dark:bg-black z-20">
+      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 overflow-hidden">
         <SidebarContent />
       </aside>
 

@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { FileVideo, Save, Youtube, HelpCircle, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2, Wand2 } from 'lucide-react';
+import { FileVideo, Save, Youtube, FileText, Sparkles, Plus, PenTool, Video, CheckCircle, ArrowLeft, Link as LinkIcon, Loader2, Wand2, AlertCircle } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { getClassDetails, getClassQuestions, updateClassMetadata, updateClassAiMaterials, createClassQuestion, deleteClassQuestion, getModuleDetails } from '../../lib/api/cms';
 import { generateAIMaterials, generateAIQuestions } from '../../lib/aiGenerator';
-import { isTursoConfigured } from '../../lib/turso';
-import { X, AlertCircle } from 'lucide-react';
 
 
 export default function ClassEditor() {
@@ -99,7 +97,7 @@ export default function ClassEditor() {
     try {
       await updateClassMetadata(classId as string, classTitle, classDescription, youtubeLink, meetLink, docUrl);
       if (aiKeypoints !== classData?.ai_keypoints) {
-        await updateClassAiMaterials(classId as string, classData?.ai_ppt_markdown || '', aiKeypoints, classData?.ai_script || '');
+        await updateClassAiMaterials(classId as string, classData?.ai_ppt_markdown || '', aiKeypoints, classData?.ai_script || '', classData?.ai_study_guide || '');
         setClassData({ ...classData, ai_keypoints: aiKeypoints });
       }
       showAlert('Class saved successfully!', 'success');
@@ -358,7 +356,7 @@ export default function ClassEditor() {
                 {generating ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><Sparkles className="w-4 h-4" /> Generate All Materials</>}
               </Button>
 
-              <div className="bg-white dark:bg-black/10 rounded-xl p-4 border border-white/10">
+              <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center gap-2"><Video className="w-4 h-4 text-blue-300" /> Presentation (PPT)</h3>
                   {aiStatus.ppt ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}
@@ -366,7 +364,7 @@ export default function ClassEditor() {
                 <p className="text-xs text-indigo-200 mb-3">{aiStatus.ppt ? 'Slides generated for teacher Live Dashboard.' : 'Pending generation.'}</p>
               </div>
 
-              <div className="bg-white dark:bg-black/10 rounded-xl p-4 border border-white/10">
+              <div className="bg-white/10 dark:bg-black/20 backdrop-blur-sm rounded-xl p-4 border border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="font-bold flex items-center gap-2"><PenTool className="w-4 h-4 text-purple-300" /> Teacher Script & Keypoints</h3>
                   {aiStatus.script ? <CheckCircle className="w-4 h-4 text-green-400" /> : <div className="w-4 h-4 rounded-full border-2 border-white/30" />}

@@ -89,7 +89,14 @@ export const createClassForModule = async (classId: string, moduleId: string, ti
 };
 
 export const deleteClass = async (classId: string) => {
+  await executeWithRetry('DELETE FROM class_questions WHERE class_id = ?', [classId]);
   await executeWithRetry('DELETE FROM classes WHERE id = ?', [classId]);
+};
+
+export const updateClassOrder = async (classList: { id: string; order_index: number }[]) => {
+  for (const cls of classList) {
+    await executeWithRetry('UPDATE classes SET order_index = ? WHERE id = ?', [cls.order_index, cls.id]);
+  }
 };
 
 // ---- Class Editor ----
@@ -117,7 +124,16 @@ export const updateClassAiMaterials = async (classId: string, ppt: string, keypo
   );
 };
 
-export const createClassQuestion = async (id: string, classId: string, type: string, questionText: string, optionsJson: string, correctAnswerIdx: number, boilerplateJson: string, testCasesJson: string) => {
+export const createClassQuestion = async (
+  id: string,
+  classId: string,
+  type: string,
+  questionText: string,
+  optionsJson: string | null,
+  correctAnswerIdx: number | null,
+  boilerplateJson: string | null,
+  testCasesJson: string | null
+) => {
   await executeWithRetry(
     `INSERT INTO class_questions (id, class_id, type, question_text, options_json, correct_answer_idx, boilerplate_json, test_cases_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, classId, type, questionText, optionsJson, correctAnswerIdx, boilerplateJson, testCasesJson]

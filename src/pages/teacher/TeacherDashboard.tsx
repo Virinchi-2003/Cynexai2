@@ -78,7 +78,7 @@ export default function TeacherDashboard() {
           const course = await getTeacherFirstCourse(user?.id || '');
           if (!course) {
             // Still show batches from timetable even without a course
-            const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
+            const uniqueBatches: string[] = Array.from(new Set(formattedTimetable.map((t: any) => t.batchId as string)));
             setRealBatches(uniqueBatches.map((bId: string) => ({
               id: bId as string,
               name: parseBatchJSON(bId as string) || 'All Batches',
@@ -102,7 +102,7 @@ export default function TeacherDashboard() {
           });
 
           // Build batch list from timetable slots
-          const uniqueBatches = [...new Set(formattedTimetable.map((t: any) => t.batchId))];
+          const uniqueBatches: string[] = Array.from(new Set(formattedTimetable.map((t: any) => t.batchId as string)));
           setRealBatches(uniqueBatches.map((bId: string) => ({
             id: bId as string,
             name: parseBatchJSON(bId as string) || 'All Batches',
@@ -115,7 +115,7 @@ export default function TeacherDashboard() {
       });
     };
     fetchTimetableAndProgress();
-  }, [user]);
+  }, [user?.id]);
 
   // Group timetable by day (1=Mon ... 5=Fri)
   const schedule: Record<number, any[]> = {};

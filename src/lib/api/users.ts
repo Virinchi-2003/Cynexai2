@@ -1,15 +1,36 @@
-import { client } from '../turso';
+import { client, isDbFailed, setDbConnectionFailed } from '../turso';
 import { encryptPassword } from '../crypto';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
+const checkDbFailed = () => {
+  try {
+    return typeof isDbFailed === 'function' ? isDbFailed() : false;
+  } catch {
+    return false;
+  }
+};
+
+const markDbFailed = () => {
+  try {
+    if (typeof setDbConnectionFailed === 'function') {
+      setDbConnectionFailed(true);
+    }
+  } catch {}
+};
+
 async function executeWithRetry(query: string, args: any[] = [], retries = MAX_RETRIES): Promise<any> {
   try {
-    if (!client) throw new Error('Database client not configured');
+    if (!client || checkDbFailed()) throw new Error('Database client not configured or offline');
     return await client.execute({ sql: query, args });
-  } catch (error) {
-    if (retries > 0) {
+  } catch (error: any) {
+    const msg = String(error?.message || error || '');
+    if (msg.includes('BLOCKED') || msg.includes('forbidden') || msg.includes('403')) {
+      markDbFailed();
+      throw error;
+    }
+    if (retries > 0 && !checkDbFailed()) {
       await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
       return executeWithRetry(query, args, retries - 1);
     }
@@ -67,7 +88,6 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
     }
     
     if (sortBy && sortBy !== 'actions') {
-      // Map UI keys to DB columns
       const sortColumnMap: Record<string, string> = {
         'name': 'u.name',
         'email': 'u.email',
@@ -89,7 +109,6 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
     return res.rows.map((row: any) => ({
       ...row,
       salary: Number(row.salary) || 0,
-      // Prefer student-table phone/dob if set, fall back to user-level fields
       phone: row.stu_phone || row.phone || '',
       dob: row.dob || '',
       fees_total: Number(row.fees_total) || 0,
@@ -105,18 +124,19 @@ export async function getUsers(filters?: Record<string, any>, sortBy?: string, s
 export async function getFilterOptions(): Promise<{courses: string[], batches: string[]}> {
   try {
     const coursesRes = await executeWithRetry('SELECT DISTINCT title FROM courses WHERE title IS NOT NULL');
-    let courses = Array.from(new Set(coursesRes.rows.map((r: any) => String(r.title)).filter(c => c && c !== 'null')));
+    let courses: string[] = Array.from(new Set<string>(coursesRes.rows.map((r: any) => String(r.title)).filter((c: string) => c && c !== 'null')));
     if (courses.length === 0) {
       const studentCourses = await executeWithRetry('SELECT DISTINCT course FROM students WHERE course IS NOT NULL');
-      courses = Array.from(new Set(studentCourses.rows.map((r: any) => String(r.course)).filter(c => c && c !== 'null')));
+      courses = Array.from(new Set<string>(studentCourses.rows.map((r: any) => String(r.course)).filter((c: string) => c && c !== 'null')));
     }
 
-    const batchesRes = await executeWithRetry('SELECT DISTINCT name FROM batches WHERE name IS NOT NULL');
-    let batches = Array.from(new Set(batchesRes.rows.map((r: any) => String(r.name)).filter(b => b && b !== 'null')));
-    if (batches.length === 0) {
-      const studentBatchesRes = await executeWithRetry('SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL');
-      batches = Array.from(new Set(studentBatchesRes.rows.map((r: any) => String(r.batch_number)).filter(b => b && b !== 'null')));
-    }
+    const batchesRes = await executeWithRetry('SELECT DISTINCT name FROM batches WHERE name IS NOT NULL').catch(() => ({ rows: [] }));
+    const studentBatchesRes = await executeWithRetry('SELECT DISTINCT batch_number FROM students WHERE batch_number IS NOT NULL').catch(() => ({ rows: [] }));
+    const allBatchNames = [
+      ...batchesRes.rows.map((r: any) => String(r.name)),
+      ...studentBatchesRes.rows.map((r: any) => String(r.batch_number))
+    ].filter((b: string) => b && b !== 'null' && b.trim() !== '');
+    const batches: string[] = Array.from(new Set<string>(allBatchNames));
 
     return { courses, batches };
   } catch (error) {
@@ -167,8 +187,6 @@ export async function saveUser(user: any): Promise<void> {
         [newId, user.name, user.email, user.phone || '', user.role, salary, status, encPw, encPw, user.permissions_json]
       );
     }
-
-    // Student creation is now handled exclusively by saveStudent()
   } catch (error) {
     console.error('Failed to save user', error);
     throw error;
@@ -180,7 +198,6 @@ export async function saveStudent(studentData: any): Promise<void> {
     const encPw = studentData.password ? encryptPassword(studentData.password) : encryptPassword('cynex123');
     const status = studentData.status || 'Active';
 
-    // 1. Save to users table
     if (studentData.id) {
       await executeWithRetry(
         "UPDATE users SET name=?, email=?, phone=?, role='Student', status=?, password_hash=?, password_encrypted=? WHERE id=?",
@@ -194,7 +211,6 @@ export async function saveStudent(studentData: any): Promise<void> {
       );
     }
 
-    // 2. Save to students table
     const existing = await executeWithRetry(`SELECT id FROM students WHERE portal_login_email = ?`, [studentData.email]);
     if (existing.rows.length === 0) {
       const studentCode = `CNX-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -244,10 +260,7 @@ export async function updateStudentAttended(email: string, classesAttendedJson: 
 
 export async function deleteUser(id: string, email: string): Promise<void> {
   try {
-    // Delete from users table
     await executeWithRetry("DELETE FROM users WHERE id = ?", [id]);
-    
-    // Attempt to delete from students table as well if email exists
     if (email) {
       await executeWithRetry("DELETE FROM students WHERE portal_login_email = ?", [email]);
     }
@@ -257,13 +270,11 @@ export async function deleteUser(id: string, email: string): Promise<void> {
   }
 }
 
-// ─── STUDENT DOCUMENTS ──────────────────────────────────────────────────────
-
 export async function uploadStudentDocument(
   studentId: string,
   docType: string,
   fileName: string,
-  fileData: string, // base64 string
+  fileData: string,
   uploadedBy: string
 ): Promise<string> {
   const id = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
@@ -306,25 +317,23 @@ export async function deleteStudentDocument(docId: string): Promise<void> {
 }
 
 export async function updateStudentProfile(emailOrId: string, profile: {
-  phone?: string; dob?: string; address?: string;
+  name?: string; phone?: string; dob?: string; address?: string;
   father_name?: string; mother_name?: string;
   emergency_contact?: string; blood_group?: string;
   batch_number?: string; course?: string; joining_date?: string; status?: string;
   gender?: string; fees_total?: number; fees_paid?: number; fees_pending?: number;
   training_start_date?: string; documents_submitted?: number;
+  aadhar_file?: string; other_attachments?: string; topic_completed?: string;
 }): Promise<void> {
   const fields = Object.keys(profile) as (keyof typeof profile)[];
   if (fields.length === 0) return;
   const setClauses = fields.map(f => `${f} = ?`).join(', ');
   const args = [...fields.map(f => (profile[f] ?? null) as any), emailOrId, emailOrId];
-  // Match by portal_login_email (primary) OR by students.id (secondary)
   await executeWithRetry(
     `UPDATE students SET ${setClauses} WHERE portal_login_email = ? OR id = ?`,
     args
   );
 }
-
-// ─── CSV BULK STUDENT IMPORT ────────────────────────────────────────────────
 
 export async function bulkImportStudents(rows: {
   name: string; email: string; phone?: string;
@@ -378,8 +387,6 @@ export async function bulkImportStudents(rows: {
   return { imported, errors };
 }
 
-// ─── ONBOARDING APPROVAL WORKFLOW ──────────────────────────────────────────
-
 export async function createPendingStudent(data: {
   name: string; email: string; phone: string; fees_total: number;
   fees_paid: number; fees_pending: number; joining_date: string;
@@ -399,7 +406,6 @@ export async function createPendingStudent(data: {
       data.course, data.documents_submitted, data.gender, data.dob
     ]
   );
-  // Do NOT insert into users table until approved
   return studentId;
 }
 
@@ -413,13 +419,11 @@ export async function approveStudent(studentId: string, portalId: string, passwo
   const encPw = encryptPassword(passwordPlain);
   const userId = `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-  // 1. Mark student as Approved and set their final portal ID (student_code)
   await executeWithRetry(
     `UPDATE students SET approval_status = ?, student_code = ? WHERE id = ?`,
     ['Approved', portalId, studentId]
   );
 
-  // 2. Create or Update actual User for login
   const existingUser = await executeWithRetry(`SELECT id FROM users WHERE email = ?`, [email]);
   if (existingUser.rows.length > 0) {
     await executeWithRetry(

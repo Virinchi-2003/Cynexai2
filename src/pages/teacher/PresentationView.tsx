@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getClassForPresentation } from '../../lib/api/teacher';
 import ReactMarkdown from 'react-markdown';
-import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Palette, Upload, FileCode2, Trash2, Undo2, Redo2, Minus, Square, Circle as CircleIcon, ArrowRight as ArrowIcon, Diamond, Database, FilePlus, FileText } from 'lucide-react';
+import { BookOpen, Code, ArrowLeft, ArrowRight, Pencil, Eraser, Loader2, MousePointer2, PlayCircle, Cast, MonitorPlay, Upload, FileCode2, Trash2, Undo2, Redo2, Minus, Square, Circle as CircleIcon, ArrowRight as ArrowIcon, Diamond, Database, FilePlus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { executeCode, Language, UploadedFile } from '../../lib/compiler';
 import Editor from '@monaco-editor/react';
@@ -500,7 +500,7 @@ export default function PresentationView() {
         <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-cyan-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-2000" />
         <div className="absolute bottom-1/4 left-1/2 w-96 h-96 bg-pink-300 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-blob animation-delay-4000" />
         
-        <div className="relative w-full h-full bg-white dark:bg-black/20 backdrop-blur-2xl border border-white/40 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-12 md:p-16 z-10 overflow-y-auto">
+        <div className="relative w-full h-full bg-slate-900/80 dark:bg-black/40 backdrop-blur-2xl border border-white/20 rounded-[32px] shadow-[0_32px_64px_rgba(0,0,0,0.2)] flex flex-col p-12 md:p-16 z-10 overflow-y-auto">
           <div className="flex-1 flex flex-col justify-center items-center text-center max-w-5xl mx-auto">
             <ReactMarkdown
               components={{
@@ -509,8 +509,8 @@ export default function PresentationView() {
                 p: ({node, ...props}) => <p className="text-xl md:text-3xl text-white/90 leading-relaxed mb-6 font-medium" {...props} />,
                 ul: ({node, ...props}) => <ul className="space-y-6 mb-6 text-left inline-block" {...props} />,
                 li: ({node, ...props}) => (
-                  <li className="flex items-start text-xl md:text-3xl text-white font-medium bg-white dark:bg-black/10 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-sm">
-                    <span className="w-3 h-3 rounded-full bg-white dark:bg-black mt-3 mr-4 flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
+                  <li className="flex items-start text-xl md:text-3xl text-white font-medium bg-white/10 dark:bg-black/20 px-6 py-4 rounded-2xl border border-white/20 backdrop-blur-sm">
+                    <span className="w-3 h-3 rounded-full bg-white mt-3 mr-4 flex-shrink-0 shadow-[0_0_10px_rgba(255,255,255,0.8)]" />
                     <span {...props} />
                   </li>
                 ),

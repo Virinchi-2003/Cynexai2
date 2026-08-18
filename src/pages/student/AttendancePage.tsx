@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
 import { QrCode, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
@@ -19,7 +19,7 @@ export default function AttendancePage() {
     if (user?.id) {
       getStudentMode(user.id).then(mode => setStudentMode(mode));
     }
-  }, [user]);
+  }, [user?.id]);
 
   useEffect(() => {
     if (!scanning) return;
@@ -56,7 +56,7 @@ export default function AttendancePage() {
             setResult({ success: false, message: 'Failed to read QR code. Please try again.' });
           }
         },
-        (error) => {
+        () => {
           // ignore continuous scanning errors
         }
       );
@@ -69,7 +69,7 @@ export default function AttendancePage() {
         scanner.clear().catch(e => console.error(e));
       }
     };
-  }, [scanning, user]);
+  }, [scanning, user?.id]);
 
   if (studentMode === 'Online') {
     return (

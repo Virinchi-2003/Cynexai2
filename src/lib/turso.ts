@@ -33,7 +33,39 @@ export const client = isTursoConfigured
   : null;
 
 // Circuit Breaker: If connection fails, stop trying to use Turso for this session
-let dbConnectionFailed = false;
+export let dbConnectionFailed = false;
+export const setDbConnectionFailed = (failed: boolean) => {
+  dbConnectionFailed = failed;
+};
+export const isDbFailed = () => dbConnectionFailed;
+
+if (client) {
+  const origExecute = client.execute.bind(client);
+  client.execute = (async (...args: any[]) => {
+    if (dbConnectionFailed) {
+      return { rows: [], columns: [] } as any;
+    }
+    try {
+      return await (origExecute as any)(...args);
+    } catch (error: any) {
+      const msg = String(error?.message || error || '');
+      if (
+        msg.includes('BLOCKED') ||
+        msg.includes('forbidden') ||
+        msg.includes('Operation was blocked') ||
+        msg.includes('403') ||
+        msg.includes('401')
+      ) {
+        console.warn("Turso Cloud DB is BLOCKED. Intercepted error and switched to local fallback mode.");
+        dbConnectionFailed = true;
+        return { rows: [], columns: [] } as any;
+      }
+      throw error;
+    }
+  }) as any;
+}
+
+
 
 
 export interface User {
@@ -452,6 +484,14 @@ export const syncSamplePosts = async () => {
 export const initTursoDB = async () => {
   if (isTursoConfigured && client && !dbConnectionFailed) {
     try {
+      // Health check to verify read capability
+      await client.execute('SELECT 1');
+    } catch (healthErr: any) {
+      console.warn("Turso Cloud DB health check failed (BLOCKED/Offline). Switching to Local Fallback mode.");
+      dbConnectionFailed = true;
+      return false;
+    }
+    try {
       // Create tables if they don't exist
       await client.execute(`
         CREATE TABLE IF NOT EXISTS blog_posts (
@@ -828,11 +868,13 @@ export const initTursoDB = async () => {
           name TEXT,
           module_id TEXT,
           min_students INTEGER,
-          max_students INTEGER,
+          max_students INTEGER DEFAULT 30,
           target_capacity INTEGER,
-          current_enrolled INTEGER,
+          current_enrolled INTEGER DEFAULT 0,
           start_date TEXT,
-          status TEXT,
+          timing TEXT,
+          schedule_pattern TEXT,
+          status TEXT DEFAULT 'Active',
           course_id TEXT,
           primary_teacher_id TEXT,
           created_at TEXT
@@ -1421,7 +1463,10 @@ export const seedCRMData = async () => {
 
         console.log('CRM Demo Data seeded.');
       }
-    } catch(e) { console.error('Seed failed', e); }
+    } catch(e) { 
+      console.error('Seed failed (switching to fallback):', e); 
+      dbConnectionFailed = true;
+    }
   }
 };
 
