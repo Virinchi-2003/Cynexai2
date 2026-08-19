@@ -1392,7 +1392,7 @@ export const initTursoDB = async () => {
         ['show_leaderboard', '1'],
         ['show_mock_interview', '1'],
         ['show_attendance', '1'],
-        ['show_gamification', '1'],
+        ['show_gamification', '0'],
       ];
       for (const [key, value] of defaultPortalSettings) {
         await client.execute({

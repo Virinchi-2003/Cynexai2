@@ -5,7 +5,7 @@ import { client } from '../../lib/turso';
 import {
   Home, ClipboardCheck, Trophy, Mic2, Gift, Briefcase,
   Flame, Coins, Shield, GraduationCap, LogOut, Moon, Sun,
-  Menu, X, ChevronRight, Bell,
+  Menu, X, ChevronRight, Bell, CheckCircle2,
 } from 'lucide-react';
 import { useTheme } from '../../lib/ThemeContext';
 
@@ -123,118 +123,76 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // ── Sidebar content (shared between desktop + mobile overlay) ─────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800">
+    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800">
 
-      {/* Logo */}
-      <div className="px-4 py-4 flex items-center gap-3 flex-shrink-0"
-        style={{ borderBottom: `1px solid ${T.border}` }}>
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/20"
+      {/* Brand Header */}
+      <div className="px-5 py-5 flex items-center gap-3 flex-shrink-0 border-b border-slate-200/70 dark:border-slate-800">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
           style={{ background: 'linear-gradient(135deg, #4f46e5, #3b82f6)' }}>
           <GraduationCap className="w-5 h-5 text-white" />
         </div>
         <div>
           <p className="font-black text-base leading-tight tracking-tight text-slate-900 dark:text-white">Cynex<span className="text-indigo-600 dark:text-indigo-400">AI</span></p>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">Student Portal</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Executive Portal</p>
         </div>
       </div>
 
-      {/* Scrollable middle content (scrollbar hidden) */}
-      <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-3 space-y-3 min-h-0">
-        {/* Compact Profile & Stats Card */}
-        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-2.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 relative shadow-sm"
-              style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)' }}>
-              {initials}
-              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-xs truncate text-slate-900 dark:text-white">{user?.name ?? 'Student'}</p>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full text-white inline-block mt-0.5 shadow-sm"
-                style={{ background: 'linear-gradient(90deg, #4f46e5, #3b82f6)' }}>
-                LVL {data.level}
-              </span>
-            </div>
-            {data.notifications > 0 && (
-              <div className="relative flex-shrink-0">
-                <Bell className="w-4 h-4 text-slate-400" />
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-black flex items-center justify-center shadow-sm">
-                  {data.notifications}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-1 pt-1 border-t border-slate-200/60 dark:border-slate-700/60">
-            <div className="flex justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-              <span>Level Progress</span>
-              <span>{data.completedClasses % 10}/10 classes</span>
-            </div>
-            <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${data.xpPct}%`, background: 'linear-gradient(90deg, #4f46e5, #3b82f6)' }} />
-            </div>
-          </div>
-
-          {/* Embedded Stat Bar */}
-          <div className="grid grid-cols-3 gap-1 pt-1">
-            {[
-              { icon: Flame,  value: data.streak,     label: 'Streak', color: '#f97316' },
-              { icon: Coins,  value: data.coins,       label: 'Coins',  color: '#f59e0b' },
-              { icon: Shield, value: data.badgeCount,  label: 'Badges', color: '#6366f1' },
-            ].map(({ icon: Icon, value, label, color }) => (
-              <div key={label} className="rounded-lg py-1 px-1 text-center bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
-                <div className="flex items-center justify-center gap-1">
-                  <Icon className="w-3 h-3" style={{ color }} />
-                  <span className="text-xs font-black tabular-nums" style={{ color }}>{value}</span>
-                </div>
-                <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="space-y-1 pt-1">
-          <p className="text-[10px] font-bold uppercase tracking-widest px-2 mb-1.5 text-slate-400">Navigation</p>
+      {/* Navigation Links */}
+      <div className="flex-1 overflow-y-auto scrollbar-none px-3 py-4 space-y-4 min-h-0">
+        <nav className="space-y-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest px-3 mb-2 text-slate-400">Navigation</p>
           {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
             const active = isActive(to);
             return (
               <button key={to}
                 onClick={() => { navigate(to); setMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   active 
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-bold' 
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white active:scale-[0.98]'
+                    ? 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold border-l-4 border-indigo-600 dark:border-indigo-400 shadow-sm' 
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" strokeWidth={active ? 2.5 : 2} />
+                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} strokeWidth={active ? 2.5 : 2} />
                 <span className="flex-1 text-left flex items-center justify-between">
                   <span>{label}</span>
                   {comingSoon && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded-md bg-slate-200 dark:bg-slate-800 font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Soon</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-bold uppercase tracking-wider text-slate-500">Soon</span>
                   )}
                 </span>
-                {active && !comingSoon && <ChevronRight className="w-3.5 h-3.5 opacity-80" />}
+                {active && !comingSoon && <ChevronRight className="w-3.5 h-3.5 opacity-60 text-indigo-600 dark:text-indigo-400" />}
               </button>
             );
           })}
         </nav>
       </div>
 
-      {/* Bottom actions (Fixed at bottom, no overlap) */}
-      <div className="p-3 space-y-1 flex-shrink-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <button onClick={toggleTheme}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
-          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-600" />}
-          {isDark ? 'Light Mode' : 'Dark Mode'}
-        </button>
-        <button
-          onClick={() => { localStorage.removeItem('cynexai_user'); navigate('/login'); }}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors">
-          <LogOut className="w-4 h-4" />
-          Sign Out
-        </button>
+      {/* Movin-style Pinned User Profile (Bottom Left) */}
+      <div className="p-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/80 flex-shrink-0 space-y-2">
+        <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60 shadow-sm">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 relative shadow-sm"
+            style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)' }}>
+            {initials}
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-xs truncate text-slate-900 dark:text-white leading-tight">{user?.name ?? 'Student'}</p>
+            <p className="text-[10px] text-slate-400 truncate mt-0.5">{user?.email ?? 'student@cynexai.com'}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button onClick={toggleTheme}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors">
+            {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-600" />}
+            {isDark ? 'Light' : 'Dark'}
+          </button>
+          <button
+            onClick={() => { localStorage.removeItem('cynexai_user'); navigate('/login'); }}
+            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-semibold text-red-500 hover:bg-red-500/10 transition-colors">
+            <LogOut className="w-3.5 h-3.5" />
+            Sign Out
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -275,13 +233,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             <span className="font-black text-sm" style={{ color: '#06b6d4' }}>CynexAI</span>
           </button>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316', border: '1px solid rgba(249,115,22,0.25)' }}>
-              <Flame className="w-3.5 h-3.5" />{data.streak}
-            </span>
-            <span className="flex items-center gap-1 text-sm font-bold px-2.5 py-1 rounded-full"
-              style={{ background: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
-              <Coins className="w-3.5 h-3.5" />{data.coins}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              {data.completedClasses} Classes Done
             </span>
           </div>
         </div>
