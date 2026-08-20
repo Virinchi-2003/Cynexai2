@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { FolderOpen, Plus, ArrowRight, Video, FileText, ArrowLeft, X, Edit, Trash2, ArrowUp, ArrowDown, HelpCircle, Link as LinkIcon } from 'lucide-react';
+import { FolderOpen, Plus, ArrowRight, Video, FileText, ArrowLeft, X, Edit, Trash2, ArrowUp, ArrowDown, HelpCircle, Link as LinkIcon, Lock, Unlock } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getModuleDetails, createClassForModule, deleteClass, updateModuleCoding, updateClassOrder } from '../../lib/api/cms';
+import { getModuleDetails, createClassForModule, deleteClass, updateModuleCoding, updateClassOrder, updateClassAccessStatus } from '../../lib/api/cms';
 import { ConfirmModal } from '../../components/ui/erp/ConfirmModal';
 
 export default function ModuleEditor() {
@@ -109,6 +109,17 @@ export default function ModuleEditor() {
     }
   };
 
+  const handleToggleAccess = async (classId: string, currentStatus: string) => {
+    const isCurrentlyUnlocked = currentStatus === 'unlocked' || currentStatus === 'in_progress' || currentStatus === 'active' || currentStatus === 'completed';
+    const newStatus = isCurrentlyUnlocked ? 'locked' : 'unlocked';
+    try {
+      await updateClassAccessStatus(classId, newStatus);
+      await fetchModuleData();
+    } catch (e) {
+      console.error("Failed to update class access status", e);
+    }
+  };
+
   const handleToggleItModule = async () => {
     if (!moduleData) return;
     const newVal = !(moduleData.is_it_module === 1);
@@ -156,7 +167,7 @@ export default function ModuleEditor() {
   }
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-16 sm:pb-24 p-4 md:p-8 bg-erp-background">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <button 
@@ -232,6 +243,19 @@ export default function ModuleEditor() {
               </div>
 
               <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button 
+                  type="button"
+                  onClick={() => handleToggleAccess(cls.id as string, cls.status)} 
+                  className={`h-8 px-2.5 text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 rounded-lg border transition-all cursor-pointer ${
+                    (cls.status === 'unlocked' || cls.status === 'in_progress' || cls.status === 'active' || cls.status === 'completed')
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600 hover:text-white'
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-600 hover:text-white'
+                  }`}
+                  title={(cls.status === 'unlocked' || cls.status === 'in_progress' || cls.status === 'active' || cls.status === 'completed') ? "Click to lock student access" : "Click to grant access to students"}
+                >
+                  {(cls.status === 'unlocked' || cls.status === 'in_progress' || cls.status === 'active' || cls.status === 'completed') ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                  {(cls.status === 'unlocked' || cls.status === 'in_progress' || cls.status === 'active' || cls.status === 'completed') ? 'Unlocked 🔓' : 'Give Access 🔓'}
+                </button>
                 <button 
                   type="button"
                   onClick={() => navigate(`${basePath}/courses/${courseId}/modules/${moduleId}/classes/${cls.id}`)} 

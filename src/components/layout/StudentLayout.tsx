@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client } from '../../lib/turso';
 import {
-  Home, ClipboardCheck, Trophy, Mic2, Gift, Briefcase,
+  Home, ClipboardCheck, Mic2, Gift, Briefcase,
   Flame, Coins, Shield, GraduationCap, LogOut, Moon, Sun,
   Menu, X, ChevronRight, Bell, CheckCircle2,
 } from 'lucide-react';
@@ -30,13 +30,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/student',             icon: Home,           label: 'Dashboard',    short: 'Home'      },
   { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',   short: 'Attend'    },
-  { to: '/student/leaderboard', icon: Trophy,         label: 'Leaderboard',  short: 'Rank'      },
   { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview' },
   { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards'   },
   { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career'    },
 ];
 
-const BOTTOM_NAV = NAV_ITEMS.slice(0, 5);
+const BOTTOM_NAV = NAV_ITEMS;
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const navigate  = useNavigate();

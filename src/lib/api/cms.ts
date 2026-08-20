@@ -99,6 +99,10 @@ export const updateClassOrder = async (classList: { id: string; order_index: num
   }
 };
 
+export const updateClassAccessStatus = async (classId: string, status: string) => {
+  await executeWithRetry('UPDATE classes SET status = ? WHERE id = ?', [status, classId]);
+};
+
 // ---- Class Editor ----
 export const getClassDetails = async (classId: string) => {
   const res = await executeWithRetry('SELECT * FROM classes WHERE id = ?', [classId]);

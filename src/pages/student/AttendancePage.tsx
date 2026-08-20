@@ -73,11 +73,11 @@ export default function AttendancePage() {
 
   if (studentMode === 'Online') {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-erp-background p-4">
-        <Card className="bg-erp-surface border-erp-border p-8 shadow-md flex flex-col items-center max-w-md text-center">
+      <div className="flex flex-col w-full min-h-full items-center justify-start sm:justify-center bg-erp-background p-4 pt-6 sm:pt-12 pb-16">
+        <Card className="bg-erp-surface border-erp-border p-6 sm:p-8 shadow-md flex flex-col items-center max-w-md text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mb-4" />
           <h2 className="text-2xl font-bold font-display text-erp-text mb-2">Online Student</h2>
-          <p className="text-erp-text/70 mb-6">
+          <p className="text-erp-text/70 mb-6 text-sm leading-relaxed">
             You are enrolled as an Online student. You do not need to scan a QR code. Your attendance is marked automatically when you join a live class!
           </p>
           <Button onClick={() => navigate(-1)} className="font-bold px-8">Go Back</Button>
@@ -88,7 +88,7 @@ export default function AttendancePage() {
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-erp-background">
-      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
+      <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-16 sm:pb-24">
         <div className="flex items-center gap-4 mb-8">
           <Button variant="ghost" onClick={() => navigate(-1)} className="p-2 h-auto text-erp-text/60">
             <ArrowLeft className="w-5 h-5" />

@@ -198,7 +198,7 @@ export default function ClassEditor() {
   if (loading) return <div className="p-8 text-erp-text">Loading class data...</div>;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-16 sm:pb-24 p-4 md:p-8 bg-erp-background">
       <div className="flex justify-between items-center mb-8">
         <div>
           <div className="flex items-center gap-2 text-sm text-erp-text/50 font-bold mb-2 cursor-pointer hover:text-indigo-400" onClick={() => navigate(`${basePath}/courses/${courseId}/modules/${moduleId}`)}>

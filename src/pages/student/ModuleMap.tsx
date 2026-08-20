@@ -195,6 +195,11 @@ function NodePopup({
                 Ready to start
               </span>
             )}
+            {state === 'locked' && (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-600 bg-amber-100 border border-amber-200 px-3 py-1 rounded-full dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20">
+                <NodeIcons.lock size={14} /> Locked · Complete previous class to unlock
+              </span>
+            )}
           </div>
 
           {/* Action */}
@@ -419,7 +424,7 @@ export default function ModuleMap() {
   }
 
   return (
-    <div className="min-h-screen candy-map-bg">
+    <div className="w-full min-h-full candy-map-bg">
       {/* ── Sticky Header ── */}
       <div
         className="sticky top-0 z-30 px-2 sm:px-4 py-3 bg-white/70 dark:bg-black/70 backdrop-blur-md border-b border-white/20 shadow-sm"
@@ -500,43 +505,63 @@ export default function ModuleMap() {
 
       {/* ── Standard Vertical List ── */}
       {virtualNodes.length > 0 && (
-        <div className="max-w-xl mx-auto px-2 sm:px-4 pt-6 pb-32" ref={mapContainer}>
+        <div className="max-w-xl mx-auto px-2 sm:px-4 pt-4 pb-16 sm:pb-24" ref={mapContainer}>
           {/* Start Banner */}
           <div
-            className="text-center mb-6 py-4 rounded-2xl relative z-10"
+            className="text-center mb-4 py-3 rounded-2xl relative z-10"
             style={{ background: 'rgba(99,102,241,0.08)', border: '1px dashed rgba(99,102,241,0.2)' }}
           >
             <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Course Classes · {virtualNodes.length} Items</p>
           </div>
 
           {/* List Area */}
-          <div className="relative w-full mx-auto space-y-4 pb-32">
+          <div className="relative w-full mx-auto space-y-3 pb-12 sm:pb-20">
             {virtualNodes.map((node, i) => {
-              const state = i < currentLevel ? 'completed' : 'current';
+              const isCompleted = node.isCompleted;
+              const isTeacherUnlocked = node.classItem.status === 'unlocked' || node.classItem.status === 'in_progress' || node.classItem.status === 'active' || node.classItem.status === 'completed';
+              const isPreviousCompleted = i === 0 || virtualNodes[i - 1].isCompleted;
+              const isUnlocked = isPreviousCompleted || isTeacherUnlocked || isCompleted;
+              const isLocked = !isUnlocked;
+
+              const state: NodeState = isCompleted ? 'completed' : isUnlocked ? 'current' : 'locked';
+              const isCurrent = state === 'current';
+
               let kind: keyof typeof KIND_CONFIG = 'video';
               if (node.classItem.type === 'live' || node.classItem.type === 'zoom') kind = 'live';
               const cfg = KIND_CONFIG[kind] || KIND_CONFIG.lesson;
-              
-              const isCompleted = state === 'completed';
-              const isCurrent = state === 'current';
-              const isLocked = false;
-              
+
               return (
                 <div 
                   key={node.id} 
                   id={`node-${i}`}
-                  onClick={() => handleNodeClick(node)}
-                  className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${isCurrent ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]' : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'}`}
+                  onClick={() => {
+                    handleNodeClick(node);
+                  }}
+                  className={`relative p-4 rounded-2xl flex items-center gap-4 transition-all duration-200 border-2 ${
+                    isLocked
+                      ? 'cursor-pointer border-dashed border-slate-300 dark:border-white/10 bg-slate-100/60 dark:bg-white/5 opacity-60 hover:opacity-80'
+                      : isCurrent
+                      ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]'
+                      : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'
+                  }`}
                 >
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${isCompleted ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20' : isCurrent ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-black/5 dark:text-white/40'}`}>
-                    {isCompleted ? <NodeIcons.check size={24} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                    isCompleted
+                      ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20'
+                      : isCurrent
+                      ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20'
+                      : 'bg-slate-200 text-slate-400 dark:bg-white/10 dark:text-white/30'
+                  }`}>
+                    {isCompleted ? <NodeIcons.check size={24} /> : isLocked ? <NodeIcons.lock size={22} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: cfg.labelColor }}>
-                      {cfg.label} {isCurrent && <span className="ml-2 text-indigo-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full">Next up</span>}
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: isLocked ? '#94a3b8' : cfg.labelColor }}>
+                      {cfg.label}
+                      {isCurrent && <span className="ml-2 text-indigo-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full">Next up</span>}
+                      {isLocked && <span className="ml-2 text-slate-500 text-[9px] px-1.5 py-0.5 bg-slate-200 dark:bg-white/10 rounded-full font-bold">Locked 🔒</span>}
                     </p>
-                    <p className={`font-bold text-sm leading-tight line-clamp-2 text-slate-900 dark:text-white`}>
+                    <p className={`font-bold text-sm leading-tight line-clamp-2 ${isLocked ? 'text-slate-500 dark:text-white/40' : 'text-slate-900 dark:text-white'}`}>
                       {node.title}
                     </p>
                     {node.classItem.date && (
@@ -549,6 +574,11 @@ export default function ModuleMap() {
                   {isCompleted && (
                     <div className="flex-shrink-0 text-emerald-500 bg-emerald-100/50 p-2 rounded-full">
                       <span className="text-sm font-black">✓</span>
+                    </div>
+                  )}
+                  {isLocked && (
+                    <div className="flex-shrink-0 text-slate-400 bg-slate-200/50 dark:bg-white/10 p-2.5 rounded-full">
+                      <NodeIcons.lock size={16} />
                     </div>
                   )}
                 </div>
@@ -574,9 +604,15 @@ export default function ModuleMap() {
       {selectedNode && (
         <NodePopup
           node={selectedNode}
-          state={
-            virtualNodes.findIndex(n => n.id === selectedNode.id) < currentLevel ? 'completed' : 'current'
-          }
+          state={(() => {
+            const idx = virtualNodes.findIndex(n => n.id === selectedNode.id);
+            if (idx === -1) return 'locked';
+            const isCompleted = selectedNode.isCompleted;
+            const isTeacherUnlocked = selectedNode.classItem.status === 'unlocked' || selectedNode.classItem.status === 'in_progress' || selectedNode.classItem.status === 'active' || selectedNode.classItem.status === 'completed';
+            const isPreviousCompleted = idx === 0 || virtualNodes[idx - 1].isCompleted;
+            const isUnlocked = isPreviousCompleted || isTeacherUnlocked || isCompleted;
+            return isCompleted ? 'completed' : isUnlocked ? 'current' : 'locked';
+          })()}
           onClose={() => setSelectedNode(null)}
           onGo={handleGo}
         />

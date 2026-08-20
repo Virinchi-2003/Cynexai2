@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
 import { 
-  Users, Key, Plus, X, Edit, Search, Trash2, Shield, LayoutGrid, Check, RotateCcw,
+  Users, Key, Plus, X, Edit, Search, Trash2, Shield, Check,
   Layers, Calendar, Clock, BookOpen, GraduationCap, UserCheck, UserPlus, UserMinus,
   CheckSquare, Square
 } from 'lucide-react';
@@ -16,8 +16,6 @@ import {
   removeStudentFromBatch, StudentAssignmentItem 
 } from '../../../lib/api/batches';
 import { DataTable } from '../../../components/ui/erp/DataTable';
-import { ALL_PAGES } from '../../../lib/pageRegistry';
-import { getRolePages, setRolePages, resetRolePages, CONFIGURABLE_ROLES } from '../../../lib/api/rolePageAccess';
 
 interface ERPUser {
   id: string; name: string; email: string;
@@ -30,12 +28,7 @@ export default function UserManagement() {
   const currentUser = getCurrentUser();
   const [users, setUsers] = useState<ERPUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'staff' | 'role-access' | 'batches'>('staff');
-
-  // Role page access state
-  const [selectedRole, setSelectedRole] = useState<string>('Manager');
-  const [rolePageKeys, setRolePageKeys] = useState<string[]>([]);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [activeTab, setActiveTab] = useState<'staff' | 'batches'>('staff');
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortBy, setSortBy] = useState<string>('');
@@ -110,11 +103,6 @@ export default function UserManagement() {
     getErpModules().then(setAllModules).catch(console.error);
     getFilterOptions().then(opt => setAvailableCourseOptions(opt.courses)).catch(console.error);
   }, [filters, sortBy, sortDir]);
-
-  // Load page keys when role changes
-  useEffect(() => {
-    setRolePageKeys(getRolePages(selectedRole));
-  }, [selectedRole]);
 
   // Load batches when switching to batches tab
   useEffect(() => {
@@ -454,16 +442,6 @@ export default function UserManagement() {
           >
             <Users className="w-4 h-4" /> Staff List
           </button>
-          {currentUser?.role === 'CEO' && (
-            <button
-              onClick={() => setActiveTab('role-access')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                activeTab === 'role-access' ? 'bg-erp-primary text-white shadow-md' : 'bg-erp-surface text-erp-text hover:bg-erp-border'
-              }`}
-            >
-              <LayoutGrid className="w-4 h-4" /> Role Page Access
-            </button>
-          )}
           <button
             onClick={() => setActiveTab('batches')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
@@ -496,91 +474,6 @@ export default function UserManagement() {
               <DataTable columns={staffColumns} data={users} onSort={handleSort} onEdit={handleCellEdit} sortBy={sortBy} sortDir={sortDir} />
             </div>
           </>
-        )}
-
-        {/* --- ROLE PAGE ACCESS TAB --- */}
-        {activeTab === 'role-access' && currentUser?.role === 'CEO' && (
-          <Card>
-            <div className="flex items-center gap-3 mb-6">
-              <LayoutGrid className="w-6 h-6 text-erp-primary" />
-              <div>
-                <h2 className="text-xl font-bold text-erp-text">Extra Page Access per Role</h2>
-                <p className="text-sm text-erp-text/60">Grant additional pages to a role on top of their defaults. Each role already has their own pages — use this to give cross-role access (e.g. give Sales/HR access to Reports). No duplicates are shown.</p>
-              </div>
-            </div>
-
-            {/* Role tabs */}
-            <div className="flex gap-2 flex-wrap mb-6">
-              {CONFIGURABLE_ROLES.map(r => (
-                <button
-                  key={r}
-                  onClick={() => setSelectedRole(r)}
-                  className={`px-4 py-2 rounded-xl font-bold text-sm transition-colors ${
-                    selectedRole === r ? 'bg-indigo-600 text-white' : 'bg-erp-surface text-erp-text border border-erp-border hover:border-indigo-400'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-
-            {/* Page chips grid */}
-            <div className="mb-6">
-              <p className="text-xs font-bold text-erp-text/50 uppercase tracking-wider mb-3">Pages for <span className="text-indigo-400">{selectedRole}</span> — click to toggle</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {ALL_PAGES.filter(p => p.section !== 'Shared').map(page => {
-                  const enabled = rolePageKeys.includes(page.key);
-                  return (
-                    <button
-                      key={page.key}
-                      onClick={() => {
-                        setRolePageKeys(prev =>
-                          enabled ? prev.filter(k => k !== page.key) : [...prev, page.key]
-                        );
-                      }}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 font-bold text-xs transition-all ${
-                        enabled
-                          ? 'bg-indigo-600/10 border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                          : 'bg-erp-surface border-erp-border text-erp-text/50 hover:border-erp-primary/50'
-                      }`}
-                    >
-                      {enabled && <Check className="w-3 h-3 flex-shrink-0" />}
-                      <page.icon className="w-3 h-3 flex-shrink-0" />
-                      <span className="truncate">{page.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="flex gap-3 items-center">
-              <Button
-                onClick={() => {
-                  setRolePages(selectedRole, rolePageKeys);
-                  setSaveSuccess(true);
-                  setTimeout(() => setSaveSuccess(false), 3000);
-                }}
-                className="flex items-center gap-2"
-              >
-                <Check className="w-4 h-4" /> Save Access for {selectedRole}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  resetRolePages(selectedRole);
-                  setRolePageKeys(getRolePages(selectedRole));
-                }}
-                className="flex items-center gap-2 text-erp-text/60"
-              >
-                <RotateCcw className="w-4 h-4" /> Reset to Default
-              </Button>
-              {saveSuccess && (
-                <span className="text-green-500 font-bold text-sm flex items-center gap-1">
-                  <Check className="w-4 h-4" /> Saved! Staff must re-login to see changes.
-                </span>
-              )}
-            </div>
-          </Card>
         )}
 
         {/* --- BATCHES TAB --- */}

@@ -166,22 +166,22 @@ function MovinKpiCard({
   iconColor: string;
 }) {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-tight">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200 flex flex-col justify-between">
+      <div className="flex items-center justify-between gap-1 mb-2">
+        <span className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-tight truncate">
           {title}
         </span>
-        <ArrowUpRight className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+        <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
       </div>
-      <div className="flex items-center gap-3.5">
-        <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
-          <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={2.2} />
+      <div className="flex items-center gap-2.5 sm:gap-3.5">
+        <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+          <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} strokeWidth={2.2} />
         </div>
-        <div>
-          <div className="text-2xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">
+        <div className="min-w-0 flex-1">
+          <div className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">
             {value}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
+          <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium mt-1 truncate">
             {sublabel}
           </p>
         </div>
@@ -688,8 +688,8 @@ export default function StudentPortal() {
   const lockedCount = modules.filter(m => (m.progressPct ?? 0) === 0).length;
 
   return (
-    <div className="min-h-screen bg-slate-100/70 dark:bg-slate-950 p-4 md:p-6 lg:p-8" ref={portalContainer}>
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="w-full bg-slate-100/70 dark:bg-slate-950 p-3 sm:p-4 md:p-6 lg:p-8 pb-20 sm:pb-24" ref={portalContainer}>
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {/* Reschedule Notifications Popup */}
         <ReschedulePopup
@@ -703,32 +703,32 @@ export default function StudentPortal() {
         )}
 
         {/* Top Header / Greeting */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">
+              <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400">
                 Student Executive Portal
               </span>
             </div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
               Welcome back, <span className="text-indigo-600 dark:text-indigo-400">{firstName}</span>
             </h1>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm">
+            <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-300 shadow-sm">
               {course.title || course.name || 'Masterclass Program'}
             </span>
           </div>
         </div>
 
-        {/* ══ ROW 1: MOVIN 4 KPI METRIC CARDS ══ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* ══ ROW 1: MOVIN 4 KPI METRIC CARDS (2x2 Compact Grid on Mobile) ══ */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           <MovinKpiCard
             title="Total Modules"
             value={modules.length}
-            sublabel="Active enrolled course"
+            sublabel="Enrolled course"
             icon={BookOpen}
             iconBg="bg-indigo-50 dark:bg-indigo-950/50"
             iconColor="text-indigo-600 dark:text-indigo-400"
@@ -736,7 +736,7 @@ export default function StudentPortal() {
           <MovinKpiCard
             title="Classes Completed"
             value={completedClasses}
-            sublabel={`out of ${totalClasses} total classes`}
+            sublabel={`out of ${totalClasses}`}
             icon={CheckCircle2}
             iconBg="bg-emerald-50 dark:bg-emerald-950/50"
             iconColor="text-emerald-600 dark:text-emerald-400"
@@ -744,7 +744,7 @@ export default function StudentPortal() {
           <MovinKpiCard
             title="Attendance Rate"
             value="98%"
-            sublabel="On-time live attendance"
+            sublabel="Live attendance"
             icon={Calendar}
             iconBg="bg-blue-50 dark:bg-blue-950/50"
             iconColor="text-blue-600 dark:text-blue-400"
@@ -752,28 +752,19 @@ export default function StudentPortal() {
           <MovinKpiCard
             title="Overall Progress"
             value={`${overallPct}%`}
-            sublabel="Program completion rate"
+            sublabel="Program completion"
             icon={TrendingUp}
             iconBg="bg-violet-50 dark:bg-violet-950/50"
             iconColor="text-violet-600 dark:text-violet-400"
           />
         </div>
 
-        {/* ══ ROW 2: ACTIVITY BREAKDOWN & WEEKLY PERFORMANCE CHART ══ */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ActivityBreakdownCard
-            completedClasses={completedClasses}
-            totalClasses={totalClasses}
-            inProgressCount={inProgressCount}
-            lockedCount={lockedCount}
-            totalModules={modules.length}
-          />
-          <ActivityChartCard />
-        </div>
+        {/* ══ ROW 2: CURRICULUM MODULES DATA VIEW (Prominently Visible on Mobile) ══ */}
+        <ModulesDataSection modules={modules} />
 
         {/* ══ ROW 3: UPCOMING CLASS & ACADEMIC GUIDANCE ══ */}
         {upcomingClass && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2">
               <UpcomingClassCard cls={upcomingClass} />
             </div>
@@ -791,8 +782,17 @@ export default function StudentPortal() {
           </div>
         )}
 
-        {/* ══ ROW 4: CURRICULUM MODULES DATA VIEW ══ */}
-        <ModulesDataSection modules={modules} />
+        {/* ══ ROW 4: ACTIVITY BREAKDOWN & WEEKLY PERFORMANCE CHART ══ */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <ActivityBreakdownCard
+            completedClasses={completedClasses}
+            totalClasses={totalClasses}
+            inProgressCount={inProgressCount}
+            lockedCount={lockedCount}
+            totalModules={modules.length}
+          />
+          <ActivityChartCard />
+        </div>
 
       </div>
     </div>

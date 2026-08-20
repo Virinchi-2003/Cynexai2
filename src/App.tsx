@@ -59,7 +59,6 @@ import ClassFlow from './pages/student/ClassFlow';
 import ModuleMap from './pages/student/ModuleMap';
 import MockInterview from './pages/student/MockInterview';
 import AttendancePage from './pages/student/AttendancePage';
-import Leaderboard from './pages/student/Leaderboard';
 import StudentLayout from './components/layout/StudentLayout';
 import EnrollPage from './pages/EnrollPage';
 
@@ -298,7 +297,7 @@ function App() {
         <Route path="/student/class-flow" element={<StudentLayoutWrapper><ClassFlow /></StudentLayoutWrapper>} />
         <Route path="/student/interview" element={<StudentLayoutWrapper><MockInterview /></StudentLayoutWrapper>} />
         <Route path="/student/attendance" element={<StudentLayoutWrapper><AttendancePage /></StudentLayoutWrapper>} />
-        <Route path="/student/leaderboard" element={<StudentLayoutWrapper><Leaderboard /></StudentLayoutWrapper>} />
+        <Route path="/student/leaderboard" element={<Navigate to="/student" replace />} />
         <Route path="/student/career" element={<StudentLayoutWrapper><CareerCenter /></StudentLayoutWrapper>} />
         <Route path="/student/referrals" element={<StudentLayoutWrapper><ReferralCenter /></StudentLayoutWrapper>} />
       </Routes>
