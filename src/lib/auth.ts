@@ -1,7 +1,9 @@
 import { decryptPassword } from './crypto';
 import { getUserByEmail } from './api/auth';
+import { invalidateQueryCache } from './queryCache';
 
 export type Role = 'Admin' | 'Manager' | 'Sales/HR' | 'Teacher' | 'Student' | 'CEO' | 'DM';
+export type AccessLevel = 'none' | 'view' | 'full';
 
 export interface User {
   id: string;
@@ -9,6 +11,7 @@ export interface User {
   email: string;
   role: Role;
   salary?: number;
+  permissions_json?: string;
 }
 
 // Simple local storage key for session
@@ -39,10 +42,61 @@ export const getCurrentUser = (): User | null => {
   }
 };
 
+export const updateCurrentUserSession = (updatedFields: Partial<User>) => {
+  const current = getCurrentUser();
+  if (current) {
+    const updated = { ...current, ...updatedFields };
+    cachedUserRaw = JSON.stringify(updated);
+    cachedUserObj = updated;
+    localStorage.setItem(SESSION_KEY, cachedUserRaw);
+  }
+};
+
+export function getUserPermissions(user: User | null): Record<string, AccessLevel> {
+  const defaults: Record<string, AccessLevel> = {
+    dashboard: 'full', users: 'full', students: 'full', courses: 'full',
+    timetable: 'full', classes: 'full', finance: 'full', leaves: 'full', settings: 'full'
+  };
+  if (!user) return defaults;
+  if (user.role === 'CEO') return defaults;
+  if (user.permissions_json) {
+    try {
+      const parsed = JSON.parse(user.permissions_json);
+      const res = { ...defaults };
+      for (const k of Object.keys(parsed)) {
+        if (typeof parsed[k] === 'boolean') {
+          res[k] = parsed[k] ? 'full' : 'none';
+        } else if (typeof parsed[k] === 'string') {
+          res[k] = parsed[k] as AccessLevel;
+        }
+      }
+      return res;
+    } catch {
+      return defaults;
+    }
+  }
+  return defaults;
+}
+
+export function getModuleAccess(user: User | null, moduleId: string): AccessLevel {
+  if (!user) return 'none';
+  if (user.role === 'CEO') return 'full';
+  const perms = getUserPermissions(user);
+  return perms[moduleId] || 'full';
+}
+
+export function hasModuleAccess(user: User | null, moduleId: string, requiredLevel: 'view' | 'full' = 'view'): boolean {
+  const access = getModuleAccess(user, moduleId);
+  if (access === 'none') return false;
+  if (requiredLevel === 'full' && access !== 'full') return false;
+  return true;
+}
+
 export const logout = () => {
   cachedUserRaw = null;
   cachedUserObj = null;
   localStorage.removeItem(SESSION_KEY);
+  invalidateQueryCache();
   window.location.href = '/login';
 };
 
@@ -69,7 +123,8 @@ export const login = async (email: string, password: string): Promise<User | nul
           name: row.name as string,
           email: row.email as string,
           role: row.role as Role,
-          salary: Number(row.salary) || 0
+          salary: Number(row.salary) || 0,
+          permissions_json: (row.permissions_json as string) || undefined
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(user));
         return user;

@@ -1,12 +1,53 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap, TrendingUp } from 'lucide-react';
-import { getCurrentUser, logout } from '../../lib/auth';
+import { getCurrentUser, logout, getModuleAccess } from '../../lib/auth';
 import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { ALL_PAGES } from '../../lib/pageRegistry';
 import { getRolePages } from '../../lib/api/rolePageAccess';
+
+const ROUTE_MODULE_MAP: Record<string, string> = {
+  '/manager': 'dashboard',
+  '/teacher': 'dashboard',
+  '/sales/dashboard': 'dashboard',
+  '/dm/dashboard': 'dashboard',
+  '/manager/users': 'users',
+  '/ceo/users': 'users',
+  '/manager/students': 'students',
+  '/manager/student-progress': 'students',
+  '/ceo/students': 'students',
+  '/ceo/student-progress': 'students',
+  '/manager/courses': 'courses',
+  '/teacher/cms': 'courses',
+  '/sales/pitch': 'courses',
+  '/ceo/courses': 'courses',
+  '/manager/timetable': 'timetable',
+  '/teacher/timetable': 'timetable',
+  '/ceo/timetable': 'timetable',
+  '/teacher/live': 'classes',
+  '/teacher/attendance': 'classes',
+  '/sales/history': 'finance',
+  '/manager/reports': 'finance',
+  '/ceo/history': 'finance',
+  '/ceo/reports': 'finance',
+  '/ceo/sales-dashboard': 'finance',
+  '/manager/tasks': 'leaves',
+  '/teacher/tasks': 'leaves',
+  '/dm/planner': 'leaves',
+  '/dm/tasks': 'leaves',
+  '/sales/tasks': 'leaves',
+  '/sales/pipeline': 'leaves',
+  '/ceo/tasks': 'leaves',
+  '/manager/student-settings': 'settings',
+  '/manager/gamification': 'settings',
+  '/teacher/settings': 'settings',
+  '/ceo/ai-settings': 'settings',
+  '/ceo/gamification': 'settings',
+  '/ceo/student-settings': 'settings',
+  '/ceo/settings': 'settings'
+};
 
 type NavItem = { to: string, icon: any, label: string, section: string };
 
@@ -127,6 +168,16 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   const existingRoutes = new Set(allNavItems.map(i => i.to));
   const dedupedExtras = extraNavItems.filter(e => !existingRoutes.has(e.to));
   allNavItems = [...allNavItems, ...dedupedExtras];
+
+  // Apply Advanced Access Control permission filtering for non-CEO users
+  if (user.role !== 'CEO' && user.permissions_json) {
+    allNavItems = allNavItems.filter(item => {
+      const moduleId = ROUTE_MODULE_MAP[item.to];
+      if (!moduleId) return true;
+      const access = getModuleAccess(user, moduleId);
+      return access !== 'none';
+    });
+  }
 
   let portalName = "CynexAI CRM";
   if (accessLevels.includes('CEO')) portalName = "CEO Portal";

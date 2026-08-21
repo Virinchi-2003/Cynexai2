@@ -1,4 +1,5 @@
 import { client } from '../turso';
+import { cachedQuery, invalidateQueryCache } from '../queryCache';
 
 export interface Session {
   id: string;
@@ -40,21 +41,23 @@ async function executeWithRetry(query: string, args: any[] = [], retries = MAX_R
 }
 
 export async function getTimetables(): Promise<Session[]> {
-  try {
-    const res = await executeWithRetry("SELECT * FROM timetable_slots");
-    return res.rows.map((r: any) => ({
-      id: r.id as string,
-      day: r.day_of_week as string,
-      startTime: r.start_time as string,
-      endTime: r.end_time as string,
-      module: r.batch_id as string,
-      teacher: r.teacher_id as string,
-      room: r.timing as string
-    }));
-  } catch (e) {
-    console.error("Failed to fetch timetables", e);
-    return [];
-  }
+  return cachedQuery('timetables_all', 60000, async () => {
+    try {
+      const res = await executeWithRetry("SELECT * FROM timetable_slots");
+      return res.rows.map((r: any) => ({
+        id: r.id as string,
+        day: r.day_of_week as string,
+        startTime: r.start_time as string,
+        endTime: r.end_time as string,
+        module: r.batch_id as string,
+        teacher: r.teacher_id as string,
+        room: r.timing as string
+      }));
+    } catch (e) {
+      console.error("Failed to fetch timetables", e);
+      return [];
+    }
+  });
 }
 
 export async function saveTimetable(session: Partial<Session>): Promise<void> {
@@ -71,6 +74,8 @@ export async function saveTimetable(session: Partial<Session>): Promise<void> {
         [sessId, session.module, session.teacher, session.room, session.day, session.startTime, session.endTime]
       );
     }
+    invalidateQueryCache('timetables');
+    invalidateQueryCache('teacher_check');
   } catch (e) {
     console.error("Failed to save timetable", e);
     throw e;
@@ -80,6 +85,8 @@ export async function saveTimetable(session: Partial<Session>): Promise<void> {
 export async function deleteTimetable(id: string): Promise<void> {
   try {
     await executeWithRetry("DELETE FROM timetable_slots WHERE id = ?", [id]);
+    invalidateQueryCache('timetables');
+    invalidateQueryCache('teacher_check');
   } catch (e) {
     console.error("Failed to delete timetable", e);
     throw e;

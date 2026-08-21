@@ -4,8 +4,8 @@ import { getCurrentUser } from '../../lib/auth';
 import { client } from '../../lib/turso';
 import {
   Home, ClipboardCheck, Mic2, Gift, Briefcase,
-  Flame, Coins, Shield, GraduationCap, LogOut, Moon, Sun,
-  Menu, X, ChevronRight, Bell, CheckCircle2,
+  GraduationCap, LogOut, Moon, Sun,
+  Menu, X, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import { useTheme } from '../../lib/ThemeContext';
 

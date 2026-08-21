@@ -6,7 +6,7 @@ import {
   Phone, Mail, Download, FileSpreadsheet,
   Upload, UserPlus
 } from 'lucide-react';
-import { getCurrentUser } from '../../../lib/auth';
+import { getCurrentUser, getModuleAccess } from '../../../lib/auth';
 import { client, dbConnectionFailed } from '../../../lib/turso';
 import { decryptPassword } from '../../../lib/crypto';
 import { Button } from '../../../components/ui/erp/Button';
@@ -37,6 +37,7 @@ function Badge({ color, children }: { color: string; children: React.ReactNode }
 
 export default function StudentsPage() {
   const me = getCurrentUser();
+  const isReadOnly = me ? getModuleAccess(me, 'students') === 'view' : false;
 
   const [activeTab, setActiveTab] = useState<'students' | 'pending'>('students');
 
@@ -60,6 +61,7 @@ export default function StudentsPage() {
   const [adjustModal, setAdjustModal] = useState<{ student: StudentStat; field: 'coins' | 'streak' | 'badges' } | null>(null);
   const [adjustDelta, setAdjustDelta] = useState(0);
   const [adjustReason, setAdjustReason] = useState('');
+  const [adjustSaving, setAdjustSaving] = useState(false);
 
   // Add Student Modal
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
@@ -75,6 +77,7 @@ export default function StudentsPage() {
   const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvPreview, setCsvPreview] = useState<any[]>([]);
   const [csvImporting, setCsvImporting] = useState(false);
+  const [csvResult, setCsvResult] = useState<any>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
 
   // Approvals
@@ -484,13 +487,21 @@ export default function StudentsPage() {
             <Button variant="ghost" className="text-indigo-400" onClick={downloadSampleCsv}>
               <Download className="w-4 h-4 mr-2" /> Sample CSV
             </Button>
-            <Button variant="secondary" onClick={() => setShowCsvModal(true)}>
-              <FileSpreadsheet className="w-4 h-4 mr-2" /> Import CSV
-            </Button>
-            <Button onClick={() => { setEditStudentId(null); setName(''); setEmail(''); setPassword(''); setStuPhone(''); setStuCourse(''); setStuBatch(''); setStatus('Active'); setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate(''); setIsStudentModalOpen(true); }}>
-              <UserPlus className="w-4 h-4 mr-2" /> Add Student
-            </Button>
-
+            {!isReadOnly && (
+              <>
+                <Button variant="secondary" onClick={() => setShowCsvModal(true)}>
+                  <FileSpreadsheet className="w-4 h-4 mr-2" /> Import CSV
+                </Button>
+                <Button onClick={() => { setEditStudentId(null); setName(''); setEmail(''); setPassword(''); setStuPhone(''); setStuCourse(''); setStuBatch(''); setStatus('Active'); setDob(''); setAddress(''); setGender(''); setBloodGroup(''); setFeesTotal(''); setFeesPaid(''); setJoiningDate(''); setIsStudentModalOpen(true); }}>
+                  <UserPlus className="w-4 h-4 mr-2" /> Add Student
+                </Button>
+              </>
+            )}
+            {isReadOnly && (
+              <span className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold flex items-center">
+                View Only Access
+              </span>
+            )}
           </div>
         </div>
 
@@ -672,8 +683,8 @@ export default function StudentsPage() {
               <button onClick={() => setAdjustDelta(d => d + 1)} className="w-10 h-10 rounded-xl border border-erp-border text-green-400 font-black">+</button>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => { setAdjustModal(null); setAdjustDelta(0); }} className="flex-1 px-4 py-2 border rounded-xl">Cancel</button>
-              <button onClick={handleAdjust} className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-xl">Apply</button>
+              <button onClick={() => { setAdjustModal(null); setAdjustDelta(0); }} className="flex-1 px-4 py-2 border rounded-xl" disabled={adjustSaving}>Cancel</button>
+              <button onClick={handleAdjust} disabled={adjustSaving} className="flex-1 px-4 py-2 bg-indigo-500 text-white rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">{adjustSaving && <Loader2 className="w-4 h-4 animate-spin" />}Apply</button>
             </div>
           </div>
         </div>
@@ -689,13 +700,13 @@ export default function StudentsPage() {
                 <div>
                   <h3 className="text-sm font-black text-erp-text mb-3 uppercase tracking-wider text-erp-text/50">Basic Info</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="text-xs font-bold mb-1 block">Name *</label><input className={inputCls} value={name} onChange={e=>setName(e.target.value)} /></div>
-                    <div><label className="text-xs font-bold mb-1 block">Email *</label><input className={inputCls} value={email} onChange={e=>setEmail(e.target.value)} disabled={!!editStudentId} /></div>
-                    <div><label className="text-xs font-bold mb-1 block">Password</label><input className={inputCls} value={password} onChange={e=>setPassword(e.target.value)} placeholder={editStudentId ? "Leave blank to keep" : "cynex123"} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Full Name *</label><input className={inputCls} value={name} onChange={e=>setName(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Portal Login Email *</label><input className={inputCls} value={email} onChange={e=>setEmail(e.target.value)} disabled={!!editStudentId} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Password *</label><input className={inputCls} value={password} onChange={e=>setPassword(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Phone</label><input className={inputCls} value={stuPhone} onChange={e=>setStuPhone(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">DOB</label><input type="date" className={inputCls} value={dob} onChange={e=>setDob(e.target.value)} /></div>
-                    <div><label className="text-xs font-bold mb-1 block">Gender</label><select className={inputCls} value={gender} onChange={e=>setGender(e.target.value)}><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
-                    <div><label className="text-xs font-bold mb-1 block">Blood Group</label><input className={inputCls} value={bloodGroup} onChange={e=>setBloodGroup(e.target.value)} /></div>
+                    <div><label className="text-xs font-bold mb-1 block">Gender</label><select className={inputCls} value={gender} onChange={e=>setGender(e.target.value)}><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
+                    <div><label className="text-xs font-bold mb-1 block">Blood Group</label><input className={inputCls} value={bloodGroup} onChange={e=>setBloodGroup(e.target.value)} placeholder="e.g. O+" /></div>
                     <div><label className="text-xs font-bold mb-1 block">Emergency Contact</label><input className={inputCls} value={emergencyContact} onChange={e=>setEmergencyContact(e.target.value)} /></div>
                     <div className="col-span-2"><label className="text-xs font-bold mb-1 block">Address</label><input className={inputCls} value={address} onChange={e=>setAddress(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Father's Name</label><input className={inputCls} value={fatherName} onChange={e=>setFatherName(e.target.value)} /></div>
@@ -808,9 +819,17 @@ export default function StudentsPage() {
       {showCsvModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-3xl shadow-2xl p-5">
-             <div className="flex justify-between mb-4"><h2 className="text-xl font-bold">Import CSV</h2><button onClick={() => setShowCsvModal(false)}><X /></button></div>
+             <div className="flex justify-between mb-4"><h2 className="text-xl font-bold">Import CSV</h2><button onClick={() => { setShowCsvModal(false); setCsvResult(null); setCsvPreview([]); }}><X /></button></div>
              <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={e => e.target.files?.[0] && handleCsvFile(e.target.files[0])} />
              
+             {csvResult ? (
+                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4 text-emerald-400 text-sm">
+                  <p className="font-bold">Import Summary:</p>
+                  <p>Success: {csvResult.imported ?? csvResult.successCount ?? csvResult.length ?? 'Done'}</p>
+                  {csvResult.failed > 0 && <p className="text-red-400">Failed: {csvResult.failed}</p>}
+                </div>
+             ) : null}
+
              {csvPreview.length === 0 ? (
                 <button onClick={() => csvInputRef.current?.click()} className="w-full border-2 border-dashed border-erp-border rounded-xl p-8 text-center hover:border-indigo-500">
                   <Upload className="w-8 h-8 mx-auto mb-2" />
@@ -821,7 +840,7 @@ export default function StudentsPage() {
              )}
 
              <div className="mt-4 flex justify-end gap-2">
-               <Button variant="ghost" onClick={() => setCsvPreview([])}>Clear</Button>
+               <Button variant="ghost" onClick={() => { setCsvPreview([]); setCsvResult(null); }}>Clear</Button>
                <Button disabled={csvPreview.length===0 || csvImporting} onClick={handleCsvImport}>{csvImporting ? 'Importing...' : 'Import'}</Button>
              </div>
           </div>

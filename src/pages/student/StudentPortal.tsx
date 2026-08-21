@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen,
-  Zap,
-  Trophy,
   Calendar,
   ChevronRight,
   Bell,
@@ -19,8 +17,6 @@ import {
   X,
   AlarmClock,
   ArrowUpRight,
-  Filter,
-  GraduationCap,
 } from 'lucide-react';
 import { getCurrentUser } from '../../lib/auth';
 import {

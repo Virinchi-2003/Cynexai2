@@ -21,29 +21,7 @@ interface ClassItem {
   description?: string | null;
 }
 
-interface ModuleData {
-  id: string;
-  title: string;
-  description: string | null;
-}
-
 type NodeState = 'completed' | 'current' | 'locked';
-
-function getNodeState(cls: ClassItem, completedSet: Set<string>, currentId: string | null): NodeState {
-  if (completedSet.has(cls.id)) return 'completed';
-  if (cls.id === currentId) return 'current';
-  return 'locked';
-}
-
-// Classify node type for icon and style
-function getNodeKind(cls: ClassItem): 'video' | 'live' | 'quiz' | 'code' | 'lesson' {
-  const t = (cls.type || '').toLowerCase();
-  if (t === 'live') return 'live';
-  if (t === 'quiz' || t === 'qa' || t === 'q&a') return 'quiz';
-  if (t === 'code' || t === 'exercise' || t === 'coding') return 'code';
-  if (cls.youtube_video_id) return 'video';
-  return 'lesson';
-}
 
 function formatDate(date: string | null, startTime: string | null): string | null {
   if (!date) return null;
@@ -236,94 +214,6 @@ interface VirtualNode {
   classItem: ClassItem;
 }
 
-// ─── Single Node ──────────────────────────────────────────────────────────────
-
-function MapNode({
-  node, state, index, totalNodes, onClick
-}: {
-  node: VirtualNode;
-  state: NodeState;
-  index: number;
-  totalNodes: number;
-  onClick: () => void;
-}) {
-
-  // Map stepType to kind config
-  let kind: keyof typeof KIND_CONFIG = 'video';
-  if (node.stepType === 'qa') kind = 'quiz';
-  if (node.stepType === 'coding') kind = 'code';
-  
-  const cfg = KIND_CONFIG[kind];
-
-  const sizes = {
-    completed: 'w-16 h-16 md:w-20 md:h-20',
-    current:   'w-20 h-20 md:w-24 md:h-24',
-    locked:    'w-14 h-14 md:w-16 md:h-16',
-  };
-
-  return (
-    <div className="flex flex-col items-center">
-      {/* Node button */}
-      <div className="relative flex flex-col items-center">
-        <button
-          onClick={onClick}
-          disabled={state === 'locked'}
-          className={`
-            ${sizes[state]} rounded-full flex items-center justify-center
-            transition-all duration-300 relative select-none
-            ${state !== 'locked' ? 'cursor-pointer hover:scale-110 active:scale-95' : 'cursor-default opacity-50'}
-            ${state === 'completed' ? 'candy-btn-green' : state === 'current' ? 'candy-btn border-4' : 'bg-slate-300 border-4 border-slate-400 dark:bg-zinc-700 dark:border-zinc-800'}
-          `}
-        >
-          {/* Pulsing ring for current */}
-          {state === 'current' && (
-            <span
-              className="absolute -inset-2 rounded-full animate-ping opacity-30 border-4 border-[#ff71ce]"
-            />
-          )}
-
-          {/* Star badge for completed */}
-          {state === 'completed' && (
-            <span className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center text-xs shadow-lg">
-              ⭐
-            </span>
-          )}
-
-          {/* Icon */}
-          <span
-            className="relative z-10"
-            style={{ color: state === 'locked' ? '#555' : 'white' }}
-          >
-            {state === 'completed'
-              ? <NodeIcons.check size={state === 'current' ? 28 : 22} />
-              : state === 'locked'
-              ? <NodeIcons.lock size={18} />
-              : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, {
-                  size: state === 'current' ? 28 : 22
-                })
-            }
-          </span>
-        </button>
-
-        {/* Label below node */}
-        <div className="mt-2 text-center max-w-[110px] candy-panel !rounded-xl !p-2 !border-2">
-          <p
-            className="text-[10px] font-black uppercase tracking-wide mb-0.5"
-            style={{ color: state === 'locked' ? '#555' : cfg.labelColor }}
-          >
-            {cfg.label}
-          </p>
-          <p
-            className="text-[11px] font-bold leading-tight line-clamp-2 text-slate-800 dark:text-slate-200"
-          >
-            {node.title}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function ModuleMap() {
@@ -335,7 +225,6 @@ export default function ModuleMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<VirtualNode | null>(null);
-  const currentNodeRef = useRef<HTMLDivElement>(null);
   const mapContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

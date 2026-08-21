@@ -1,4 +1,5 @@
 import { client, isTursoConfigured } from '../turso';
+import { cachedQuery } from '../queryCache';
 
 export type PendingApproval = {
   id: string;
@@ -436,14 +437,17 @@ export const updateLeaveStatus = async (leaveId: string, status: string) => {
 };
 
 export const checkTeacherAssignment = async (userId: string): Promise<boolean> => {
-  if (isTursoConfigured && client) {
-    try {
-      const res = await executeWithRetry("SELECT count(*) as count FROM timetable_slots WHERE teacher_id = ?", [userId]);
-      const count = Number(res.rows[0]?.count || 0);
-      return count > 0;
-    } catch (e) {
-      console.error(e);
+  if (!userId) return false;
+  return cachedQuery(`teacher_check_${userId}`, 300000, async () => {
+    if (isTursoConfigured && client) {
+      try {
+        const res = await executeWithRetry("SELECT count(*) as count FROM timetable_slots WHERE teacher_id = ?", [userId]);
+        const count = Number(res.rows[0]?.count || 0);
+        return count > 0;
+      } catch (e) {
+        console.error(e);
+      }
     }
-  }
-  return false;
+    return false;
+  });
 };

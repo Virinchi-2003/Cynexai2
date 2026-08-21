@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Settings, Bell, Briefcase, FileText, ToggleLeft, ToggleRight,
-  Plus, Trash2, Save, Check, Loader2, Upload, ExternalLink,
+  Plus, Trash2, Check, Loader2, Upload, ExternalLink,
   Eye, EyeOff
 } from 'lucide-react';
 import {

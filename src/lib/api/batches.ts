@@ -1,4 +1,5 @@
 import { client, isTursoConfigured } from '../turso';
+import { cachedQuery, invalidateQueryCache } from '../queryCache';
 
 export interface BatchItem {
   id: string;
@@ -89,69 +90,71 @@ export async function ensureBatchesTable() {
 export async function getAllBatches(): Promise<BatchItem[]> {
   if (!isTursoConfigured || !client) return [];
 
-  await ensureBatchesTable();
+  return cachedQuery('batches_all', 60000, async () => {
+    await ensureBatchesTable();
 
-  try {
-    const res = await executeWithRetry(`
-      SELECT 
-        b.id,
-        b.name,
-        b.course_id,
-        b.primary_teacher_id,
-        b.start_date,
-        b.timing,
-        b.schedule_pattern,
-        b.max_students,
-        b.current_enrolled,
-        b.status,
-        b.created_at,
-        u.name as primary_teacher_name,
-        c.title as course_name
-      FROM batches b
-      LEFT JOIN users u ON b.primary_teacher_id = u.id OR b.primary_teacher_id = u.email
-      LEFT JOIN courses c ON b.course_id = c.id OR b.course_id = c.title
-      ORDER BY b.created_at DESC
-    `);
+    try {
+      const res = await executeWithRetry(`
+        SELECT 
+          b.id,
+          b.name,
+          b.course_id,
+          b.primary_teacher_id,
+          b.start_date,
+          b.timing,
+          b.schedule_pattern,
+          b.max_students,
+          b.current_enrolled,
+          b.status,
+          b.created_at,
+          u.name as primary_teacher_name,
+          c.title as course_name
+        FROM batches b
+        LEFT JOIN users u ON b.primary_teacher_id = u.id OR b.primary_teacher_id = u.email
+        LEFT JOIN courses c ON b.course_id = c.id OR b.course_id = c.title
+        ORDER BY b.created_at DESC
+      `);
 
-    // Fetch live student counts grouped by batch
-    const studentCountRes = await executeWithRetry(`
-      SELECT batch_number, COUNT(*) as cnt 
-      FROM students 
-      WHERE batch_number IS NOT NULL AND batch_number != '' 
-      GROUP BY batch_number
-    `).catch(() => ({ rows: [] }));
+      // Fetch live student counts grouped by batch
+      const studentCountRes = await executeWithRetry(`
+        SELECT batch_number, COUNT(*) as cnt 
+        FROM students 
+        WHERE batch_number IS NOT NULL AND batch_number != '' 
+        GROUP BY batch_number
+      `).catch(() => ({ rows: [] }));
 
-    const countMap = new Map<string, number>();
-    studentCountRes.rows.forEach((r: any) => {
-      if (r.batch_number) {
-        countMap.set(String(r.batch_number).trim().toLowerCase(), Number(r.cnt));
-      }
-    });
+      const countMap = new Map<string, number>();
+      studentCountRes.rows.forEach((r: any) => {
+        if (r.batch_number) {
+          countMap.set(String(r.batch_number).trim().toLowerCase(), Number(r.cnt));
+        }
+      });
 
-    return res.rows.map((row: any) => {
-      const batchName = String(row.name || '').trim();
-      const liveEnrolled = countMap.get(batchName.toLowerCase()) ?? (Number(row.current_enrolled) || 0);
+      return res.rows.map((row: any) => {
+        const batchName = String(row.name || '').trim();
+        const liveEnrolled = countMap.get(batchName.toLowerCase()) ?? (Number(row.current_enrolled) || 0);
 
-      return {
-        id: String(row.id),
-        name: batchName || 'Unnamed Batch',
-        course_id: row.course_id ? String(row.course_id) : undefined,
-        course_name: row.course_name ? String(row.course_name) : (row.course_id ? String(row.course_id) : undefined),
-        primary_teacher_id: row.primary_teacher_id ? String(row.primary_teacher_id) : undefined,
-        primary_teacher_name: row.primary_teacher_name ? String(row.primary_teacher_name) : undefined,
-        start_date: row.start_date ? String(row.start_date) : undefined,
-        timing: row.timing ? String(row.timing) : (row.schedule_pattern ? String(row.schedule_pattern) : undefined),
-        schedule_pattern: row.schedule_pattern ? String(row.schedule_pattern) : undefined,
-        max_students: Number(row.max_students) || 30,
-        current_enrolled: liveEnrolled,
-        status: (row.status as any) || 'Active',
-        created_at: row.created_at ? String(row.created_at) : undefined,
-      };
-    });
-  } catch (e) {
-    console.error("Error fetching batches:", e);
-    return [];
-  }
+        return {
+          id: String(row.id),
+          name: batchName || 'Unnamed Batch',
+          course_id: row.course_id ? String(row.course_id) : undefined,
+          course_name: row.course_name ? String(row.course_name) : (row.course_id ? String(row.course_id) : undefined),
+          primary_teacher_id: row.primary_teacher_id ? String(row.primary_teacher_id) : undefined,
+          primary_teacher_name: row.primary_teacher_name ? String(row.primary_teacher_name) : undefined,
+          start_date: row.start_date ? String(row.start_date) : undefined,
+          timing: row.timing ? String(row.timing) : (row.schedule_pattern ? String(row.schedule_pattern) : undefined),
+          schedule_pattern: row.schedule_pattern ? String(row.schedule_pattern) : undefined,
+          max_students: Number(row.max_students) || 30,
+          current_enrolled: liveEnrolled,
+          status: (row.status as any) || 'Active',
+          created_at: row.created_at ? String(row.created_at) : undefined,
+        };
+      });
+    } catch (error) {
+      console.error('Failed to fetch batches:', error);
+      return [];
+    }
+  });
 }
 
 /**
@@ -184,6 +187,7 @@ export async function createBatch(data: Partial<BatchItem>): Promise<BatchItem |
       now
     ]);
 
+    invalidateQueryCache('batches_all');
     return {
       id,
       name: data.name || 'New Batch',
@@ -232,6 +236,7 @@ export async function updateBatch(id: string, data: Partial<BatchItem>): Promise
       data.status || 'Active',
       id
     ]);
+    invalidateQueryCache('batches_all');
     return true;
   } catch (e) {
     console.error("Error updating batch:", e);
@@ -247,6 +252,7 @@ export async function deleteBatch(id: string): Promise<boolean> {
 
   try {
     await executeWithRetry("DELETE FROM batches WHERE id = ?", [id]);
+    invalidateQueryCache('batches_all');
     return true;
   } catch (e) {
     console.error("Error deleting batch:", e);

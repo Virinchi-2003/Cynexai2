@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Card } from '../../../components/ui/erp/Card';
 import { Button } from '../../../components/ui/erp/Button';
 import { 
-  Users, Key, Plus, X, Edit, Search, Trash2, Shield, Check,
+  Users, Key, Plus, X, Edit, Search, Trash2, Shield,
   Layers, Calendar, Clock, BookOpen, GraduationCap, UserCheck, UserPlus, UserMinus,
   CheckSquare, Square
 } from 'lucide-react';
 import { decryptPassword } from '../../../lib/crypto';
-import { getCurrentUser } from '../../../lib/auth';
+import { getCurrentUser, updateCurrentUserSession } from '../../../lib/auth';
 import { getUsers, saveUser, deleteUser, patchUser, getFilterOptions } from '../../../lib/api/users';
 import { getErpModules, assignModulesToInstructor } from '../../../lib/api/manager';
 import { 
@@ -78,8 +77,8 @@ export default function UserManagement() {
   
   type AccessLevel = 'none' | 'view' | 'full';
   const DEFAULT_PERMISSIONS: Record<string, AccessLevel> = {
-    dashboard: 'none', users: 'none', students: 'none', courses: 'none',
-    timetable: 'none', classes: 'none', finance: 'none', leaves: 'none', settings: 'none'
+    dashboard: 'full', users: 'none', students: 'full', courses: 'full',
+    timetable: 'full', classes: 'full', finance: 'full', leaves: 'full', settings: 'full'
   };
   const MODULES_LIST = [
     { id: 'dashboard', label: 'Dashboard' },
@@ -186,8 +185,13 @@ export default function UserManagement() {
     if (!name.trim() || !email.trim()) { alert('Name and email are required.'); return; }
     try {
       const newUserId = editUser?.id || `usr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-      await saveUser({ id: newUserId, name, email, phone, password, role, status, salary: Number(salary) || 0, permissions_json: JSON.stringify(permissions) });
+      const permissionsStr = JSON.stringify(permissions);
+      await saveUser({ id: newUserId, name, email, phone, password, role, status, salary: Number(salary) || 0, permissions_json: permissionsStr });
       
+      if (currentUser && (currentUser.id === newUserId || currentUser.email.toLowerCase() === email.toLowerCase())) {
+        updateCurrentUserSession({ permissions_json: permissionsStr });
+      }
+
       if (role === 'Teacher') {
         await assignModulesToInstructor(newUserId, assignedModules);
         const updatedMods = await getErpModules();

@@ -8,6 +8,7 @@ export interface UserRow {
   role: string;
   password_encrypted: string;
   salary: number;
+  permissions_json?: string;
 }
 
 const FALLBACK_USERS: UserRow[] = [
@@ -34,7 +35,7 @@ export const getUserByEmail = async (email: string) => {
   if (isTursoConfigured && client && !dbConnectionFailed) {
     try {
       const result = await client.execute({
-        sql: "SELECT id, name, email, role, password_encrypted, salary FROM users WHERE LOWER(email) = ?",
+        sql: "SELECT id, name, email, role, password_encrypted, salary, permissions_json FROM users WHERE LOWER(email) = ?",
         args: [normEmail]
       });
       

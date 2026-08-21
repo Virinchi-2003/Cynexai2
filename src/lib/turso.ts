@@ -481,8 +481,15 @@ export const syncSamplePosts = async () => {
   return { success: 0, failed: 0 };
 };
 
-export const initTursoDB = async () => {
-  if (isTursoConfigured && client && !dbConnectionFailed) {
+let dbInitPromise: Promise<boolean> | null = null;
+let isDbInitialized = false;
+
+export const initTursoDB = async (): Promise<boolean> => {
+  if (isDbInitialized) return true;
+  if (dbInitPromise) return dbInitPromise;
+
+  dbInitPromise = (async () => {
+    if (!isTursoConfigured || !client || dbConnectionFailed) return false;
     try {
       // Health check to verify read capability
       await client.execute('SELECT 1');
@@ -1414,20 +1421,21 @@ export const initTursoDB = async () => {
         )
       `);
 
-      // Sync sample posts securely and robustly
-      await syncSamplePosts();
+      // Sync sample posts securely and robustly      await syncSamplePosts();
 
+      isDbInitialized = true;
       console.log("Turso Cloud Database Connected and Initialized");
       return true;
     } catch (e) {
       console.error("Turso Cloud Initialization Failed (Using Local Fallback):", e);
       dbConnectionFailed = true;
       return false;
+    } finally {
+      dbInitPromise = null;
     }
-  } else {
-    console.log("Using LocalStorage fallback for blog posts and mock tests");
-    return true;
-  }
+  })();
+
+  return dbInitPromise;
 };
 
 export const seedCRMData = async () => {

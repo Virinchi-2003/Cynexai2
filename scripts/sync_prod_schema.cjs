@@ -29,9 +29,23 @@ async function sync() {
   const existingTables = tablesRes.rows.map(r => r.name);
 
   for (const [tableName, columns] of Object.entries(idealSchema)) {
+    if (tableName.startsWith('sqlite_')) continue;
     if (!existingTables.includes(tableName)) {
-      console.log(`Table ${tableName} does not exist. (Creating missing tables is not fully automated by this script yet)`);
-      // We could add CREATE TABLE logic here if needed.
+      console.log(`Table ${tableName} does not exist. Creating table...`);
+      const colDefs = columns.map(col => {
+        let def = `${col.name} ${col.type || 'TEXT'}`;
+        if (col.name === 'id') def += ' PRIMARY KEY';
+        if (col.dflt_value !== null && col.dflt_value !== undefined) {
+          def += ` DEFAULT ${col.dflt_value}`;
+        }
+        return def;
+      }).join(', ');
+      try {
+        await client.execute(`CREATE TABLE IF NOT EXISTS ${tableName} (${colDefs})`);
+        console.log(`Successfully created table ${tableName}`);
+      } catch (e) {
+        console.error(`Failed to create table ${tableName}:`, e.message);
+      }
       continue;
     }
 
