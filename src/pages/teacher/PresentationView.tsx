@@ -628,20 +628,20 @@ export default function PresentationView() {
       {/* Minimal control bar */}
       <div className="flex items-center justify-between px-6 py-3 bg-slate-900/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-30">
         <div className="flex gap-2 items-center">
-          <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}>
+          <button onClick={() => updateMode('slides')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'slides' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <BookOpen className="w-4 h-4" /> Slides
           </button>
-          <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}>
+          <button onClick={() => updateMode('code')} className={`px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-colors ${mode === 'code' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}>
             <Code className="w-4 h-4" /> Code & Draw
           </button>
 
-          <div className="w-px h-5 bg-white dark:bg-black/10 mx-1" />
+          <div className="w-px h-5 bg-white/10 mx-1" />
 
           {/* Cast / Screen Share */}
           <button
             onClick={handleCast}
             title={isCasting ? 'Stop casting' : 'Cast / Share this screen'}
-            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white dark:bg-black/5'}`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-bold flex items-center gap-2 transition-all ${isCasting ? 'bg-green-600 text-white animate-pulse' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
           >
             {isCasting ? <><MonitorPlay className="w-4 h-4" /> Casting…</> : <><Cast className="w-4 h-4" /> Cast</>}
           </button>
@@ -649,11 +649,11 @@ export default function PresentationView() {
 
         {mode === 'slides' && slides.length > 0 && (
           <div className="flex items-center gap-3">
-            <button onClick={() => changeSlide(slide - 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center transition-colors">
+            <button onClick={() => changeSlide(slide - 1)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
               <ArrowLeft className="w-4 h-4" />
             </button>
             <span className="text-sm font-bold text-slate-300 w-20 text-center font-mono">{slide} / {slides.length}</span>
-            <button onClick={() => changeSlide(slide + 1)} className="w-8 h-8 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center transition-colors">
+            <button onClick={() => changeSlide(slide + 1)} className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors">
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>

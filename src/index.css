@@ -130,14 +130,61 @@ body {
   border-color: var(--erp-border) !important;
 }
 
-/* Light mode safeguard: Ensure elements inside dark banners maintain white text */
+/* Dark Container Safeguard: Ensure elements inside dark containers keep crisp white/light text in light mode */
 .bg-slate-900 .text-white,
 .bg-slate-950 .text-white,
 .bg-slate-800 .text-white,
+.bg-\[\#111118\] .text-white,
+.bg-\[\#0B0B1A\] .text-white,
+.bg-\[\#1a1a28\] .text-white,
+.bg-\[\#0e1117\] .text-white,
 [class*="from-slate-900"] .text-white,
 [class*="from-indigo-900"] .text-white,
-.bg-black .text-white {
+.bg-black .text-white,
+[data-dark-container="true"] .text-white {
   color: #ffffff !important;
+}
+
+.bg-slate-900 .text-slate-100,
+.bg-slate-950 .text-slate-100,
+.bg-slate-800 .text-slate-100,
+.bg-\[\#111118\] .text-slate-100,
+.bg-\[\#0B0B1A\] .text-slate-100,
+.bg-\[\#1a1a28\] .text-slate-100,
+.bg-\[\#0e1117\] .text-slate-100,
+[data-dark-container="true"] .text-slate-100 {
+  color: #f1f5f9 !important;
+}
+
+.bg-slate-900 .text-slate-300,
+.bg-slate-950 .text-slate-300,
+.bg-slate-800 .text-slate-300,
+.bg-\[\#111118\] .text-slate-300,
+.bg-\[\#0B0B1A\] .text-slate-300,
+.bg-\[\#1a1a28\] .text-slate-300,
+.bg-\[\#0e1117\] .text-slate-300,
+[data-dark-container="true"] .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+
+.bg-slate-900 .text-slate-400,
+.bg-slate-950 .text-slate-400,
+.bg-slate-800 .text-slate-400,
+.bg-\[\#111118\] .text-slate-400,
+.bg-\[\#0B0B1A\] .text-slate-400,
+.bg-\[\#1a1a28\] .text-slate-400,
+.bg-\[\#0e1117\] .text-slate-400,
+[data-dark-container="true"] .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Light mode text readability fixes for general containers */
+[data-theme="light"] .text-slate-100:not([class*="bg-slate-"]):not([class*="bg-black"]):not([class*="bg-\[\#"]) {
+  color: #09090b;
+}
+
+[data-theme="light"] .text-slate-200:not([class*="bg-slate-"]):not([class*="bg-black"]):not([class*="bg-\[\#"]) {
+  color: #18181b;
 }
 
 /* Input & form overrides for dark mode */
@@ -153,7 +200,9 @@ body {
 [data-theme="light"] input:not([type="range"]):not([type="checkbox"]):not([type="radio"]),
 [data-theme="light"] textarea,
 [data-theme="light"] select {
+  background-color: #ffffff;
   color: #09090B !important;
+  border-color: #E4E4E7;
 }
 
 /* Placeholder color */

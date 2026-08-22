@@ -249,7 +249,7 @@ export default function LiveStreamDashboard() {
                   </h3>
                   <div className="space-y-2">
                     {attendance.map((a, i) => (
-                      <div key={i} className="flex items-center justify-between bg-white dark:bg-black/5 rounded-lg px-3 py-2">
+                      <div key={i} className="flex items-center justify-between bg-white/10 rounded-lg px-3 py-2 border border-white/5">
                         <div className="flex flex-col">
                           <span className="text-xs font-bold text-white">{a.student_name}</span>
                           <span className="text-[10px] text-slate-400">{a.batch_name} • {a.course_name}</span>
@@ -273,10 +273,10 @@ export default function LiveStreamDashboard() {
                     <button key={t} onClick={() => setSlideTheme(t)}
                       className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all capitalize ${
                         slideTheme === t
-                          ? t === 'retro' ? 'bg-[#f4a7a1] text-black border-black'
-                            : t === 'minimal' ? 'bg-white dark:bg-black text-black border-black'
-                            : 'bg-slate-800 text-white border-indigo-500'
-                          : 'bg-white dark:bg-black/5 text-slate-400 border-white/10 hover:border-white/30'
+                          ? t === 'retro' ? 'bg-[#f4a7a1] text-black border-black shadow'
+                            : t === 'minimal' ? 'bg-white text-slate-900 border-white shadow'
+                            : 'bg-indigo-600 text-white border-indigo-500 shadow'
+                          : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20 hover:text-white'
                       }`}>{t}
                     </button>
                   ))}
@@ -284,11 +284,11 @@ export default function LiveStreamDashboard() {
               </div>
 
               {!hasAI ? (
-                <Button onClick={handleGenerateMaterials} disabled={generating} className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 font-bold">
+                <Button onClick={handleGenerateMaterials} disabled={generating} className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 font-bold text-white">
                   {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />} Generate AI Slides
                 </Button>
               ) : !isLive ? (
-                <div className="flex flex-col gap-3 p-3 bg-white dark:bg-black/5 border border-white/10 rounded-xl">
+                <div className="flex flex-col gap-3 p-3 bg-white/5 border border-white/10 rounded-xl">
                   <div className="text-xs font-bold text-slate-400 uppercase tracking-widest text-center">Step 1: Start Recording</div>
                   <Button 
                     onClick={() => {
@@ -301,14 +301,14 @@ export default function LiveStreamDashboard() {
                   </Button>
                   
                   {youtubeOpened && (
-                    <label className="flex items-center gap-2 cursor-pointer p-2 bg-black/30 rounded-lg border border-white/5 hover:border-white/20 transition-colors">
+                    <label className="flex items-center gap-2 cursor-pointer p-2 bg-black/40 rounded-lg border border-white/10 hover:border-white/30 transition-colors">
                       <input 
                         type="checkbox" 
                         checked={youtubeConfirmed} 
                         onChange={(e) => setYoutubeConfirmed(e.target.checked)}
                         className="w-4 h-4 accent-red-500 rounded cursor-pointer"
                       />
-                      <span className="text-xs text-slate-300 font-semibold select-none leading-tight">I confirm the YouTube stream is running</span>
+                      <span className="text-xs text-slate-200 font-semibold select-none leading-tight">I confirm the YouTube stream is running</span>
                     </label>
                   )}
 
@@ -342,7 +342,7 @@ export default function LiveStreamDashboard() {
         {/* Topbar */}
         <div className="shrink-0 flex items-center justify-between px-4 py-2 bg-[#111118]/80 backdrop-blur border-b border-white/5 absolute top-0 left-0 right-0 z-50">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 rounded-lg transition-colors">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
               {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
             <div className="flex gap-1 bg-black/30 rounded-lg p-1">
@@ -358,16 +358,16 @@ export default function LiveStreamDashboard() {
           <div className="flex items-center gap-3">
             {panelMode === 'slides' && hasAI && (
               <div className="flex items-center gap-2">
-                <button onClick={() => changeSlide(Math.max(1, slide - 1))} className="w-7 h-7 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center">
+                <button onClick={() => changeSlide(Math.max(1, slide - 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
                   <ArrowLeft className="w-3.5 h-3.5" />
                 </button>
                 <span className="text-xs font-bold text-slate-300 w-16 text-center">{slide} / {slides.length}</span>
-                <button onClick={() => changeSlide(Math.min(slides.length, slide + 1))} className="w-7 h-7 rounded-lg bg-white dark:bg-black/10 hover:bg-white dark:bg-black/20 flex items-center justify-center">
+                <button onClick={() => changeSlide(Math.min(slides.length, slide + 1))} className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center">
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             )}
-            <button onClick={openPopOut} className="flex items-center gap-1.5 text-xs font-bold bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={openPopOut} className="flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg transition-colors">
               <Maximize2 className="w-3.5 h-3.5" /> Pop-Out Screen
             </button>
           </div>
@@ -517,7 +517,7 @@ export default function LiveStreamDashboard() {
               ) : (
                 <ul className="space-y-4">
                   {currentKeypoints.map((kp: string, i: number) => (
-                    <li key={i} className="flex items-start gap-3 text-sm text-slate-100 leading-relaxed bg-white/10 dark:bg-black/20 p-4 rounded-xl border border-white/10">
+                    <li key={i} className="flex items-start gap-3 text-sm text-slate-100 leading-relaxed bg-white/10 p-4 rounded-xl border border-white/10">
                       <ArrowRight className="w-4 h-4 text-green-400 mt-1 shrink-0" />
                       <ReactMarkdown>{kp}</ReactMarkdown>
                     </li>
@@ -537,15 +537,15 @@ export default function LiveStreamDashboard() {
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">Class Title</label>
-                <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500" />
+                <input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500" />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">Description / Topics</label>
-                <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500 resize-none" placeholder="What will you teach today?" />
+                <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white mt-1 outline-none focus:border-indigo-500 resize-none" placeholder="What will you teach today?" />
               </div>
             </div>
             <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
+              <button onClick={() => setShowEditModal(false)} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
               <button onClick={handleUpdateDetails} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-sm">Save & Update</button>
             </div>
           </div>
@@ -558,9 +558,9 @@ export default function LiveStreamDashboard() {
           <div className="bg-[#1a1a28] border border-white/10 rounded-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><CheckCircle className="w-6 h-6 text-green-400"/> End Class</h2>
             <p className="text-slate-400 text-sm mb-4">Paste YouTube recording URL so students can replay. AI summary will be auto-generated.</p>
-            <input type="url" placeholder="https://youtube.com/watch?v=..." value={ytUrl} onChange={e => setYtUrl(e.target.value)} className="w-full bg-white dark:bg-black/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 outline-none focus:border-indigo-500" />
+            <input type="url" placeholder="https://youtube.com/watch?v=..." value={ytUrl} onChange={e => setYtUrl(e.target.value)} className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white text-sm mb-4 outline-none focus:border-indigo-500" />
             <div className="flex gap-3">
-              <button onClick={() => setShowEndModal(false)} className="flex-1 bg-white dark:bg-black/5 hover:bg-white dark:bg-black/10 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
+              <button onClick={() => setShowEndModal(false)} className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl text-sm">Cancel</button>
               <button onClick={handleEndClass} disabled={ending} className="flex-1 bg-green-600 hover:bg-green-500 flex items-center justify-center gap-2 text-white font-bold py-3 rounded-xl text-sm">
                 {ending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'End & Generate Summary'}
               </button>

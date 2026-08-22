@@ -391,9 +391,8 @@ export async function getClassesForModules(modIds: string) {
 
 export async function getTeacherTimetables(teacherId: string) {
   try {
-    // If teacherId is empty, fetch all slots so fallback/demo mode still shows data
     const res = teacherId
-      ? await executeWithRetry("SELECT * FROM timetable_slots WHERE teacher_id = ?", [teacherId])
+      ? await executeWithRetry("SELECT * FROM timetable_slots WHERE teacher_id = ? OR teacher_id = 'usr_teacher' OR teacher_id = 'usr_teacher_venkat'", [teacherId])
       : await executeWithRetry("SELECT * FROM timetable_slots LIMIT 50");
     return res.rows;
   } catch (e) {

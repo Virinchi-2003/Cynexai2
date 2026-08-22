@@ -11,21 +11,37 @@ Context about the student: ${context}
 Start the interview by introducing yourself briefly, acknowledging their background, and asking them to introduce themselves.
 Keep it under 3 sentences. Be welcoming but professional.`;
 
-    const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${groqKey}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'llama-3.1-8b-instant',
-            messages: [{ role: 'system', content: systemPrompt }]
-        })
-    });
+    let aiText = '';
+    const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
+    let lastLlmErr = '';
 
-    if (!llmRes.ok) throw new Error(`Groq LLM error: ${await llmRes.text()}`);
-    const llmData = await llmRes.json();
-    const aiText = llmData.choices?.[0]?.message?.content || 'Hello, welcome to your mock interview. Let us begin.';
+    for (const model of candidateModels) {
+        try {
+            const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${groqKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model,
+                    messages: [{ role: 'system', content: systemPrompt }]
+                })
+            });
+
+            if (llmRes.ok) {
+                const llmData = await llmRes.json();
+                aiText = llmData.choices?.[0]?.message?.content || '';
+                if (aiText) break;
+            } else {
+                lastLlmErr = await llmRes.text();
+            }
+        } catch (e) {
+            lastLlmErr = e.message || String(e);
+        }
+    }
+
+    if (!aiText) aiText = 'Hello, welcome to your mock interview. Let us begin.';
 
     // 2. Deepgram TTS
     const ttsRes = await fetch(`https://api.deepgram.com/v1/speak?model=${voiceId}`, {
@@ -101,21 +117,36 @@ If this is turn 10 or higher, conclude the interview by thanking the candidate f
                 { role: 'user', content: studentText }
             ];
 
-            const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${groqKey}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    model: 'llama-3.1-8b-instant',
-                    messages: messages
-                })
-            });
+            const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
+            let lastLlmErr = '';
 
-            if (!llmRes.ok) throw new Error(`Groq LLM error: ${await llmRes.text()}`);
-            const llmData = await llmRes.json();
-            aiText = llmData.choices?.[0]?.message?.content || 'Thank you for your answer.';
+            for (const model of candidateModels) {
+                try {
+                    const llmRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${groqKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model,
+                            messages: messages
+                        })
+                    });
+
+                    if (llmRes.ok) {
+                        const llmData = await llmRes.json();
+                        aiText = llmData.choices?.[0]?.message?.content || '';
+                        if (aiText) break;
+                    } else {
+                        lastLlmErr = await llmRes.text();
+                    }
+                } catch (e) {
+                    lastLlmErr = e.message || String(e);
+                }
+            }
+
+            if (!aiText) aiText = 'Thank you for your answer.';
 
             // 3. Deepgram Aura (TTS)
             const ttsRes = await fetch(`https://api.deepgram.com/v1/speak?model=${voiceId}`, {

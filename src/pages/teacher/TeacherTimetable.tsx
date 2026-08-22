@@ -56,7 +56,7 @@ const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnlin
 export default function TeacherTimetable() {
   const navigate = useNavigate();
   const user = getCurrentUser();
-  const resolvedUserId = user?.id === 'usr_teacher' ? 'usr_venkatesh' : (user?.id || '');
+  const resolvedUserId = user?.id || 'usr_teacher';
 
   const [schedule, setSchedule] = useState<GlobalTimetableSlot[]>([]);
   const [batches, setBatches] = useState<any[]>([]);

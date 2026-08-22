@@ -667,8 +667,12 @@ async function textToSpeech(text: string, voice: string): Promise<string> {
   return `data:audio/mp3;base64,${base64}`;
 }
 
+function getGroqApiKey(): string {
+  return import.meta.env.VITE_GROQ_VOICE_API || import.meta.env.VITE_GROQ_API_KEY || (typeof localStorage !== 'undefined' ? localStorage.getItem('cynex_groq_key') : '') || '';
+}
+
 async function speechToText(audioBlob: Blob): Promise<string> {
-  const GROQ_API_KEY = import.meta.env.VITE_GROQ_VOICE_API;
+  const GROQ_API_KEY = getGroqApiKey();
   if (!GROQ_API_KEY) throw new Error("Missing Groq API Key");
 
   const formData = new FormData();
@@ -689,29 +693,41 @@ async function speechToText(audioBlob: Blob): Promise<string> {
 }
 
 async function generateChatResponse(messages: any[]): Promise<string> {
-  const GROQ_API_KEY = import.meta.env.VITE_GROQ_VOICE_API;
+  const GROQ_API_KEY = getGroqApiKey();
   if (!GROQ_API_KEY) throw new Error("Missing Groq API Key");
 
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${GROQ_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
-      messages,
-      temperature: 0.85,
-      max_tokens: 200
-    })
-  });
+  const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile'];
+  let lastErr = '';
 
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Groq LLM failed: ${response.status} ${errText}`);
+  for (const model of candidateModels) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          temperature: 0.85,
+          max_tokens: 300
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        if (content) return content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+      } else {
+        lastErr = await response.text();
+      }
+    } catch (err: any) {
+      lastErr = err.message || String(err);
+    }
   }
-  const data = await response.json();
-  return data.choices[0]?.message?.content || 'Hmm, I see. Could you tell me a bit more about that?';
+
+  throw new Error(`Groq LLM failed: ${lastErr}`);
 }
 
 // Indian HR interview structured question bank (used to guide the AI)
