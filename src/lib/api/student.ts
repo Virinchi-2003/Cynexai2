@@ -542,11 +542,30 @@ export interface MockInterviewInput {
   coinsAwarded: number;
 }
 
-export async function saveMockInterview(input: MockInterviewInput): Promise<void> {
+export interface InterviewEvaluation {
+
+  overallScore: number;
+  technicalScore: number;
+  communicationScore: number;
+  confidenceScore: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  recommendations: string;
+}
+
+export async function saveMockInterview(input: {
+  studentId: string;
+  transcript: string;
+  feedback: string;
+  score: number;
+  coinsAwarded: number;
+  evaluation?: InterviewEvaluation;
+  targetRole?: string;
+}): Promise<void> {
   const id = `mi_${Date.now()}`;
-  
-  // Resolve real student ID
   let realStudentId = input.studentId;
+
   try {
     const res = await executeWithRetry(
       "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
@@ -555,10 +574,26 @@ export async function saveMockInterview(input: MockInterviewInput): Promise<void
     if (res.rows.length > 0) realStudentId = res.rows[0].id as string;
   } catch (e) {}
 
+  // Store JSON feedback payload if available, else store string feedback
+  const feedbackData = input.evaluation 
+    ? JSON.stringify({ ...input.evaluation, targetRole: input.targetRole || 'General' }) 
+    : input.feedback;
+
   await executeWithRetry(
     `INSERT INTO mock_interviews (id, student_id, transcript, feedback, score, coins_awarded, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, input.studentId, input.transcript, input.feedback, input.score, input.coinsAwarded, new Date().toISOString()]
+    [id, realStudentId, input.transcript, feedbackData, input.score, input.coinsAwarded, new Date().toISOString()]
   );
+
+  // Also write to user ID if different so both lookups work seamlessly
+  if (realStudentId !== input.studentId) {
+    try {
+      await executeWithRetry(
+        `INSERT INTO mock_interviews (id, student_id, transcript, feedback, score, coins_awarded, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [`${id}_usr`, input.studentId, input.transcript, feedbackData, input.score, input.coinsAwarded, new Date().toISOString()]
+      );
+    } catch (e) {}
+  }
+
   if (input.coinsAwarded > 0) {
     await executeWithRetry(
       `UPDATE students SET coins = coins + ? WHERE id = ?`,
@@ -570,8 +605,8 @@ export async function saveMockInterview(input: MockInterviewInput): Promise<void
 export async function getLastMockInterview(studentId: string): Promise<MockInterview | null> {
   try {
     const res = await executeWithRetry(
-      `SELECT * FROM mock_interviews WHERE student_id = ? ORDER BY created_at DESC LIMIT 1`,
-      [studentId]
+      `SELECT * FROM mock_interviews WHERE student_id = ? OR student_id = (SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?)) ORDER BY created_at DESC LIMIT 1`,
+      [studentId, studentId, studentId]
     );
     return res.rows.length > 0 ? (res.rows[0] as MockInterview) : null;
   } catch (e) {
@@ -579,6 +614,26 @@ export async function getLastMockInterview(studentId: string): Promise<MockInter
     return null;
   }
 }
+
+export async function getMockInterviewHistory(studentId: string): Promise<MockInterview[]> {
+  try {
+    const res = await executeWithRetry(
+      `SELECT * FROM mock_interviews WHERE student_id = ? OR student_id = (SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?)) ORDER BY created_at DESC LIMIT 20`,
+      [studentId, studentId, studentId]
+    );
+    // Deduplicate by ID
+    const unique = new Map<string, MockInterview>();
+    for (const row of res.rows as MockInterview[]) {
+      const baseId = row.id.replace('_usr', '');
+      if (!unique.has(baseId)) unique.set(baseId, row);
+    }
+    return Array.from(unique.values());
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}
+
 
 // ─── Announcements ────────────────────────────────────────────────────────────
 
@@ -620,8 +675,8 @@ export async function getJobListings(): Promise<JobListing[]> {
 // ─── Voice Interview ──────────────────────────────────────────────────────────
 
 
-async function textToSpeech(text: string, voice: string): Promise<string> {
-  const DEEPGRAM_API_KEY = import.meta.env.VITE_DEEPGRAM_VOICE_API;
+export async function textToSpeech(text: string, voice: string): Promise<string> {
+  const DEEPGRAM_API_KEY = import.meta.env.VITE_DEEPGRAM_VOICE_API || 'ff72b49c11e1a77dd5b34bb7cb7ac8b40d3b97be';
   if (!DEEPGRAM_API_KEY) throw new Error("Missing Deepgram API Key");
 
   // Map voice IDs to Deepgram Aura models
@@ -692,6 +747,17 @@ async function speechToText(audioBlob: Blob): Promise<string> {
   return data.text || '';
 }
 
+export function cleanAiTextResponse(text: string): string {
+  if (!text) return '';
+  let cleaned = text;
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
+  cleaned = cleaned.replace(/\*\*.*?\*\*/g, '');
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+  cleaned = cleaned.replace(/^[\s\-*#]+/gm, '');
+  return cleaned.trim();
+}
+
 async function generateChatResponse(messages: any[]): Promise<string> {
   const GROQ_API_KEY = getGroqApiKey();
   if (!GROQ_API_KEY) throw new Error("Missing Groq API Key");
@@ -718,7 +784,7 @@ async function generateChatResponse(messages: any[]): Promise<string> {
       if (response.ok) {
         const data = await response.json();
         const content = data.choices[0]?.message?.content;
-        if (content) return content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+        if (content) return cleanAiTextResponse(content);
       } else {
         lastErr = await response.text();
       }
@@ -751,6 +817,7 @@ Interview structure you MUST follow (guide naturally through each phase):
 9. Any questions for us? (turn 10+)
 
 Rules:
+- CRITICAL: Output ONLY plain text for spoken audio. Do NOT include <think> tags, markdown, bold text, or internal notes.
 - Speak ONLY as the HR interviewer - do NOT act as both interviewer and candidate
 - Ask ONLY ONE question per response
 - Keep each response to 2-3 sentences maximum — clear and natural for spoken audio
@@ -808,6 +875,79 @@ export async function processVoiceInterview(audioBlob: Blob, chatHistory: any[],
   }
 }
 
+export async function processTextInterviewResponse(userText: string, chatHistory: any[], context: string, turnCount: number, voice: string = 'aura-asteria-en', targetRole: string = 'General'): Promise<{ aiResponse: string, audioBase64: string }> {
+  try {
+    const messages = [
+      { 
+        role: 'system', 
+        content: `${INDIAN_HR_SYSTEM_PROMPT}\n\n[CANDIDATE COURSE PROGRESS: ${context}]\n[TARGET JOB ROLE: ${targetRole}]\n[Current turn: ${turnCount}. Guide the interview naturally based on the turn number and conversation flow. Make sure to ask questions highly relevant to a ${targetRole} position, evaluating their technical or domain knowledge.]` 
+      },
+      ...chatHistory.map(h => ({ 
+        role: h.role === 'user' ? 'user' : 'assistant', 
+        content: h.content 
+      })),
+      { role: 'user', content: userText }
+    ];
+    const aiResponse = await generateChatResponse(messages);
+    const audioBase64 = await textToSpeech(aiResponse, voice);
+    return { aiResponse, audioBase64 };
+  } catch (e) {
+    console.error("Process text interview error:", e);
+    throw e;
+  }
+}
+
+export async function evaluateMockInterview(chatHistory: any[], targetRole: string = 'General'): Promise<InterviewEvaluation> {
+  const formattedTranscript = chatHistory.map(m => `${m.role.toUpperCase()}: ${m.content}`).join("\n");
+  const prompt = `You are a expert HR Evaluation Director analyzing a candidate's mock interview performance for a "${targetRole}" position.
+
+Transcript:
+${formattedTranscript}
+
+Perform a rigorous evaluation and output ONLY a JSON object matching this exact structure:
+{
+  "overallScore": 8.5,
+  "technicalScore": 8.0,
+  "communicationScore": 9.0,
+  "confidenceScore": 8.5,
+  "summary": "Brief summary of how the candidate performed overall.",
+  "strengths": ["Strength 1", "Strength 2", "Strength 3"],
+  "improvements": ["Area for improvement 1", "Area for improvement 2"],
+  "recommendations": "Concrete recommendations for their next interview."
+}
+Scores MUST be numbers between 1.0 and 10.0 based on actual answers given in transcript. If transcript is very short, adjust scores accordingly. Do not add markdown backticks around the JSON.`;
+
+  try {
+    const rawResponse = await generateChatResponse([{ role: 'user', content: prompt }]);
+    const cleanJson = rawResponse.replace(/```json|```/gi, '').trim();
+    const parsed = JSON.parse(cleanJson);
+    return {
+      overallScore: Number(parsed.overallScore) || 7.0,
+      technicalScore: Number(parsed.technicalScore) || 7.0,
+      communicationScore: Number(parsed.communicationScore) || 7.5,
+      confidenceScore: Number(parsed.confidenceScore) || 7.0,
+      summary: parsed.summary || "Completed mock interview session.",
+      strengths: Array.isArray(parsed.strengths) ? parsed.strengths : ["Good communication style", "Clear responses"],
+      improvements: Array.isArray(parsed.improvements) ? parsed.improvements : ["Elaborate more on technical project examples"],
+      recommendations: parsed.recommendations || "Practice explaining past projects with concrete metrics and technical depth."
+    };
+  } catch (e) {
+    console.error("Failed to evaluate mock interview with AI, using fallback scores", e);
+    const turnCount = chatHistory.filter(m => m.role === 'user').length;
+    const baseScore = Math.min(Math.max(turnCount * 1.5, 5.0), 9.5);
+    return {
+      overallScore: baseScore,
+      technicalScore: baseScore,
+      communicationScore: Math.min(baseScore + 0.5, 10),
+      confidenceScore: baseScore,
+      summary: `Candidate engaged in a ${turnCount}-turn mock interview for the ${targetRole} position.`,
+      strengths: ["Active participation", "Clear verbal responses"],
+      improvements: ["Provide deeper code or technical implementation details"],
+      recommendations: "Review core module concepts and prepare STAR-method answers."
+    };
+  }
+}
+
 export async function spendCoins(studentId: string, amount: number): Promise<boolean> {
   try {
     const res = await executeWithRetry(
@@ -830,3 +970,4 @@ export async function spendCoins(studentId: string, amount: number): Promise<boo
     return false;
   }
 }
+

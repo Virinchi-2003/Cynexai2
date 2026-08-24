@@ -1,4 +1,6 @@
 async function generateInitialQuestionVoice(context, voiceId, groqKey, deepgramKey, mocks = null) {
+    if (groqKey === undefined) groqKey = process.env.GROQ_VOICE_API || process.env.GROQ_API_KEY;
+    if (deepgramKey === undefined) deepgramKey = process.env.DEEPGRAM_VOICE_API || process.env.VITE_DEEPGRAM_VOICE_API;
     if (!groqKey || !deepgramKey) throw new Error("Missing API keys");
 
     if (mocks) {
@@ -29,9 +31,19 @@ Keep it under 3 sentences. Be welcoming but professional.`;
                 })
             });
 
+function cleanText(text) {
+    if (!text) return '';
+    let cleaned = text;
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
+    cleaned = cleaned.replace(/\*\*.*?\*\*/g, '');
+    return cleaned.trim();
+}
+
             if (llmRes.ok) {
                 const llmData = await llmRes.json();
-                aiText = llmData.choices?.[0]?.message?.content || '';
+                let rawText = llmData.choices?.[0]?.message?.content || '';
+                aiText = cleanText(rawText);
                 if (aiText) break;
             } else {
                 lastLlmErr = await llmRes.text();
@@ -63,6 +75,8 @@ Keep it under 3 sentences. Be welcoming but professional.`;
 }
 
 async function processVoiceTurn(audioBuffer, chatHistoryText, context, turnCount, voiceId, groqKey, deepgramKey, mocks = null) {
+    if (groqKey === undefined) groqKey = process.env.GROQ_VOICE_API || process.env.GROQ_API_KEY;
+    if (deepgramKey === undefined) deepgramKey = process.env.DEEPGRAM_VOICE_API || process.env.VITE_DEEPGRAM_VOICE_API;
     if (!groqKey || !deepgramKey) {
         throw new Error("Missing API keys for voice processing");
     }
@@ -136,7 +150,8 @@ If this is turn 10 or higher, conclude the interview by thanking the candidate f
 
                     if (llmRes.ok) {
                         const llmData = await llmRes.json();
-                        aiText = llmData.choices?.[0]?.message?.content || '';
+                        let rawText = llmData.choices?.[0]?.message?.content || '';
+                        aiText = cleanText(rawText);
                         if (aiText) break;
                     } else {
                         lastLlmErr = await llmRes.text();

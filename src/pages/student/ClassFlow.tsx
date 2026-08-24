@@ -19,7 +19,9 @@ interface Question {
   boilerplate_json?: string;
 }
 
-const REQUIRED_WATCH_SECONDS = 15 * 60; // 15 minutes for live attendance
+import { logOnlineAttendancePing } from '../../lib/api/teacher';
+
+const REQUIRED_WATCH_SECONDS = 5 * 60; // 5 minutes for live attendance as required
 
 export default function ClassFlow() {
   const [searchParams] = useSearchParams();
@@ -50,7 +52,7 @@ export default function ClassFlow() {
   const [watchedSeconds, setWatchedSeconds] = useState(0);
   const REQUIRED_VIDEO_SECONDS = 5 * 60; // 5 min for video completion unlock
 
-  // Live attendance timer (15 min for live classes)
+  // Live attendance timer (5 min for live classes)
   const liveStartRef = useRef<number | null>(null);
   const [liveSeconds, setLiveSeconds] = useState(0);
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -92,8 +94,18 @@ export default function ClassFlow() {
     liveIntervalRef.current = setInterval(() => {
       setLiveSeconds(prev => {
         const next = prev + 1;
+        const currentMins = Math.ceil(next / 60);
+
+        // Ping database every 30 seconds to update live duration minutes
+        if (next % 30 === 0 || next >= REQUIRED_WATCH_SECONDS) {
+          logOnlineAttendancePing(user.id, classId, classData.batch_id || 'default', currentMins).then(res => {
+            if (res.markedPresent && !attendanceMarked) {
+              setAttendanceMarked(true);
+            }
+          });
+        }
+
         if (next >= REQUIRED_WATCH_SECONDS && user && !attendanceMarked) {
-          // Auto-mark attendance
           submitOnlineAttendance(user.id, classId).then(result => {
             if (result.success) {
               setAttendanceMarked(true);
@@ -317,7 +329,7 @@ export default function ClassFlow() {
                   <Wifi className="w-8 h-8 text-red-500 animate-pulse" />
                 </div>
                 <h3 className="font-black text-slate-900 dark:text-white text-lg mb-1">Live Class in Session</h3>
-                <p className="text-slate-600 dark:text-white/60 text-sm mb-4 font-bold">Stay on this page for 15 minutes to mark your attendance automatically.</p>
+                <p className="text-slate-600 dark:text-white/60 text-sm mb-4 font-bold">Stay on this page for 5 minutes to mark your attendance automatically.</p>
                 <a
                   href={classData.meet_link}
                   target="_blank"
@@ -337,7 +349,7 @@ export default function ClassFlow() {
               </div>
             )}
 
-            {/* 15-min attendance timer */}
+            {/* 5-min attendance timer */}
             <div className="p-4 bg-slate-50/70 dark:bg-black/50">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-black text-slate-700 dark:text-white/70 flex items-center gap-1">
@@ -362,7 +374,7 @@ export default function ClassFlow() {
               <p className="text-xs text-slate-600 dark:text-white/60 font-bold mt-2">
                 {attendanceMarked
                   ? '✅ Attendance marked! Great job attending this live class.'
-                  : 'Stay on this page for 15 minutes to automatically mark attendance.'}
+                  : 'Stay on this page for 5 minutes to automatically mark attendance.'}
               </p>
             </div>
           </div>

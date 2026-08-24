@@ -14,6 +14,7 @@ export interface BatchItem {
   max_students?: number;
   current_enrolled?: number;
   status: 'Active' | 'Upcoming' | 'Completed' | 'Paused';
+  mode?: 'Online' | 'Offline' | 'Hybrid';
   created_at?: string;
 }
 
@@ -61,6 +62,7 @@ export async function ensureBatchesTable() {
         max_students INTEGER DEFAULT 30,
         current_enrolled INTEGER DEFAULT 0,
         status TEXT DEFAULT 'Active',
+        mode TEXT DEFAULT 'Hybrid',
         created_at TEXT
       )
     `);
@@ -79,6 +81,7 @@ export async function ensureBatchesTable() {
     await safeAddColumn('max_students', 'INTEGER DEFAULT 30');
     await safeAddColumn('current_enrolled', 'INTEGER DEFAULT 0');
     await safeAddColumn('status', "TEXT DEFAULT 'Active'");
+    await safeAddColumn('mode', "TEXT DEFAULT 'Hybrid'");
   } catch (e) {
     console.error("Error ensuring batches table:", e);
   }
@@ -106,6 +109,7 @@ export async function getAllBatches(): Promise<BatchItem[]> {
           b.max_students,
           b.current_enrolled,
           b.status,
+          b.mode,
           b.created_at,
           u.name as primary_teacher_name,
           c.title as course_name
@@ -147,6 +151,7 @@ export async function getAllBatches(): Promise<BatchItem[]> {
           max_students: Number(row.max_students) || 30,
           current_enrolled: liveEnrolled,
           status: (row.status as any) || 'Active',
+          mode: (row.mode as any) || 'Hybrid',
           created_at: row.created_at ? String(row.created_at) : undefined,
         };
       });
@@ -171,8 +176,8 @@ export async function createBatch(data: Partial<BatchItem>): Promise<BatchItem |
   try {
     await executeWithRetry(`
       INSERT INTO batches (
-        id, name, course_id, primary_teacher_id, start_date, timing, schedule_pattern, max_students, current_enrolled, status, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        id, name, course_id, primary_teacher_id, start_date, timing, schedule_pattern, max_students, current_enrolled, status, mode, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       id,
       data.name || 'New Batch',
@@ -184,6 +189,7 @@ export async function createBatch(data: Partial<BatchItem>): Promise<BatchItem |
       Number(data.max_students) || 30,
       Number(data.current_enrolled) || 0,
       data.status || 'Active',
+      data.mode || 'Hybrid',
       now
     ]);
 
@@ -199,6 +205,7 @@ export async function createBatch(data: Partial<BatchItem>): Promise<BatchItem |
       max_students: Number(data.max_students) || 30,
       current_enrolled: Number(data.current_enrolled) || 0,
       status: (data.status as any) || 'Active',
+      mode: (data.mode as any) || 'Hybrid',
       created_at: now
     };
   } catch (e) {
@@ -223,7 +230,8 @@ export async function updateBatch(id: string, data: Partial<BatchItem>): Promise
         timing = ?,
         schedule_pattern = ?,
         max_students = ?,
-        status = ?
+        status = ?,
+        mode = ?
       WHERE id = ?
     `, [
       data.name,
@@ -234,6 +242,7 @@ export async function updateBatch(id: string, data: Partial<BatchItem>): Promise
       data.schedule_pattern || data.timing || null,
       Number(data.max_students) || 30,
       data.status || 'Active',
+      data.mode || 'Hybrid',
       id
     ]);
     invalidateQueryCache('batches_all');

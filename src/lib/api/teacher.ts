@@ -153,11 +153,42 @@ export async function getAllAvailableClasses(): Promise<any[]> {
   }
 }
 
-export async function logAttendance(studentId: string, classId: string): Promise<void> {
+export async function ensureAttendanceSchema() {
+  if (!client) return;
   try {
+    await executeWithRetry(`
+      CREATE TABLE IF NOT EXISTS attendance_logs (
+        id TEXT PRIMARY KEY,
+        batch_id TEXT,
+        class_id TEXT,
+        student_id TEXT,
+        join_time TEXT,
+        leave_time TEXT,
+        duration_minutes INTEGER DEFAULT 0,
+        attendance_type TEXT DEFAULT 'Manual',
+        status TEXT DEFAULT 'Present'
+      )
+    `);
+    const safeAddColumn = async (col: string, def: string) => {
+      try { await executeWithRetry(`ALTER TABLE attendance_logs ADD COLUMN ${col} ${def}`); } catch (e) {}
+    };
+    await safeAddColumn('class_id', 'TEXT');
+    await safeAddColumn('leave_time', 'TEXT');
+    await safeAddColumn('duration_minutes', 'INTEGER DEFAULT 0');
+    await safeAddColumn('attendance_type', "TEXT DEFAULT 'Manual'");
+    await safeAddColumn('status', "TEXT DEFAULT 'Present'");
+  } catch (e) {
+    console.error("Error ensuring attendance_logs schema", e);
+  }
+}
+
+export async function logAttendance(studentId: string, classId: string, type: string = 'Manual'): Promise<void> {
+  await ensureAttendanceSchema();
+  try {
+    const id = `att_${Date.now()}`;
     await executeWithRetry(
-      "INSERT INTO attendance_logs (id, batch_id, student_id, join_time) VALUES (?, ?, ?, ?)",
-      [`att_${Date.now()}`, classId, studentId, new Date().toISOString()]
+      "INSERT INTO attendance_logs (id, batch_id, class_id, student_id, join_time, duration_minutes, attendance_type, status) VALUES (?, ?, ?, ?, ?, 60, ?, 'Present')",
+      [id, classId, classId, studentId, new Date().toISOString(), type]
     );
   } catch (e) {
     console.error("Failed to log attendance", e);
@@ -165,11 +196,60 @@ export async function logAttendance(studentId: string, classId: string): Promise
   }
 }
 
+export async function logOnlineAttendancePing(studentId: string, classId: string, batchId: string = 'default', durationMinutes: number = 1): Promise<{ markedPresent: boolean; durationMinutes: number }> {
+  await ensureAttendanceSchema();
+  try {
+    const isPresent = durationMinutes >= 5;
+    const statusStr = isPresent ? 'Present' : 'Pending';
+
+    const checkRes = await executeWithRetry(
+      "SELECT id, duration_minutes FROM attendance_logs WHERE student_id = ? AND (batch_id = ? OR class_id = ?) LIMIT 1",
+      [studentId, classId, classId]
+    );
+
+    if (checkRes.rows.length > 0) {
+      const existing = checkRes.rows[0];
+      const maxDuration = Math.max(Number(existing.duration_minutes) || 0, durationMinutes);
+      const newStatus = maxDuration >= 5 ? 'Present' : 'Pending';
+      await executeWithRetry(
+        "UPDATE attendance_logs SET duration_minutes = ?, status = ?, leave_time = ? WHERE id = ?",
+        [maxDuration, newStatus, new Date().toISOString(), existing.id]
+      );
+      return { markedPresent: maxDuration >= 5, durationMinutes: maxDuration };
+    } else {
+      const id = `att_on_${Date.now()}`;
+      await executeWithRetry(
+        "INSERT INTO attendance_logs (id, batch_id, class_id, student_id, join_time, duration_minutes, attendance_type, status) VALUES (?, ?, ?, ?, ?, ?, 'Online', ?)",
+        [id, batchId, classId, studentId, new Date().toISOString(), durationMinutes, statusStr]
+      );
+      return { markedPresent: isPresent, durationMinutes };
+    }
+  } catch (e) {
+    console.error("Failed to log online attendance ping", e);
+    return { markedPresent: durationMinutes >= 5, durationMinutes };
+  }
+}
+
+export async function logQRAttendance(studentId: string, classId: string): Promise<boolean> {
+  await ensureAttendanceSchema();
+  try {
+    const id = `att_qr_${Date.now()}`;
+    await executeWithRetry(
+      "INSERT INTO attendance_logs (id, batch_id, class_id, student_id, join_time, duration_minutes, attendance_type, status) VALUES (?, ?, ?, ?, ?, 60, 'Offline_QR', 'Present')",
+      [id, classId, classId, studentId, new Date().toISOString()]
+    );
+    return true;
+  } catch (e) {
+    console.error("Failed to log QR attendance", e);
+    return false;
+  }
+}
+
 export async function removeAttendance(studentId: string, classId: string): Promise<void> {
   try {
     await executeWithRetry(
-      "DELETE FROM attendance_logs WHERE student_id = ? AND batch_id = ?",
-      [studentId, classId]
+      "DELETE FROM attendance_logs WHERE student_id = ? AND (batch_id = ? OR class_id = ?)",
+      [studentId, classId, classId]
     );
   } catch (e) {
     console.error("Failed to remove attendance", e);
@@ -177,19 +257,29 @@ export async function removeAttendance(studentId: string, classId: string): Prom
   }
 }
 
-export async function getLiveAttendance(classId: string): Promise<any[]> {
+export async function getLiveAttendance(classId: string, batchName?: string): Promise<any[]> {
+  await ensureAttendanceSchema();
   try {
-    const res = await executeWithRetry(`
-      SELECT a.student_id, u.name as student_name, u.email as student_email, b.name as batch_name, c.title as course_name, MAX(a.join_time) as join_time
+    let sql = `
+      SELECT 
+        a.student_id, 
+        COALESCE(u.name, s.name, 'Student') as student_name, 
+        COALESCE(u.email, s.portal_login_email, '') as student_email, 
+        COALESCE(b.name, s.batch_number, 'Global') as batch_name, 
+        MAX(a.join_time) as join_time,
+        MAX(a.duration_minutes) as duration_minutes,
+        MAX(a.attendance_type) as attendance_type,
+        MAX(a.status) as status
       FROM attendance_logs a
-      JOIN users u ON a.student_id = u.id
-      LEFT JOIN students s ON u.id = s.id
-      LEFT JOIN batches b ON s.batch_id = b.id
-      LEFT JOIN courses c ON b.course_id = c.id
-      WHERE a.batch_id = ?
+      LEFT JOIN users u ON a.student_id = u.id OR LOWER(a.student_id) = LOWER(u.email)
+      LEFT JOIN students s ON a.student_id = s.id OR LOWER(a.student_id) = LOWER(s.portal_login_email)
+      LEFT JOIN batches b ON LOWER(TRIM(s.batch_number)) = LOWER(TRIM(b.name))
+      WHERE (a.batch_id = ? OR a.class_id = ? ${batchName ? 'OR LOWER(TRIM(s.batch_number)) = LOWER(TRIM(?))' : ''})
       GROUP BY a.student_id
       ORDER BY MAX(a.join_time) DESC
-    `, [classId]);
+    `;
+    const args = batchName ? [classId, classId, batchName] : [classId, classId];
+    const res = await executeWithRetry(sql, args);
     return res.rows;
   } catch (e) {
     console.error("Failed to get live attendance", e);
