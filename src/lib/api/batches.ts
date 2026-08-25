@@ -444,3 +444,39 @@ export async function removeStudentFromBatch(studentIdentifier: string, batchNam
     throw e;
   }
 }
+
+/**
+ * Fetches basic batch details for dropdown/assignment list.
+ */
+export async function getBatchesForAssignment(): Promise<{ id: string; name: string; course_id?: string }[]> {
+  if (!isTursoConfigured || !client) return [];
+  try {
+    const res = await executeWithRetry(`SELECT id, name, course_id FROM batches ORDER BY created_at DESC`);
+    return res.rows.map((r: any) => ({
+      id: String(r.id),
+      name: String(r.name || 'Unnamed Batch'),
+      course_id: r.course_id ? String(r.course_id) : undefined,
+    }));
+  } catch (e) {
+    console.error("Error fetching batches for assignment:", e);
+    return [];
+  }
+}
+
+/**
+ * Finds a pending task associated with a specific entity by description pattern matching.
+ */
+export async function findPendingTaskForEntity(entityId: string): Promise<string | null> {
+  if (!isTursoConfigured || !client || !entityId) return null;
+  try {
+    const res = await executeWithRetry(
+      `SELECT id FROM tasks WHERE description LIKE '%' || ? || '%' AND status != 'Done' LIMIT 1`,
+      [entityId]
+    );
+    return res.rows.length > 0 ? String(res.rows[0].id) : null;
+  } catch (e) {
+    console.error("Error finding pending task for entity:", e);
+    return null;
+  }
+}
+

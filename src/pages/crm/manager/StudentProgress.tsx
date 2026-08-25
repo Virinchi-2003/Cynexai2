@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { client, dbConnectionFailed } from '../../../lib/turso';
+import { getManagerStudentProgress, updateManagerStudentProgress } from '../../../lib/api/student';
 import { TrendingUp, Users, BookOpen, Award, Edit2, Save, X } from 'lucide-react';
 import studentSeedData from '../../../../students_seed.json';
 
@@ -17,23 +17,10 @@ export default function StudentProgress() {
   const fetchData = async () => {
     setLoading(true);
     let data: any[] = [];
-    if (client && !dbConnectionFailed) {
-      try {
-        const res = await client.execute(`
-          SELECT 
-            sp.*,
-            COALESCE(s.name, (SELECT name FROM users u WHERE u.email = s.portal_login_email)) as student_name,
-            s.portal_login_email as student_email
-          FROM manager_student_progress sp
-          JOIN students s ON sp.student_id = s.id
-          ORDER BY sp.course_progress_percentage DESC
-        `);
-        if (res && res.rows && res.rows.length > 0) {
-          data = res.rows;
-        }
-      } catch (err) {
-        console.error("StudentProgress fetchData DB error:", err);
-      }
+    try {
+      data = await getManagerStudentProgress();
+    } catch (err) {
+      console.error("StudentProgress fetchData DB error:", err);
     }
 
     if (data.length === 0) {
@@ -100,38 +87,9 @@ export default function StudentProgress() {
   };
 
   const handleSave = async (id: string) => {
-    if (!client) return;
     setIsSaving(true);
-    
-    // Auto calculate percentages based on nums/dens
-    const course_perc = editForm.course_progress_den > 0 ? Math.round((editForm.course_progress_num / editForm.course_progress_den) * 100) : 0;
-    const att_perc = editForm.attendance_den > 0 ? Math.round((editForm.attendance_num / editForm.attendance_den) * 100) : 0;
-    const quiz_perc = editForm.quiz_den > 0 ? Math.round((editForm.quiz_num / editForm.quiz_den) * 100) : 0;
-    const int_perc = editForm.interview_den > 0 ? Math.round((editForm.interview_num / editForm.interview_den) * 100) : 0;
-    const cod_perc = editForm.coding_den > 0 ? Math.round((editForm.coding_num / editForm.coding_den) * 100) : 0;
-
     try {
-      await client.execute({
-        sql: `UPDATE manager_student_progress SET 
-          course_progress_num = ?, course_progress_den = ?, course_progress_percentage = ?,
-          attendance_num = ?, attendance_den = ?, attendance_score = ?,
-          quiz_num = ?, quiz_den = ?, quiz_score = ?,
-          interview_num = ?, interview_den = ?, interview_score = ?,
-          coding_num = ?, coding_den = ?, coding_test_score = ?,
-          coins_spent = ?, leaderboard_rank = ?,
-          last_updated = CURRENT_TIMESTAMP
-          WHERE id = ?`,
-
-        args: [
-          Number(editForm.course_progress_num), Number(editForm.course_progress_den), course_perc,
-          Number(editForm.attendance_num), Number(editForm.attendance_den), att_perc,
-          Number(editForm.quiz_num), Number(editForm.quiz_den), quiz_perc,
-          Number(editForm.interview_num), Number(editForm.interview_den), int_perc,
-          Number(editForm.coding_num), Number(editForm.coding_den), cod_perc,
-          Number(editForm.coins_spent), Number(editForm.leaderboard_rank),
-          id
-        ]
-      });
+      await updateManagerStudentProgress(id, editForm);
       await fetchData();
       setEditingId(null);
     } catch (err) {

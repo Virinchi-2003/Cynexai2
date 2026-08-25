@@ -971,3 +971,212 @@ export async function spendCoins(studentId: string, amount: number): Promise<boo
   }
 }
 
+// ─── Manager Student Management API ──────────────────────────────────────────────
+
+export async function getManagerStudentProgress(): Promise<any[]> {
+  try {
+    const res = await executeWithRetry(`
+      SELECT 
+        sp.*,
+        COALESCE(s.name, (SELECT name FROM users u WHERE u.email = s.portal_login_email)) as student_name,
+        s.portal_login_email as student_email
+      FROM manager_student_progress sp
+      JOIN students s ON sp.student_id = s.id
+      ORDER BY sp.course_progress_percentage DESC
+    `);
+    return res && res.rows ? res.rows : [];
+  } catch (err) {
+    console.error("getManagerStudentProgress DB error:", err);
+    return [];
+  }
+}
+
+export async function updateManagerStudentProgress(id: string, editForm: any): Promise<boolean> {
+  const course_perc = editForm.course_progress_den > 0 ? Math.round((editForm.course_progress_num / editForm.course_progress_den) * 100) : 0;
+  const att_perc = editForm.attendance_den > 0 ? Math.round((editForm.attendance_num / editForm.attendance_den) * 100) : 0;
+  const quiz_perc = editForm.quiz_den > 0 ? Math.round((editForm.quiz_num / editForm.quiz_den) * 100) : 0;
+  const int_perc = editForm.interview_den > 0 ? Math.round((editForm.interview_num / editForm.interview_den) * 100) : 0;
+  const cod_perc = editForm.coding_den > 0 ? Math.round((editForm.coding_num / editForm.coding_den) * 100) : 0;
+
+  await executeWithRetry(
+    `UPDATE manager_student_progress SET 
+      course_progress_num = ?, course_progress_den = ?, course_progress_percentage = ?,
+      attendance_num = ?, attendance_den = ?, attendance_score = ?,
+      quiz_num = ?, quiz_den = ?, quiz_score = ?,
+      interview_num = ?, interview_den = ?, interview_score = ?,
+      coding_num = ?, coding_den = ?, coding_test_score = ?,
+      coins_spent = ?, leaderboard_rank = ?,
+      last_updated = CURRENT_TIMESTAMP
+      WHERE id = ?`,
+    [
+      Number(editForm.course_progress_num), Number(editForm.course_progress_den), course_perc,
+      Number(editForm.attendance_num), Number(editForm.attendance_den), att_perc,
+      Number(editForm.quiz_num), Number(editForm.quiz_den), quiz_perc,
+      Number(editForm.interview_num), Number(editForm.interview_den), int_perc,
+      Number(editForm.coding_num), Number(editForm.coding_den), cod_perc,
+      Number(editForm.coins_spent), Number(editForm.leaderboard_rank),
+      id
+    ]
+  );
+  return true;
+}
+
+export async function getStudentModulesAndActivity(studentId: string, courseTitle: string): Promise<{ modules: any[], recentActivity: any[] }> {
+  try {
+    const modRes = await executeWithRetry(
+      `SELECT m.id, m.title,
+        (SELECT COUNT(*) FROM classes c WHERE c.module_id = m.id) as total_classes,
+        (SELECT COUNT(*) FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE c.module_id = m.id AND sp.student_id = ? AND sp.completed = 1) as completed_classes
+      FROM modules m
+      JOIN course_module_mapping cmm ON m.id = cmm.module_id
+      JOIN courses co ON cmm.course_id = co.id
+      WHERE (co.title = ?)
+      ORDER BY cmm.order_index ASC`,
+      [studentId, courseTitle || '']
+    ).catch(() => ({ rows: [] }));
+
+    const actRes = await executeWithRetry(
+      `SELECT sp.created_at, c.title as class_title, m.title as module_title
+      FROM student_progress sp
+      JOIN classes c ON sp.lesson_id = c.id
+      JOIN modules m ON c.module_id = m.id
+      WHERE sp.student_id = ? AND sp.completed = 1
+      ORDER BY sp.created_at DESC LIMIT 10`,
+      [studentId]
+    ).catch(() => ({ rows: [] }));
+
+    return { modules: modRes.rows || [], recentActivity: actRes.rows || [] };
+  } catch (e) {
+    console.error("getStudentModulesAndActivity error:", e);
+    return { modules: [], recentActivity: [] };
+  }
+}
+
+export async function adjustStudentMetrics(studentId: string, field: string, delta: number, reason?: string): Promise<boolean> {
+  if (field === 'badges' && delta > 0) {
+    for (let i = 0; i < delta; i++) {
+      await executeWithRetry(
+        `INSERT INTO badges (id, student_id, name, awarded_at) VALUES (?, ?, ?, ?)`,
+        [`bdg_${Date.now()}_${i}`, studentId, reason || 'Achievement Badge', new Date().toISOString()]
+      );
+    }
+  } else if (field !== 'badges') {
+    await executeWithRetry(
+      `UPDATE students SET ${field} = MAX(0, COALESCE(${field}, 0) + ?) WHERE id = ?`,
+      [delta, studentId]
+    );
+  }
+  return true;
+}
+
+export async function updateStudentModuleProgress(studentId: string, moduleId: string, action: 'add' | 'remove'): Promise<boolean> {
+  if (action === 'add') {
+    const res = await executeWithRetry(
+      `SELECT c.id FROM classes c WHERE c.module_id = ? AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1) ORDER BY c.order_index ASC LIMIT 1`,
+      [moduleId, studentId]
+    );
+    let classId;
+    if (res.rows.length > 0) {
+      classId = res.rows[0].id as string;
+    } else {
+      classId = `cls_dummy_${Date.now()}`;
+      await executeWithRetry(
+        `INSERT INTO classes (id, module_id, title, order_index) VALUES (?, ?, 'Manual Progress Step', 999)`,
+        [classId, moduleId]
+      );
+    }
+    await executeWithRetry(
+      `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
+      [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, studentId, classId, new Date().toISOString()]
+    );
+  } else {
+    const res = await executeWithRetry(
+      `SELECT sp.id FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1 ORDER BY sp.created_at DESC LIMIT 1`,
+      [studentId, moduleId]
+    );
+    if (res.rows.length > 0) {
+      await executeWithRetry(`DELETE FROM student_progress WHERE id = ?`, [res.rows[0].id]);
+    }
+  }
+  return true;
+}
+
+export async function getStudentDetail(studentId: string): Promise<any | null> {
+  const res = await executeWithRetry(`SELECT * FROM students WHERE id = ?`, [studentId]);
+  return res.rows.length > 0 ? res.rows[0] : null;
+}
+
+export async function getManagerStudents(
+  search?: string,
+  courseFilter?: string,
+  batchFilter?: string,
+  statusFilter?: string
+): Promise<any[]> {
+  try {
+    let sql = `
+      SELECT 
+        s.id, COALESCE(s.name, (SELECT name FROM users u WHERE u.email = s.portal_login_email)) as name,
+        s.portal_login_email as email, s.phone, s.course, s.batch_number, s.status, s.joining_date,
+        s.portal_login_email,
+        COALESCE(s.streak, 0) as streak,
+        COALESCE(s.coins, 0) as coins,
+        (SELECT COUNT(*) FROM badges b WHERE b.student_id = s.id) as badges,
+        (SELECT COUNT(*) FROM student_progress sp WHERE sp.student_id = s.id AND sp.completed = 1) as completedClasses
+      FROM students s
+      WHERE (s.approval_status = 'Approved' OR s.approval_status IS NULL)
+    `;
+    const args: any[] = [];
+    if (search) {
+      sql += ` AND (s.name LIKE ? OR s.portal_login_email LIKE ? OR s.phone LIKE ?)`;
+      const q = `%${search}%`;
+      args.push(q, q, q);
+    }
+    if (courseFilter) { sql += ` AND s.course = ?`; args.push(courseFilter); }
+    if (batchFilter) { sql += ` AND s.batch_number = ?`; args.push(batchFilter); }
+    if (statusFilter) { sql += ` AND s.status = ?`; args.push(statusFilter); }
+    sql += ` ORDER BY s.name ASC LIMIT 200`;
+
+    const res = await executeWithRetry(sql, args);
+    return res && res.rows ? res.rows : [];
+  } catch (e) {
+    console.error("getManagerStudents error:", e);
+    return [];
+  }
+}
+
+export async function getUserPasswordEncrypted(email: string): Promise<string | null> {
+  if (!email) return null;
+  try {
+    const res = await executeWithRetry(`SELECT password_encrypted FROM users WHERE email = ?`, [email]);
+    return res.rows.length > 0 && res.rows[0].password_encrypted ? (res.rows[0].password_encrypted as string) : null;
+  } catch (e) {
+    console.error("getUserPasswordEncrypted error:", e);
+    return null;
+  }
+}
+
+export async function findUserIdByEmail(email: string): Promise<string | undefined> {
+  if (!email) return undefined;
+  try {
+    const res = await executeWithRetry(`SELECT id FROM users WHERE email = ?`, [email]);
+    return res.rows.length > 0 ? (res.rows[0].id as string) : undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
+
+export async function updateStudentLeadStatus(email?: string, phone?: string): Promise<boolean> {
+  try {
+    await executeWithRetry(
+      `UPDATE crm_leads SET status = 'Closed Won' WHERE email = ? OR phone = ?`,
+      [email || '', phone || '']
+    );
+    return true;
+  } catch (e) {
+    console.error("updateStudentLeadStatus error:", e);
+    return false;
+  }
+}
+
+
+

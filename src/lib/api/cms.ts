@@ -71,6 +71,15 @@ export const removeModuleFromCourse = async (courseId: string, moduleId: string)
   await executeWithRetry('DELETE FROM course_module_mapping WHERE course_id = ? AND module_id = ?', [courseId, moduleId]);
 };
 
+export const updateModuleInstructor = async (moduleId: string, instructorId: string | null) => {
+  await executeWithRetry('UPDATE modules SET instructor_id = ? WHERE id = ?', [instructorId || null, moduleId]);
+};
+
+export const getTeachersList = async () => {
+  const res = await executeWithRetry("SELECT id, name, email, role FROM users WHERE LOWER(role) IN ('teacher', 'faculty', 'instructor') OR email LIKE '%teacher%' ORDER BY name ASC");
+  return res.rows;
+};
+
 // ---- Module Editor ----
 export const getModuleDetails = async (moduleId: string) => {
   const modRes = await executeWithRetry('SELECT * FROM modules WHERE id = ?', [moduleId]);

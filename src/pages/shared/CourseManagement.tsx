@@ -6,7 +6,7 @@ import { BookOpen, FolderOpen, Users, BarChart, FileVideo, Plus, ArrowRight, X, 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client } from '../../lib/turso';
-import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse, deleteCourse, removeModuleFromCourse } from '../../lib/api/cms';
+import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse, deleteCourse, removeModuleFromCourse, updateModuleInstructor, getTeachersList } from '../../lib/api/cms';
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -16,6 +16,7 @@ export default function CourseManagement() {
 
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // New Course Modal State
@@ -49,7 +50,17 @@ export default function CourseManagement() {
   useEffect(() => {
     fetchCourses();
     fetchAllModulesList();
+    fetchTeachers();
   }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const tList = await getTeachersList();
+      setTeachers(tList);
+    } catch (e) {
+      console.error("fetchTeachers error:", e);
+    }
+  };
 
   const fetchAllModulesList = async () => {
     if (!client) return;
@@ -102,6 +113,7 @@ export default function CourseManagement() {
           id: m.id,
           course_id: m.course_id,
           name: m.title,
+          instructor_id: m.instructor_id,
           classes: classesByModuleId.get(m.id) || [],
           completedBy: 0
         };
@@ -305,11 +317,30 @@ export default function CourseManagement() {
                             onClick={() => navigate(`${basePath}/courses/${course.id}/modules/${mod.id}`)}
                           >
                             <div className="mb-4">
-                              <h5 className="font-bold text-erp-text text-base group-hover:text-indigo-400 transition-colors truncate">{mod.name}</h5>
-                              <p className="text-xs text-erp-text/60 mt-1 font-medium flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"></span>
-                                {mod.classes.length} {mod.classes.length === 1 ? 'Class' : 'Classes'}
-                              </p>
+                              <div className="flex justify-between items-start gap-2 mb-1">
+                                <h5 className="font-bold text-erp-text text-base group-hover:text-indigo-400 transition-colors truncate flex-1">{mod.name}</h5>
+                              </div>
+                              <div className="flex items-center justify-between gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                                <p className="text-xs text-erp-text/60 font-medium flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"></span>
+                                  {mod.classes.length} {mod.classes.length === 1 ? 'Class' : 'Classes'}
+                                </p>
+                                <select
+                                  value={mod.instructor_id || ''}
+                                  onChange={async (e) => {
+                                    e.stopPropagation();
+                                    const newTeacherId = e.target.value;
+                                    await updateModuleInstructor(mod.id, newTeacherId);
+                                    await fetchCourses();
+                                  }}
+                                  className="text-[11px] font-bold bg-erp-background border border-erp-border rounded-lg px-2 py-1 text-erp-text focus:outline-none focus:border-indigo-500 cursor-pointer"
+                                >
+                                  <option value="">Select Teacher</option>
+                                  {teachers.map(t => (
+                                    <option key={t.id} value={t.id}>{t.name} ({t.role || 'Teacher'})</option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                             <div className="flex justify-between items-center pt-3 border-t border-erp-border/50">
                               <div className="text-xs font-bold text-emerald-400">{mod.completedBy}% Completion</div>

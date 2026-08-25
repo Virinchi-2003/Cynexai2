@@ -7,7 +7,6 @@ import {
   Upload, UserPlus
 } from 'lucide-react';
 import { getCurrentUser, getModuleAccess } from '../../../lib/auth';
-import { client, dbConnectionFailed } from '../../../lib/turso';
 import { decryptPassword } from '../../../lib/crypto';
 import { Button } from '../../../components/ui/erp/Button';
 import { DataTable } from '../../../components/ui/erp/DataTable';
@@ -15,6 +14,11 @@ import {
   getPendingStudents, approveStudent, rejectStudent,
   bulkImportStudents, saveStudent, updateStudentProfile
 } from '../../../lib/api/users';
+import {
+  getManagerStudents, getStudentModulesAndActivity, adjustStudentMetrics,
+  updateStudentModuleProgress, getStudentDetail, getUserPasswordEncrypted,
+  findUserIdByEmail, updateStudentLeadStatus
+} from '../../../lib/api/student';
 import studentSeedData from '../../../../students_seed.json';
 
 
@@ -105,44 +109,23 @@ export default function StudentsPage() {
 
   const loadStudents = async () => {
     let data: StudentStat[] = [];
-    if (client && !dbConnectionFailed) {
-      try {
-        let sql = `
-          SELECT 
-            s.id, COALESCE(s.name, (SELECT name FROM users u WHERE u.email = s.portal_login_email)) as name, s.portal_login_email as email, s.phone, s.course,
-            s.batch_number, s.status, s.joining_date,
-            s.portal_login_email,
-            COALESCE(s.streak, 0) as streak,
-            COALESCE(s.coins, 0) as coins,
-            (SELECT COUNT(*) FROM badges b WHERE b.student_id = s.id) as badges,
-            (SELECT COUNT(*) FROM student_progress sp WHERE sp.student_id = s.id AND sp.completed = 1) as completedClasses
-          FROM students s
-          WHERE (s.approval_status = 'Approved' OR s.approval_status IS NULL)
-        `;
-        const args: any[] = [];
-        if (search) { sql += ` AND (s.name LIKE ? OR s.portal_login_email LIKE ? OR s.phone LIKE ?)`; const q = `%${search}%`; args.push(q, q, q); }
-        if (courseFilter) { sql += ` AND s.course = ?`; args.push(courseFilter); }
-        if (batchFilter) { sql += ` AND s.batch_number = ?`; args.push(batchFilter); }
-        if (statusFilter) { sql += ` AND s.status = ?`; args.push(statusFilter); }
-        sql += ` ORDER BY s.name ASC LIMIT 200`;
-
-        const res = await client.execute({ sql, args });
-        if (res && res.rows && res.rows.length > 0) {
-          data = res.rows.map((r: any) => ({
-            id: r.id, name: r.name || 'Unknown', email: r.email, phone: r.phone,
-            course: r.course, batch_number: r.batch_number, status: r.status,
-            joining_date: r.joining_date, portal_login_email: r.portal_login_email,
-            streak: Number(r.streak) || 0,
-            coins: Number(r.coins) || 0,
-            badges: Number(r.badges) || 0,
-            completedClasses: Number(r.completedClasses) || 0,
-            totalModules: 0, attendancePct: 0,
-            level: Math.floor((Number(r.completedClasses) || 0) / 10) + 1,
-          }));
-        }
-      } catch (e) {
-        console.error("loadStudents DB fetch error:", e);
+    try {
+      const rows = await getManagerStudents(search, courseFilter, batchFilter, statusFilter);
+      if (rows && rows.length > 0) {
+        data = rows.map((r: any) => ({
+          id: r.id, name: r.name || 'Unknown', email: r.email, phone: r.phone,
+          course: r.course, batch_number: r.batch_number, status: r.status,
+          joining_date: r.joining_date, portal_login_email: r.portal_login_email,
+          streak: Number(r.streak) || 0,
+          coins: Number(r.coins) || 0,
+          badges: Number(r.badges) || 0,
+          completedClasses: Number(r.completedClasses) || 0,
+          totalModules: 0, attendancePct: 0,
+          level: Math.floor((Number(r.completedClasses) || 0) / 10) + 1,
+        }));
       }
+    } catch (e) {
+      console.error("loadStudents DB fetch error:", e);
     }
 
     if (data.length === 0) {
@@ -209,57 +192,18 @@ export default function StudentsPage() {
     setDetailLoading(true);
     setDetailData(null);
     try {
-      if (!client) return;
-      const modRes = await client.execute({
-        sql: `
-          SELECT m.id, m.title,
-            (SELECT COUNT(*) FROM classes c WHERE c.module_id = m.id) as totalClasses,
-            (SELECT COUNT(*) FROM student_progress sp
-              JOIN classes c ON sp.lesson_id = c.id
-              WHERE sp.student_id = ? AND sp.completed = 1 AND c.module_id = m.id) as completedClasses
-          FROM modules m
-          JOIN course_module_mapping cmm ON m.id = cmm.module_id
-          JOIN courses co ON cmm.course_id = co.id
-          WHERE (co.title = ?)
-          ORDER BY cmm.order_index ASC
-        `,
-        args: [stu.id, stu.course || ''],
-      }).catch(() => ({ rows: [] }));
-
-      const actRes = await client.execute({
-        sql: `SELECT sp.created_at, c.title as class_title, m.title as module_title
-              FROM student_progress sp
-              JOIN classes c ON sp.lesson_id = c.id
-              JOIN modules m ON c.module_id = m.id
-              WHERE sp.student_id = ? AND sp.completed = 1
-              ORDER BY sp.created_at DESC LIMIT 10`,
-        args: [stu.id],
-      }).catch(() => ({ rows: [] }));
-
-      setDetailData({ modules: modRes.rows, recentActivity: actRes.rows });
+      const res = await getStudentModulesAndActivity(stu.id, stu.course || '');
+      setDetailData(res);
     } catch (e) { console.error(e); }
     finally { setDetailLoading(false); }
   };
 
   const handleAdjust = async () => {
-    if (!adjustModal || !client) return;
+    if (!adjustModal) return;
     setAdjustSaving(true);
     try {
       const { student, field } = adjustModal;
-      const col = field === 'badges' ? null : field;
-      if (field === 'badges' && adjustDelta > 0) {
-        for (let i = 0; i < adjustDelta; i++) {
-          await client.execute({
-            sql: `INSERT INTO badges (id, student_id, name, awarded_at) VALUES (?, ?, ?, ?)`,
-            args: [`bdg_${Date.now()}_${i}`, student.id, adjustReason || 'Achievement Badge', new Date().toISOString()],
-          });
-        }
-      } else if (col) {
-        await client.execute({
-          sql: `UPDATE students SET ${col} = MAX(0, COALESCE(${col}, 0) + ?) WHERE id = ?`,
-          args: [adjustDelta, student.id],
-        });
-      }
+      await adjustStudentMetrics(student.id, field, adjustDelta, adjustReason);
       setAdjustModal(null);
       setAdjustDelta(0);
       setAdjustReason('');
@@ -270,38 +214,10 @@ export default function StudentsPage() {
   };
 
   const handleModuleAdjust = async (moduleId: string, action: 'add' | 'remove') => {
-    if (!selectedStudent || !client) return;
+    if (!selectedStudent) return;
     setDetailLoading(true);
     try {
-      if (action === 'add') {
-        const res = await client.execute({
-          sql: `SELECT c.id FROM classes c WHERE c.module_id = ? AND c.id NOT IN (SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1) ORDER BY c.order_index ASC LIMIT 1`,
-          args: [moduleId, selectedStudent.id]
-        });
-        let classId;
-        if (res.rows.length > 0) {
-          classId = res.rows[0].id as string;
-        } else {
-          // Auto-generate a dummy class if none exist, so progress can be incremented anyway
-          classId = `cls_dummy_${Date.now()}`;
-          await client.execute({
-            sql: `INSERT INTO classes (id, module_id, title, order_index) VALUES (?, ?, 'Manual Progress Step', 999)`,
-            args: [classId, moduleId]
-          });
-        }
-        await client.execute({
-          sql: `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
-          args: [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, selectedStudent.id, classId, new Date().toISOString()]
-        });
-      } else {
-        const res = await client.execute({
-          sql: `SELECT sp.id FROM student_progress sp JOIN classes c ON sp.lesson_id = c.id WHERE sp.student_id = ? AND c.module_id = ? AND sp.completed = 1 ORDER BY sp.created_at DESC LIMIT 1`,
-          args: [selectedStudent.id, moduleId]
-        });
-        if (res.rows.length > 0) {
-          await client.execute({ sql: `DELETE FROM student_progress WHERE id = ?`, args: [res.rows[0].id] });
-        }
-      }
+      await updateStudentModuleProgress(selectedStudent.id, moduleId, action);
       await openStudentDetail(selectedStudent);
     } catch (e) { console.error(e); alert('Failed to update module progress'); setDetailLoading(false); }
   };
@@ -345,33 +261,30 @@ export default function StudentsPage() {
     
     // Fetch full student profile and user password
     try {
-      if (client) {
-        const res = await client.execute({ sql: 'SELECT * FROM students WHERE id = ?', args: [stu.id] });
-        if (res.rows.length > 0) {
-          const r = res.rows[0];
-          setDob(r.dob as string || '');
-          setAddress(r.address as string || '');
-          setGender(r.gender as string || '');
-          setBloodGroup(r.blood_group as string || '');
-          setFeesTotal(r.fees_total as number || '');
-          setFeesPaid(r.fees_paid as number || '');
-          setJoiningDate(r.joining_date as string || '');
-          setFatherName(r.father_name as string || '');
-          setMotherName(r.mother_name as string || '');
-          setEmergencyContact(r.emergency_contact as string || '');
-          setTrainingStartDate(r.training_start_date as string || '');
-          setTopicCompleted(r.topic_completed as string || '');
-          setAadharFile(r.aadhar_file as string || '');
-          setOtherAttachments(r.other_attachments as string || '');
-          setDocumentsSubmitted(r.documents_submitted as number || '');
-        }
-        
-        // Fetch user password
-        if (stu.email) {
-          const uRes = await client.execute({ sql: 'SELECT password_encrypted FROM users WHERE email = ?', args: [stu.email] });
-          if (uRes.rows.length > 0 && uRes.rows[0].password_encrypted) {
-             setPassword(decryptPassword(uRes.rows[0].password_encrypted as string));
-          }
+      const r = await getStudentDetail(stu.id);
+      if (r) {
+        setDob(r.dob as string || '');
+        setAddress(r.address as string || '');
+        setGender(r.gender as string || '');
+        setBloodGroup(r.blood_group as string || '');
+        setFeesTotal(r.fees_total as number || '');
+        setFeesPaid(r.fees_paid as number || '');
+        setJoiningDate(r.joining_date as string || '');
+        setFatherName(r.father_name as string || '');
+        setMotherName(r.mother_name as string || '');
+        setEmergencyContact(r.emergency_contact as string || '');
+        setTrainingStartDate(r.training_start_date as string || '');
+        setTopicCompleted(r.topic_completed as string || '');
+        setAadharFile(r.aadhar_file as string || '');
+        setOtherAttachments(r.other_attachments as string || '');
+        setDocumentsSubmitted(r.documents_submitted as number || '');
+      }
+      
+      // Fetch user password
+      if (stu.email) {
+        const encPw = await getUserPasswordEncrypted(stu.email);
+        if (encPw) {
+          setPassword(decryptPassword(encPw));
         }
       }
     } catch(e) {}
@@ -383,9 +296,8 @@ export default function StudentsPage() {
     if (!name.trim() || !email.trim()) { alert('Name and email required.'); return; }
     try {
       let existingUserId: string | undefined = undefined;
-      if (editStudentId && client) {
-        const userRes = await client.execute({ sql: 'SELECT id FROM users WHERE email = ?', args: [email] });
-        existingUserId = userRes.rows[0]?.id as string | undefined;
+      if (editStudentId) {
+        existingUserId = await findUserIdByEmail(email);
       }
       const studentData = {
         id: existingUserId,
@@ -802,9 +714,7 @@ export default function StudentsPage() {
                 if (approveForm.batch) {
                   await updateStudentProfile(stu.portal_login_email, { batch_number: approveForm.batch });
                 }
-                if (client) {
-                   await client.execute({ sql: "UPDATE crm_leads SET status = 'Closed Won' WHERE email = ? OR phone = ?", args: [stu.portal_login_email, stu.phone] }).catch(console.error);
-                }
+                await updateStudentLeadStatus(stu.portal_login_email, stu.phone);
                 
                 alert("Approved!");
                 setIsApproveModalOpen(false); setApprovingStudentId(null);

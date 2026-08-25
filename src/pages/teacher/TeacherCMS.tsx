@@ -32,8 +32,8 @@ export default function TeacherCMS() {
 
   async function fetchModules() {
     try {
-      const isSuper = ['Admin', 'Manager', 'CEO'].includes(user.role);
-      const resolvedUserId = user.id === 'usr_teacher' ? 'usr_venkatesh' : user.id;
+      const isSuper = ['Admin', 'Manager', 'CEO'].includes(user?.role);
+      const resolvedUserId = user?.id || 'usr_teacher';
       
       const mRows = await getTeacherCMSModules(isSuper, resolvedUserId);
 
