@@ -103,9 +103,11 @@ export const deleteClass = async (classId: string) => {
 };
 
 export const updateClassOrder = async (classList: { id: string; order_index: number }[]) => {
-  for (const cls of classList) {
-    await executeWithRetry('UPDATE classes SET order_index = ? WHERE id = ?', [cls.order_index, cls.id]);
-  }
+  await Promise.all(
+    classList.map(cls =>
+      executeWithRetry('UPDATE classes SET order_index = ? WHERE id = ?', [cls.order_index, cls.id])
+    )
+  );
 };
 
 export const updateClassAccessStatus = async (classId: string, status: string) => {

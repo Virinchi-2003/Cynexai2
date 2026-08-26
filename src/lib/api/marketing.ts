@@ -38,6 +38,7 @@ async function executeWithRetry(query: string, args: any[] = [], retries = MAX_R
 export async function getMarketingMetrics(): Promise<MarketingMetric[]> {
   try {
     const res = await executeWithRetry('SELECT * FROM marketing_metrics');
+    if (!res || !res.rows) return [];
     return res.rows.map((row: any) => ({
       id: row.id,
       platform: row.platform,
@@ -55,6 +56,7 @@ export async function getMarketingMetrics(): Promise<MarketingMetric[]> {
 export async function getMarketingCampaigns(): Promise<MarketingCampaign[]> {
   try {
     const res = await executeWithRetry('SELECT * FROM marketing_campaigns');
+    if (!res || !res.rows) return [];
     return res.rows.map((row: any) => ({
       id: row.id,
       name: row.name,

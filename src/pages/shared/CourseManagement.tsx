@@ -7,6 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client } from '../../lib/turso';
 import { getCoursesFull, createCourse, createModule, updateCoursePitch, getAllModules, mapExistingModuleToCourse, deleteCourse, removeModuleFromCourse, updateModuleInstructor, getTeachersList } from '../../lib/api/cms';
+import { getAllBatches } from '../../lib/api/batches';
 
 export default function CourseManagement() {
   const navigate = useNavigate();
@@ -79,20 +80,33 @@ export default function CourseManagement() {
       return;
     }
     try {
-      const { courses: cRows, modules: mRows, classes: clsRows } = await getCoursesFull();
+      const [{ courses: cRows, modules: mRows, classes: clsRows }, allBatchesList] = await Promise.all([
+        getCoursesFull(),
+        getAllBatches().catch(() => [])
+      ]);
 
       const courseMap = new Map();
       
       cRows.forEach((c: any) => {
+        const matchingBatches = allBatchesList.filter(b => 
+          b.course_id === c.id || 
+          (b.course_name && b.course_name.toLowerCase() === (c.title || '').toLowerCase())
+        );
+        const totalEnrolledInCourse = matchingBatches.reduce((acc, b) => acc + (b.current_enrolled || 0), 0);
+
         courseMap.set(c.id, {
           id: c.id,
           name: c.title,
           description: c.description,
           sales_pitch_summary: c.sales_pitch_summary || '',
           sales_pitch_script: c.sales_pitch_script || '',
-          studentsEnrolled: 0,
+          studentsEnrolled: totalEnrolledInCourse,
           modules: [],
-          batches: [] // Keep empty for now as requested
+          batches: matchingBatches.map(b => ({
+            name: b.name,
+            students: b.current_enrolled || 0,
+            progress: b.status === 'Completed' ? 100 : b.status === 'Active' ? 50 : 0
+          }))
         });
       });
 

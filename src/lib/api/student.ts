@@ -1087,7 +1087,7 @@ export async function updateStudentModuleProgress(studentId: string, moduleId: s
     }
     await executeWithRetry(
       `INSERT INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
-      [`sp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`, studentId, classId, new Date().toISOString()]
+      [`sp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, studentId, classId, new Date().toISOString()]
     );
   } else {
     const res = await executeWithRetry(

@@ -1,3 +1,12 @@
+function cleanText(text) {
+    if (!text) return '';
+    let cleaned = text;
+    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
+    cleaned = cleaned.replace(/\*\*.*?\*\*/g, '');
+    return cleaned.trim();
+}
+
 async function generateInitialQuestionVoice(context, voiceId, groqKey, deepgramKey, mocks = null) {
     if (groqKey === undefined) groqKey = process.env.GROQ_VOICE_API || process.env.GROQ_API_KEY;
     if (deepgramKey === undefined) deepgramKey = process.env.DEEPGRAM_VOICE_API || process.env.VITE_DEEPGRAM_VOICE_API;
@@ -14,7 +23,7 @@ Start the interview by introducing yourself briefly, acknowledging their backgro
 Keep it under 3 sentences. Be welcoming but professional.`;
 
     let aiText = '';
-    const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
+    const candidateModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'qwen/qwen3.6-27b', 'groq/compound'];
     let lastLlmErr = '';
 
     for (const model of candidateModels) {
@@ -30,15 +39,6 @@ Keep it under 3 sentences. Be welcoming but professional.`;
                     messages: [{ role: 'system', content: systemPrompt }]
                 })
             });
-
-function cleanText(text) {
-    if (!text) return '';
-    let cleaned = text;
-    cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
-    cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
-    cleaned = cleaned.replace(/\*\*.*?\*\*/g, '');
-    return cleaned.trim();
-}
 
             if (llmRes.ok) {
                 const llmData = await llmRes.json();
@@ -131,7 +131,7 @@ If this is turn 10 or higher, conclude the interview by thanking the candidate f
                 { role: 'user', content: studentText }
             ];
 
-            const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.1-8b-instant'];
+            const candidateModels = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'qwen/qwen3.6-27b', 'groq/compound'];
             let lastLlmErr = '';
 
             for (const model of candidateModels) {

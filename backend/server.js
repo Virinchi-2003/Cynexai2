@@ -25,10 +25,30 @@ let db = createClient({
   authToken: tursoAuthToken,
 });
 
-db.execute('SELECT 1').catch((err) => {
-  console.warn('[Backend DB] Cloud database BLOCKED/unreachable. Falling back to local SQLite file:cynexai.db');
-  db = createClient({ url: 'file:cynexai.db' });
-});
+async function initDbTables(clientDb) {
+  try {
+    await clientDb.execute(`
+      CREATE TABLE IF NOT EXISTS whatsapp_messages (
+        id TEXT PRIMARY KEY,
+        lead_id TEXT,
+        direction TEXT,
+        message_body TEXT,
+        timestamp TEXT
+      )
+    `);
+    console.log('[Backend DB] Ensured whatsapp_messages table exists.');
+  } catch (err) {
+    console.warn('[Backend DB] Failed to ensure whatsapp_messages table:', err.message);
+  }
+}
+
+db.execute('SELECT 1')
+  .then(() => initDbTables(db))
+  .catch((err) => {
+    console.warn('[Backend DB] Cloud database BLOCKED/unreachable. Falling back to local SQLite file:cynexai.db');
+    db = createClient({ url: 'file:cynexai.db' });
+    initDbTables(db);
+  });
 
 
 // --- WhatsApp Client ---
@@ -223,7 +243,7 @@ cron.schedule('30 59 23 * * *', async () => {
       if (existsResult.rows.length > 0) continue;
 
       // Create tomorrow's copy
-      const newId = 'task_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+      const newId = 'task_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
       const now = new Date().toISOString();
       await db.execute({
         sql: `INSERT INTO tasks (id, title, description, assignee_id, status, priority, due_date, project_id, related_entity, task_type, target_number, current_number, start_date, tags, recurrence_rule, created_by, lead_id, student_id, created_at, updated_at)
