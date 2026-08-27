@@ -23,34 +23,58 @@ const getDurationHours = (start: string, end: string) => {
 
 const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnline: boolean) => {
   try {
-    const cList = JSON.parse(classItem.course_name || '[]');
-    const bMap = JSON.parse(classItem.batch_id || '{}');
-    if (Array.isArray(cList) && cList.length > 0) {
+    let cList: string[] = [];
+    try { cList = JSON.parse(classItem.course_name || '[]'); } catch { cList = [classItem.course_name || '']; }
+    if (!Array.isArray(cList)) cList = [cList];
+    cList = cList.filter(Boolean);
+
+    let bMap: Record<string, string[]> = {};
+    try { bMap = JSON.parse(classItem.batch_id || '{}'); } catch { bMap = {}; }
+
+    const resolveBatchName = (bid: string) => {
+      const norm = String(bid).trim().toLowerCase();
+      const bMatch = batches.find((b: any) => 
+        String(b.id).toLowerCase() === norm ||
+        String(b.name).toLowerCase() === norm ||
+        String(b.id).toLowerCase() === 'batch_' + norm ||
+        String(b.name).toLowerCase() === 'batch ' + norm ||
+        ('batch_' + String(b.id).toLowerCase()) === norm
+      );
+      if (bMatch) return bMatch.name;
+      if (bid.startsWith('batch_')) return 'Batch ' + bid.replace('batch_', '');
+      return bid;
+    };
+
+    if (cList.length > 0) {
+      const allAssignedIds = Array.from(new Set(Object.values(bMap).flat()));
+
       return (
         <div className="flex flex-col gap-1.5">
           {cList.map((c: string) => {
-            const batchNames = (bMap[c] || []).map((bid: string) => batches.find((b: any) => b.id === bid)?.name || bid).join(', ');
+            const courseBatchIds = bMap[c] && bMap[c].length > 0 ? bMap[c] : allAssignedIds;
+            const batchNames = courseBatchIds.map(resolveBatchName).join(', ');
             return (
               <div key={c} className="leading-tight">
                 <div className={`text-[9px] font-extrabold uppercase truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>{c}</div>
-                <div className="text-[11px] font-bold text-erp-text truncate">{batchNames || 'No Batches'}</div>
+                <div className="text-[11px] font-bold text-erp-text truncate">{batchNames || 'All Batches'}</div>
               </div>
             );
           })}
         </div>
       );
     }
-    throw new Error('Fallback');
-  } catch {
-    return (
-      <>
-        <div className="font-bold text-xs text-erp-text truncate leading-tight">{classItem.batch_name || classItem.batch_id}</div>
-        <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>
-          {classItem.course_name}
-        </div>
-      </>
-    );
-  }
+  } catch {}
+
+  const fallbackBatch = classItem.batch_name || classItem.batch_id || 'All Batches';
+  const cleanFallback = String(fallbackBatch).startsWith('batch_') ? 'Batch ' + String(fallbackBatch).replace('batch_', '') : fallbackBatch;
+  return (
+    <>
+      <div className="font-bold text-xs text-erp-text truncate leading-tight">{cleanFallback}</div>
+      <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>
+        {classItem.course_name}
+      </div>
+    </>
+  );
 };
 
 export default function TeacherTimetable() {

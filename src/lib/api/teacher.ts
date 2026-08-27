@@ -617,3 +617,26 @@ export async function getRescheduleHistory(slotId?: string): Promise<any[]> {
   }
 }
 
+export async function ensureClassQuestions(classId: string, title: string, description: string = '', keypoints: string = ''): Promise<void> {
+  try {
+    const existing = await executeWithRetry('SELECT id FROM class_questions WHERE class_id = ? LIMIT 1', [classId]);
+    if (existing.rows.length === 0) {
+      const { generateAIQuestions } = await import('../aiGenerator');
+      const generated = await generateAIQuestions(title, description, keypoints, true);
+      for (const q of generated) {
+        const qId = 'cq_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        const optionsJson = q.options ? JSON.stringify(q.options) : null;
+        const boilerplate = q.boilerplate ? JSON.stringify(q.boilerplate) : null;
+        const testCases = q.test_cases ? (typeof q.test_cases === 'string' ? q.test_cases : JSON.stringify(q.test_cases)) : null;
+
+        await executeWithRetry(
+          `INSERT INTO class_questions (id, class_id, type, question_text, options_json, correct_answer_idx, boilerplate_json, test_cases_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [qId, classId, q.type || 'mcq', q.question_text, optionsJson, q.correct_answer_idx ?? 0, boilerplate, testCases]
+        );
+      }
+    }
+  } catch (e) {
+    console.error('ensureClassQuestions failed:', e);
+  }
+}
+

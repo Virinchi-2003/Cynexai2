@@ -166,11 +166,10 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
 
       try {
         let modRes = await executeWithRetry(
-          `SELECT m.*, cmm.order_index as map_order
+          `SELECT DISTINCT m.*, COALESCE(cmm.order_index, m.rowid) as map_order
            FROM modules m
-           JOIN course_module_mapping cmm ON m.id = cmm.module_id
-           WHERE cmm.course_id = ? OR cmm.course_id = 'course_ds_mastery'
-           ORDER BY cmm.order_index ASC`,
+           LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id AND (cmm.course_id = ? OR cmm.course_id = 'course_ds_mastery')
+           ORDER BY map_order ASC`,
           [activeCourse.id]
         ).catch(() => ({ rows: [] }));
 
@@ -225,18 +224,34 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
 
     (async () => {
       let upcomingClass = null;
+      const stuBatch = stu?.batch_number ? String(stu.batch_number).trim() : '';
+      const bTerm1 = stuBatch.toLowerCase();
+      const bTerm2 = stuBatch.toLowerCase().startsWith('batch ') ? 'batch_' + stuBatch.toLowerCase().replace('batch ', '') : stuBatch.toLowerCase();
+
       try {
-        const tsRes = await executeWithRetry(
-          `SELECT id, title, date, start_time, meet_link, 'live' as type FROM timetable_slots
-           WHERE date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
-        );
-        if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
+        if (stuBatch) {
+          const tsRes = await executeWithRetry(
+            `SELECT id, title, day_of_week, start_time, timing, status, 'live' as type FROM timetable_slots
+             WHERE LOWER(batch_id) LIKE ? OR LOWER(batch_id) LIKE ? OR course_name LIKE ?
+             ORDER BY created_at DESC LIMIT 1`,
+            [`%${bTerm1}%`, `%${bTerm2}%`, `%${activeCourse?.title || ''}%`]
+          );
+          if (tsRes.rows.length > 0) upcomingClass = tsRes.rows[0];
+        }
+        if (!upcomingClass) {
+          const tsFallback = await executeWithRetry(
+            `SELECT id, title, day_of_week, start_time, timing, status, 'live' as type FROM timetable_slots
+             ORDER BY created_at DESC LIMIT 1`
+          );
+          if (tsFallback.rows.length > 0) upcomingClass = tsFallback.rows[0];
+        }
       } catch { /* no timetable */ }
+
       if (!upcomingClass) {
         try {
           const clsUp = await executeWithRetry(
             `SELECT id, title, date, start_time, meet_link, type FROM classes
-             WHERE type = 'live' AND date >= date('now') ORDER BY date ASC, start_time ASC LIMIT 1`
+             WHERE type = 'live' ORDER BY order_index ASC LIMIT 1`
           );
           if (clsUp.rows.length > 0) upcomingClass = clsUp.rows[0];
         } catch { /* ignore */ }
@@ -252,15 +267,61 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
 
 export async function getClassFlowData(classId: string, studentId?: string): Promise<ClassFlowData> {
   try {
-    const clsRes = await executeWithRetry(
-      `SELECT id, title, youtube_video_id, meet_link, type, status, ai_summary, description, ai_study_guide
-       FROM classes WHERE id = ?`,
-      [classId]
-    );
+    let targetClassId = classId;
+    let clsRow: any = null;
+
+    // 1. If classId is a timetable slot, find matching class from classes table
+    if (classId.startsWith('ts_') || classId.startsWith('slot_') || classId.startsWith('tt_')) {
+      const slotRes = await executeWithRetry('SELECT course_name FROM timetable_slots WHERE id = ?', [classId]);
+      if (slotRes.rows.length > 0) {
+        const rawCourse = slotRes.rows[0].course_name;
+        let parsedCourses: string[] = [];
+        try { parsedCourses = JSON.parse(rawCourse); } catch { parsedCourses = [rawCourse]; }
+        if (!Array.isArray(parsedCourses)) parsedCourses = [parsedCourses];
+        parsedCourses = parsedCourses.map(c => String(c).trim()).filter(Boolean);
+
+        if (parsedCourses.length > 0) {
+          const ph = parsedCourses.map(() => '?').join(',');
+          const matchedClass = await executeWithRetry(
+            `SELECT DISTINCT c.id, c.title, c.youtube_video_id, c.meet_link, c.type, c.status, c.ai_summary, c.description, c.ai_study_guide
+             FROM classes c 
+             JOIN modules m ON c.module_id = m.id 
+             LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+             LEFT JOIN courses crs ON cmm.course_id = crs.id
+             WHERE (crs.title IN (${ph}) OR m.title IN (${ph}))
+             ORDER BY c.order_index ASC LIMIT 1`,
+            [...parsedCourses, ...parsedCourses]
+          );
+          if (matchedClass.rows.length > 0) {
+            clsRow = matchedClass.rows[0];
+            targetClassId = clsRow.id;
+          }
+        }
+      }
+    }
+
+    if (!clsRow) {
+      const clsRes = await executeWithRetry(
+        `SELECT id, title, youtube_video_id, meet_link, type, status, ai_summary, description, ai_study_guide
+         FROM classes WHERE id = ? LIMIT 1`,
+        [targetClassId]
+      );
+      if (clsRes.rows.length > 0) {
+        clsRow = clsRes.rows[0];
+      }
+    }
+
+    // 2. Fetch questions for both targetClassId and classId
     const questionsRes = await executeWithRetry(
-      `SELECT * FROM class_questions WHERE class_id = ? ORDER BY created_at ASC`,
-      [classId]
+      `SELECT * FROM class_questions WHERE class_id = ? OR class_id = ? ORDER BY created_at ASC`,
+      [targetClassId, classId]
     );
+
+    const uniqueQMap = new Map<string, any>();
+    (questionsRes.rows || []).forEach((q: any) => {
+      if (!uniqueQMap.has(q.id)) uniqueQMap.set(q.id, q);
+    });
+    const questions = Array.from(uniqueQMap.values());
 
     let hasWatched = false;
     let hasAnswered = false;
@@ -268,28 +329,28 @@ export async function getClassFlowData(classId: string, studentId?: string): Pro
 
     if (studentId) {
       const progRes = await executeWithRetry(
-        `SELECT * FROM student_progress WHERE student_id = ? AND lesson_id = ? AND completed = 1`,
-        [studentId, classId]
+        `SELECT * FROM student_progress WHERE student_id = ? AND (lesson_id = ? OR lesson_id = ?) AND completed = 1`,
+        [studentId, targetClassId, classId]
       );
       hasWatched = progRes.rows.length > 0;
 
       const qaRes = await executeWithRetry(
-        `SELECT question_id FROM qa_responses WHERE student_id = ? AND class_id = ?`,
-        [studentId, classId]
+        `SELECT question_id FROM qa_responses WHERE student_id = ? AND (class_id = ? OR class_id = ?)`,
+        [studentId, targetClassId, classId]
       );
-      answeredQuestionIds = qaRes.rows.map((r: any) => r.question_id);
-      hasAnswered = qaRes.rows.length > 0;
+      answeredQuestionIds = (qaRes.rows || []).map((r: any) => r.question_id);
+      hasAnswered = (qaRes.rows || []).length > 0;
     }
 
     return {
-      classData: clsRes.rows.length > 0 ? clsRes.rows[0] : null,
-      questions: questionsRes.rows,
+      classData: clsRow,
+      questions,
       hasWatched,
       hasAnswered,
       answeredQuestionIds
     };
   } catch (e) {
-    console.error(e);
+    console.error('getClassFlowData error:', e);
     return { classData: null, questions: [], hasWatched: false, hasAnswered: false, answeredQuestionIds: [] };
   }
 }

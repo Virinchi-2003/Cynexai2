@@ -9,7 +9,7 @@ import { getCurrentUser } from '../../lib/auth';
 import { generateAIMaterials, generatePostClassSummary } from '../../lib/aiGenerator';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getInstructorClasses, updateClassMaterials, updateClassStatus, completeClassWithSummary, ClassRow, getLiveAttendance, updateClassDetails } from '../../lib/api/teacher';
+import { getInstructorClasses, updateClassMaterials, updateClassStatus, completeClassWithSummary, ClassRow, getLiveAttendance, updateClassDetails, ensureClassQuestions } from '../../lib/api/teacher';
 
 import { CodeWorkspace } from './CodeWorkspace';
 import { SqlWorkspace } from './SqlWorkspace';
@@ -98,6 +98,7 @@ export default function LiveStreamDashboard() {
       if (classes.length > 0) {
         setClassData(classes[0]);
         setEditForm({ title: classes[0].title, description: classes[0].description || '' });
+        ensureClassQuestions(classes[0].id, classes[0].title, classes[0].description || '', classes[0].ai_keypoints || '').catch(() => {});
       }
     } catch (e) { console.error('Failed to load class', e); } 
     finally { setLoading(false); }
@@ -117,6 +118,7 @@ export default function LiveStreamDashboard() {
       const { ppt, script, keypoints } = await generateAIMaterials(classData.title, classData.description || '');
       await updateClassMaterials(classData.id, ppt, script, keypoints);
       setClassData({ ...classData, ai_ppt_markdown: ppt, ai_script: script, ai_keypoints: keypoints });
+      await ensureClassQuestions(classData.id, classData.title, classData.description || '', keypoints);
     } catch (e: any) {
       if (e?.message === 'QUOTA_EXCEEDED') {
         alert('❌ Gemini API quota exceeded.\n\nYour free tier API key has run out of daily credits.\n\nTo fix this:\n1. Go to https://aistudio.google.com\n2. Create a new API key with billing enabled, OR\n3. Wait until tomorrow for the free quota to reset.\n\nThen update VITE_GEMINI_API_KEY in your .env file.');
@@ -132,6 +134,7 @@ export default function LiveStreamDashboard() {
     if (!classData || !youtubeConfirmed) return;
     
     await updateClassStatus(classData.id, 'in_progress', 'live');
+    await ensureClassQuestions(classData.id, classData.title, classData.description || '', classData.ai_keypoints || '').catch(() => {});
     localStorage.setItem('cynexai_live_class_id', classData.id);
     localStorage.setItem('cynexai_live_slide', '1');
     localStorage.setItem('cynexai_live_mode', 'slides');
