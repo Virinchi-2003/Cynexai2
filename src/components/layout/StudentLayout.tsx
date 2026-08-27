@@ -28,11 +28,12 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { to: '/student',             icon: Home,           label: 'Dashboard',    short: 'Home'      },
-  { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',   short: 'Attend'    },
-  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview', short: 'Interview' },
-  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',      short: 'Rewards'   },
-  { to: '/student/career',      icon: Briefcase,      label: 'Career',       short: 'Career'    },
+  { to: '/student',             icon: Home,           label: 'Dashboard',      short: 'Home'      },
+  { to: '/student/quizzes',     icon: GraduationCap,  label: 'Quizzes & Code', short: 'Quizzes'   },
+  { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',     short: 'Attend'    },
+  { to: '/student/interview',   icon: Mic2,           label: 'AI Interview',   short: 'Interview' },
+  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',        short: 'Rewards'   },
+  { to: '/student/career',      icon: Briefcase,      label: 'Career',         short: 'Career'    },
 ];
 
 const BOTTOM_NAV = NAV_ITEMS;

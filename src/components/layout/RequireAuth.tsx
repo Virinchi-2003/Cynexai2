@@ -41,50 +41,6 @@ export const RequireAuth: React.FC<RequireAuthProps> = ({ children, allowedRoles
     checkAccess();
   }, [user?.id]);
 
-  // 10-Minute Inactivity Auto-Logout Manager
-  useEffect(() => {
-    if (!user) return;
-
-    const INACTIVITY_LIMIT_MS = 10 * 60 * 1000; // 10 Minutes (600,000 ms)
-    const ACTIVITY_KEY = 'cynex_last_activity_timestamp';
-
-    const updateActivity = () => {
-      localStorage.setItem(ACTIVITY_KEY, Date.now().toString());
-    };
-
-    if (!localStorage.getItem(ACTIVITY_KEY)) {
-      updateActivity();
-    }
-
-    const events = ['mousemove', 'mousedown', 'keypress', 'keydown', 'scroll', 'touchstart', 'click'];
-    
-    let lastRecorded = 0;
-    const handleUserActivity = () => {
-      const now = Date.now();
-      if (now - lastRecorded > 3000) {
-        lastRecorded = now;
-        updateActivity();
-      }
-    };
-
-    events.forEach(evt => window.addEventListener(evt, handleUserActivity, { passive: true }));
-
-    const interval = setInterval(async () => {
-      const lastAct = parseInt(localStorage.getItem(ACTIVITY_KEY) || '0', 10);
-      if (lastAct > 0 && Date.now() - lastAct >= INACTIVITY_LIMIT_MS) {
-        clearInterval(interval);
-        events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
-        sessionStorage.setItem('cynex_auto_logged_out', 'true');
-        await logout();
-      }
-    }, 5000);
-
-    return () => {
-      clearInterval(interval);
-      events.forEach(evt => window.removeEventListener(evt, handleUserActivity));
-    };
-  }, [user?.id]);
-
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
