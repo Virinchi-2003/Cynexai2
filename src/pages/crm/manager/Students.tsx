@@ -19,6 +19,7 @@ import {
   updateStudentModuleProgress, getStudentDetail, getUserPasswordEncrypted,
   findUserIdByEmail, updateStudentLeadStatus
 } from '../../../lib/api/student';
+import { getAllBatches } from '../../../lib/api/batches';
 import studentSeedData from '../../../../students_seed.json';
 
 
@@ -76,6 +77,7 @@ export default function StudentsPage() {
   const [stuPhone, setStuPhone] = useState('');
   const [stuCourse, setStuCourse] = useState('');
   const [stuBatch, setStuBatch] = useState('');
+  const [isCustomBatchMode, setIsCustomBatchMode] = useState(false);
 
   // CSV
   const [showCsvModal, setShowCsvModal] = useState(false);
@@ -181,10 +183,33 @@ export default function StudentsPage() {
 
     setStudents(data);
 
+    // Fetch all active batches from Turso DB table
+    let dbBatchNames: string[] = [];
+    try {
+      const dbBatches = await getAllBatches();
+      if (dbBatches && dbBatches.length > 0) {
+        dbBatchNames = dbBatches.map(b => b.name).filter(Boolean);
+      }
+    } catch (e) {
+      console.error("Error loading DB batches in StudentsPage:", e);
+    }
+
     const uniqueCourses = Array.from(new Set(data.map(s => s.course).filter(Boolean))) as string[];
-    const uniqueBatches = Array.from(new Set(data.map(s => s.batch_number).filter(Boolean))) as string[];
+    const uniqueBatchesFromStudents = Array.from(new Set(data.map(s => s.batch_number).filter(Boolean))) as string[];
+    const defaultBatches = ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4', 'Batch 5'];
+
+    const combinedBatchesSet = new Set<string>([
+      ...dbBatchNames,
+      ...uniqueBatchesFromStudents,
+      ...defaultBatches
+    ]);
+
+    const sortedBatches = Array.from(combinedBatchesSet).sort((a, b) => 
+      a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
+    );
+
     setCourses(uniqueCourses.length > 0 ? uniqueCourses : ['Data Science with AI', 'AI & Genrative AI', 'Full stack python', 'SAP Fico', 'Digital marketing']);
-    setBatches(uniqueBatches.length > 0 ? uniqueBatches : ['Batch 1', 'Batch 2', 'Batch 3', 'Batch 4', 'Batch 5']);
+    setBatches(sortedBatches);
   };
 
   const openStudentDetail = async (stu: StudentStat) => {
@@ -637,16 +662,48 @@ export default function StudentsPage() {
                     </div>
                     <div>
                       <label className="text-xs font-bold mb-1 block">Batch</label>
-                      <input 
-                        list="batch-options" 
-                        className={inputCls} 
-                        value={stuBatch} 
-                        onChange={e=>setStuBatch(e.target.value)} 
-                        placeholder="Select or type new batch"
-                      />
-                      <datalist id="batch-options">
-                        {batches.map(b => <option key={b} value={b} />)}
-                      </datalist>
+                      {!isCustomBatchMode ? (
+                        <select 
+                          className={inputCls} 
+                          value={stuBatch} 
+                          onChange={e => {
+                            if (e.target.value === '__custom__') {
+                              setIsCustomBatchMode(true);
+                              setStuBatch('');
+                            } else {
+                              setStuBatch(e.target.value);
+                            }
+                          }}
+                        >
+                          <option value="">Select or type new batch</option>
+                          {batches.map(b => (
+                            <option key={b} value={b}>{b}</option>
+                          ))}
+                          {stuBatch && !batches.includes(stuBatch) && (
+                            <option value={stuBatch}>{stuBatch}</option>
+                          )}
+                          <option value="__custom__">+ Type New Batch...</option>
+                        </select>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="text" 
+                            className={inputCls} 
+                            value={stuBatch} 
+                            onChange={e => setStuBatch(e.target.value)} 
+                            placeholder="Enter custom batch name"
+                            autoFocus
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => setIsCustomBatchMode(false)}
+                            className="text-xs text-indigo-500 font-bold px-2 py-1.5 border border-indigo-500/30 rounded-xl hover:bg-indigo-500/10 shrink-0"
+                            title="Switch to existing batches dropdown"
+                          >
+                            Dropdown
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div><label className="text-xs font-bold mb-1 block">Joining Date</label><input type="date" className={inputCls} value={joiningDate} onChange={e=>setJoiningDate(e.target.value)} /></div>
                     <div><label className="text-xs font-bold mb-1 block">Training Start Date</label><input type="date" className={inputCls} value={trainingStartDate} onChange={e=>setTrainingStartDate(e.target.value)} /></div>
@@ -697,10 +754,16 @@ export default function StudentsPage() {
               <div><label className="block text-xs font-bold mb-1">Set Password *</label><input type="text" value={approveForm.password} onChange={e => setApproveForm({...approveForm, password: e.target.value})} className={inputCls} /></div>
               <div>
                 <label className="block text-xs font-bold mb-1">Assign Batch</label>
-                <input list="approve-batch-options" type="text" value={approveForm.batch} onChange={e => setApproveForm({...approveForm, batch: e.target.value})} className={inputCls} placeholder="Select or type batch" />
-                <datalist id="approve-batch-options">
-                  {batches.map(b => <option key={b} value={b} />)}
-                </datalist>
+                <select 
+                  value={approveForm.batch} 
+                  onChange={e => setApproveForm({...approveForm, batch: e.target.value})} 
+                  className={inputCls}
+                >
+                  <option value="">Select or type batch</option>
+                  {batches.map(b => (
+                    <option key={b} value={b}>{b}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">

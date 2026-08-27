@@ -10,7 +10,11 @@ import { generateAIMaterials, generateAIQuestions } from '../../lib/aiGenerator'
 export default function ClassEditor() {
   const navigate = useNavigate();
   const location = useLocation();
-  const basePath = location.pathname.startsWith('/ceo') ? '/ceo' : '/manager';
+  let basePath = '/ceo';
+  if (location.pathname.startsWith('/manager')) basePath = '/manager';
+  else if (location.pathname.startsWith('/teacher')) basePath = '/teacher';
+  else if (location.pathname.startsWith('/sales')) basePath = '/sales';
+  else if (location.pathname.startsWith('/dm')) basePath = '/dm';
   const { courseId, moduleId, classId } = useParams();
 
   const [classData, setClassData] = useState<any>(null);

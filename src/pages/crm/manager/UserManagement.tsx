@@ -1,26 +1,162 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '../../../components/ui/erp/Button';
 import { 
-  Users, Key, Plus, X, Edit, Search, Trash2, Shield,
+  Users, Key, Plus, Minus, X, Edit, Search, Trash2, Shield,
   Layers, Calendar, Clock, BookOpen, GraduationCap, UserCheck, UserPlus, UserMinus,
-  CheckSquare, Square
+  CheckSquare, Square, ChevronDown, ChevronRight, BarChart3
 } from 'lucide-react';
 import { decryptPassword } from '../../../lib/crypto';
-import { getCurrentUser, updateCurrentUserSession } from '../../../lib/auth';
+import { getCurrentUser, updateCurrentUserSession, getUserPermissions } from '../../../lib/auth';
 import { getUsers, saveUser, deleteUser, patchUser, getFilterOptions } from '../../../lib/api/users';
 import { getErpModules, assignModulesToInstructor } from '../../../lib/api/manager';
 import { 
   getAllBatches, createBatch, updateBatch, deleteBatch, BatchItem,
   getStudentsInBatch, getAllStudentsForAssignment, assignStudentsToBatch,
-  removeStudentFromBatch, StudentAssignmentItem 
+  removeStudentFromBatch, StudentAssignmentItem, parseBatchSubjectProgress,
+  updateBatchSubjectProgress, SubjectClassProgress
 } from '../../../lib/api/batches';
 import { DataTable } from '../../../components/ui/erp/DataTable';
+
+import { SYSTEM_MODULES, DEFAULT_PERMISSIONS, AccessLevel } from '../../../lib/permissionsRegistry';
 
 interface ERPUser {
   id: string; name: string; email: string;
   password_encrypted: string; role: string; salary: number;
   status?: string; permissions_json?: string;
   phone?: string;
+}
+
+function PermissionsDropdown({ 
+  userRow, 
+  onPermissionsChange 
+}: { 
+  userRow: ERPUser; 
+  onPermissionsChange: (targetUser: ERPUser, newPerms: Record<string, AccessLevel>) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const modulesList = SYSTEM_MODULES || [];
+  const userPerms = userRow ? getUserPermissions(userRow as any) : { ...DEFAULT_PERMISSIONS };
+
+  const isModuleChecked = (modId: string) => {
+    return (userPerms && userPerms[modId]) ? userPerms[modId] !== 'none' : true;
+  };
+
+  const allChecked = modulesList.length > 0 && modulesList.every(mod => isModuleChecked(mod.id));
+
+  const handleToggleModule = (modId: string) => {
+    const current = isModuleChecked(modId);
+    const updated: Record<string, AccessLevel> = { ...userPerms };
+    updated[modId] = current ? 'none' : 'full';
+    if (userRow) onPermissionsChange(userRow, updated);
+  };
+
+  const handleToggleAll = () => {
+    const target: AccessLevel = allChecked ? 'none' : 'full';
+    const updated: Record<string, AccessLevel> = { ...userPerms };
+    modulesList.forEach(mod => {
+      updated[mod.id] = target;
+    });
+    if (userRow) onPermissionsChange(userRow, updated);
+  };
+
+  const filteredModules = modulesList.filter(mod => 
+    !searchQuery.trim() || 
+    (mod.label && mod.label.toLowerCase().includes(searchQuery.toLowerCase().trim())) ||
+    (mod.category && mod.category.toLowerCase().includes(searchQuery.toLowerCase().trim()))
+  );
+
+  return (
+    <div className="relative inline-block" ref={dropdownRef}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg flex items-center gap-0.5 transition-colors"
+        title="Manage Module Access Controls"
+      >
+        <Shield className="w-4 h-4" />
+        <ChevronDown className="w-3 h-3 text-indigo-400" />
+      </button>
+
+      {isOpen && (
+        <div 
+          className="absolute right-0 top-full mt-1.5 z-50 w-72 bg-erp-surface border border-erp-border rounded-xl shadow-2xl p-3 text-left space-y-2 animate-in fade-in zoom-in-95 duration-100"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Search Box matching Image 3 */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 text-erp-text/40 absolute left-2.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-erp-background border border-erp-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-erp-text focus:outline-none focus:border-indigo-500 font-medium"
+              autoFocus
+            />
+          </div>
+
+          {/* List Container matching Image 3 */}
+          <div className="max-h-60 overflow-y-auto space-y-0.5 divide-y divide-erp-border/30 pr-1">
+            {/* All Option */}
+            {!searchQuery && (
+              <label className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-erp-background/80 rounded-lg cursor-pointer text-xs font-bold text-erp-text transition-colors">
+                <input
+                  type="checkbox"
+                  checked={allChecked}
+                  onChange={handleToggleAll}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-erp-border cursor-pointer"
+                />
+                <span>All</span>
+              </label>
+            )}
+
+            {/* Individual Module Checkboxes */}
+            {filteredModules.map(mod => {
+              const checked = isModuleChecked(mod.id);
+              return (
+                <label 
+                  key={mod.id} 
+                  className="flex items-center gap-2.5 px-2 py-1.5 hover:bg-erp-background/80 rounded-lg cursor-pointer text-xs font-medium text-erp-text transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => handleToggleModule(mod.id)}
+                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-erp-border cursor-pointer shrink-0"
+                  />
+                  <span className="truncate">{mod.label}</span>
+                </label>
+              );
+            })}
+
+            {filteredModules.length === 0 && (
+              <p className="text-[11px] text-erp-text/40 py-2 text-center">No modules found</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function UserManagement() {
@@ -74,25 +210,74 @@ export default function UserManagement() {
   const [studentModalSearch, setStudentModalSearch] = useState('');
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [studentModalLoading, setStudentModalLoading] = useState(false);
-  
-  type AccessLevel = 'none' | 'view' | 'full';
-  const DEFAULT_PERMISSIONS: Record<string, AccessLevel> = {
-    dashboard: 'full', users: 'none', students: 'full', courses: 'full',
-    timetable: 'full', classes: 'full', finance: 'full', leaves: 'full', settings: 'full'
+
+  // Expanded Batch Rows for Subject Progress Dropdown
+  const [expandedBatchIds, setExpandedBatchIds] = useState<Set<string>>(new Set());
+
+  const toggleBatchExpand = (batchId: string) => {
+    setExpandedBatchIds(prev => {
+      const next = new Set(prev);
+      if (next.has(batchId)) next.delete(batchId);
+      else next.add(batchId);
+      return next;
+    });
   };
-  const MODULES_LIST = [
-    { id: 'dashboard', label: 'Dashboard' },
-    { id: 'users', label: 'User Management' },
-    { id: 'students', label: 'Student Management' },
-    { id: 'courses', label: 'Courses & Curriculum' },
-    { id: 'timetable', label: 'Timetable & Scheduling' },
-    { id: 'classes', label: 'Live Classes & Attendance' },
-    { id: 'finance', label: 'Finance & Fees' },
-    { id: 'leaves', label: 'Leave Management' },
-    { id: 'settings', label: 'System Settings' }
-  ];
+
+  const handleAdjustSubjectClasses = async (batch: BatchItem, subjectName: string, delta: number) => {
+    const currentList = parseBatchSubjectProgress(batch);
+    const updated = currentList.map(s => {
+      if (s.subject === subjectName) {
+        const newCount = Math.max(0, s.completed + delta);
+        return { ...s, completed: newCount };
+      }
+      return s;
+    });
+
+    setBatchesList(prev => prev.map(b => {
+      if (b.id === batch.id) {
+        const totalCompleted = updated.reduce((acc, item) => acc + item.completed, 0);
+        const totalClasses = updated.reduce((acc, item) => acc + (item.total || 10), 0);
+        const pct = totalClasses > 0 ? Math.min(100, Math.round((totalCompleted / totalClasses) * 100)) : 0;
+        return {
+          ...b,
+          subject_progress_json: JSON.stringify(updated),
+          completion_percentage: pct
+        };
+      }
+      return b;
+    }));
+
+    await updateBatchSubjectProgress(batch.id, updated);
+  };
+
+  const handleAddSubjectToBatch = async (batch: BatchItem) => {
+    const subjectName = prompt("Enter new subject name (e.g. React, Node.js, DSA):");
+    if (!subjectName || !subjectName.trim()) return;
+    const currentList = parseBatchSubjectProgress(batch);
+    if (currentList.some(s => s.subject.toLowerCase().trim() === subjectName.toLowerCase().trim())) {
+      alert("Subject already exists in this batch.");
+      return;
+    }
+    const updated = [...currentList, { subject: subjectName.trim(), completed: 0, total: 10 }];
+
+    setBatchesList(prev => prev.map(b => {
+      if (b.id === batch.id) {
+        const totalCompleted = updated.reduce((acc, item) => acc + item.completed, 0);
+        const totalClasses = updated.reduce((acc, item) => acc + (item.total || 10), 0);
+        const pct = totalClasses > 0 ? Math.min(100, Math.round((totalCompleted / totalClasses) * 100)) : 0;
+        return {
+          ...b,
+          subject_progress_json: JSON.stringify(updated),
+          completion_percentage: pct
+        };
+      }
+      return b;
+    }));
+
+    await updateBatchSubjectProgress(batch.id, updated);
+  };
   
-  const [permissions, setPermissions] = useState<Record<string, AccessLevel>>(DEFAULT_PERMISSIONS);
+  const [permissions, setPermissions] = useState<Record<string, AccessLevel>>({ ...DEFAULT_PERMISSIONS });
 
   const [allModules, setAllModules] = useState<any[]>([]);
   const [assignedModules, setAssignedModules] = useState<string[]>([]);
@@ -358,6 +543,21 @@ export default function UserManagement() {
     }
   };
 
+  const handlePermissionsChange = async (targetUser: ERPUser, newPerms: Record<string, AccessLevel>) => {
+    const permJson = JSON.stringify(newPerms);
+    setUsers(prev => prev.map(u => u.id === targetUser.id ? { ...u, permissions_json: permJson } : u));
+    try {
+      await patchUser(targetUser.id, { permissions_json: permJson });
+    } catch (e) {
+      console.error("Failed to patch user permissions:", e);
+      fetchUsersData();
+    }
+
+    if (currentUser && (currentUser.id === targetUser.id || currentUser.email.toLowerCase() === targetUser.email.toLowerCase())) {
+      updateCurrentUserSession({ permissions_json: permJson });
+    }
+  };
+
   const staffColumns = [
     { key: 'name', header: 'Name', editable: true },
     { key: 'email', header: 'Email', editable: true },
@@ -365,9 +565,10 @@ export default function UserManagement() {
     { key: 'status', header: 'Status' },
     { key: 'salary', header: 'Salary', editable: true },
     { key: 'actions', header: 'Actions', filterable: false, render: (row: any) => (
-      <div className="flex items-center gap-1">
-        <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg" title="Edit"><Edit className="w-4 h-4" /></button>
-        <button onClick={(e) => { e.stopPropagation(); handleDelete(row); }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg" title="Delete"><Trash2 className="w-4 h-4" /></button>
+      <div className="flex items-center gap-1.5 relative">
+        <PermissionsDropdown userRow={row} onPermissionsChange={handlePermissionsChange} />
+        <button onClick={(e) => { e.stopPropagation(); handleOpenModal(row); }} className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg" title="Edit Staff Member"><Edit className="w-4 h-4" /></button>
+        <button onClick={(e) => { e.stopPropagation(); handleDelete(row); }} className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg" title="Delete Staff Member"><Trash2 className="w-4 h-4" /></button>
       </div>
     )}
   ];
@@ -604,6 +805,7 @@ export default function UserManagement() {
                         <th className="py-3.5 px-4">Timing & Schedule</th>
                         <th className="py-3.5 px-4">Start Date</th>
                         <th className="py-3.5 px-4">Enrolled / Capacity</th>
+                        <th className="py-3.5 px-4">Completion</th>
                         <th className="py-3.5 px-4">Status</th>
                         <th className="py-3.5 px-4 text-right">Actions</th>
                       </tr>
@@ -612,7 +814,16 @@ export default function UserManagement() {
                       {filteredBatches.map(batch => {
                         const enrolled = batch.current_enrolled || 0;
                         const maxCap = batch.max_students || 30;
-                        const pct = Math.min(100, Math.round((enrolled / maxCap) * 100));
+                        const enrollPct = Math.min(100, Math.round((enrolled / maxCap) * 100));
+
+                        const subjects = parseBatchSubjectProgress(batch);
+                        const totalCompletedClasses = subjects.reduce((acc, s) => acc + s.completed, 0);
+                        const totalTargetClasses = subjects.reduce((acc, s) => acc + (s.total || 10), 0);
+                        const overallCompletionPct = batch.completion_percentage !== undefined && batch.completion_percentage !== null
+                          ? batch.completion_percentage
+                          : (totalTargetClasses > 0 ? Math.min(100, Math.round((totalCompletedClasses / totalTargetClasses) * 100)) : 0);
+
+                        const isExpanded = expandedBatchIds.has(batch.id);
 
                         let statusBg = 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
                         if (batch.status === 'Upcoming') statusBg = 'bg-blue-500/10 text-blue-500 border-blue-500/30';
@@ -620,85 +831,182 @@ export default function UserManagement() {
                         else if (batch.status === 'Paused') statusBg = 'bg-amber-500/10 text-amber-500 border-amber-500/30';
 
                         return (
-                          <tr key={batch.id} className="hover:bg-erp-background/40 transition-colors">
-                            <td className="py-3.5 px-4 font-bold text-erp-text">
-                              <div className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex-shrink-0" />
-                                {batch.name}
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-4 text-erp-text/80 font-medium">
-                              <span className="flex items-center gap-1.5">
-                                <BookOpen className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
-                                {batch.course_name || batch.course_id || '—'}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-erp-text/80 font-medium">
-                              <span className="flex items-center gap-1.5">
-                                <Users className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
-                                {batch.primary_teacher_name || 'Unassigned'}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-erp-text/70 font-medium text-xs">
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
-                                {batch.timing || batch.schedule_pattern || 'Flexible'}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-erp-text/70 font-medium text-xs">
-                              <span className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
-                                {batch.start_date || '—'}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4">
-                              <div className="w-36">
-                                <div className="flex justify-between items-center text-xs font-bold mb-1">
-                                  <span>{enrolled} <span className="text-erp-text/40 font-normal">/ {maxCap}</span></span>
-                                  <span className="text-[10px] text-erp-text/50">{pct}%</span>
+                          <React.Fragment key={batch.id}>
+                            <tr 
+                              onClick={() => toggleBatchExpand(batch.id)}
+                              className={`hover:bg-erp-background/60 transition-colors cursor-pointer ${
+                                isExpanded ? 'bg-indigo-500/5 dark:bg-indigo-950/20 font-medium' : ''
+                              }`}
+                            >
+                              <td className="py-3.5 px-4 font-bold text-erp-text">
+                                <div className="flex items-center gap-2">
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); toggleBatchExpand(batch.id); }}
+                                    className="p-1 text-erp-text/50 hover:text-indigo-500 transition-colors rounded hover:bg-erp-surface"
+                                    title={isExpanded ? "Collapse class progress" : "Expand class progress"}
+                                  >
+                                    {isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-500" /> : <ChevronRight className="w-4 h-4" />}
+                                  </button>
+                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                                  <span>{batch.name}</span>
                                 </div>
-                                <div className="w-full h-1.5 bg-erp-border rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full transition-all ${
-                                      pct >= 100 ? 'bg-red-500' : pct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'
-                                    }`}
-                                    style={{ width: `${pct}%` }}
-                                  />
+                              </td>
+                              <td className="py-3.5 px-4 text-erp-text/80 font-medium">
+                                <span className="flex items-center gap-1.5">
+                                  <BookOpen className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                                  {batch.course_name || batch.course_id || '—'}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-erp-text/80 font-medium">
+                                <span className="flex items-center gap-1.5">
+                                  <Users className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
+                                  {batch.primary_teacher_name || 'Unassigned'}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-erp-text/70 font-medium text-xs">
+                                <span className="flex items-center gap-1.5">
+                                  <Clock className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
+                                  {batch.timing || batch.schedule_pattern || 'Flexible'}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-erp-text/70 font-medium text-xs">
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5 text-erp-text/40 flex-shrink-0" />
+                                  {batch.start_date || '—'}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="w-32">
+                                  <div className="flex justify-between items-center text-xs font-bold mb-1">
+                                    <span>{enrolled} <span className="text-erp-text/40 font-normal">/ {maxCap}</span></span>
+                                    <span className="text-[10px] text-erp-text/50">{enrollPct}%</span>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-erp-border rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all ${
+                                        enrollPct >= 100 ? 'bg-red-500' : enrollPct >= 75 ? 'bg-amber-500' : 'bg-emerald-500'
+                                      }`}
+                                      style={{ width: `${enrollPct}%` }}
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="py-3.5 px-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusBg}`}>
-                                {batch.status}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleOpenStudentModal(batch)}
-                                  className="px-2.5 py-1 text-xs font-bold text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 dark:text-emerald-400 rounded-lg border border-emerald-500/30 flex items-center gap-1 transition-colors"
-                                  title="Add/Manage Students in Batch"
-                                >
-                                  <UserPlus className="w-3.5 h-3.5" />
-                                  <span>Students</span>
-                                </button>
-                                <button
-                                  onClick={() => handleOpenBatchModal(batch)}
-                                  className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors"
-                                  title="Edit Batch"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteBatch(batch)}
-                                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
-                                  title="Delete Batch"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                    {overallCompletionPct}%
+                                  </span>
+                                  <span className="text-[10px] text-erp-text/50 hidden sm:inline">
+                                    ({totalCompletedClasses} classes)
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border ${statusBg}`}>
+                                  {batch.status}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-4 text-right" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => handleOpenStudentModal(batch)}
+                                    className="px-2.5 py-1 text-xs font-bold text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20 dark:text-emerald-400 rounded-lg border border-emerald-500/30 flex items-center gap-1 transition-colors"
+                                    title="Add/Manage Students in Batch"
+                                  >
+                                    <UserPlus className="w-3.5 h-3.5" />
+                                    <span>Students</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleOpenBatchModal(batch)}
+                                    className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors"
+                                    title="Edit Batch"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteBatch(batch)}
+                                    className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                                    title="Delete Batch"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* Expanded Subject-Wise Class Progress Sub-Row matching Image 1 */}
+                            {isExpanded && (
+                              <tr key={"exp_" + batch.id} className="bg-slate-50/90 dark:bg-zinc-900/80 border-b border-erp-border">
+                                <td colSpan={9} className="p-4">
+                                  <div className="bg-erp-surface border border-erp-border rounded-xl p-4 space-y-3 shadow-inner">
+                                    <div className="flex items-center justify-between flex-wrap gap-2">
+                                      <div className="flex items-center gap-2">
+                                        <BarChart3 className="w-4 h-4 text-indigo-500" />
+                                        <h4 className="font-bold text-xs text-erp-text uppercase tracking-wider">
+                                          {batch.name} — Class Progress & Subject Breakdown
+                                        </h4>
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/30">
+                                          Overall Progress: {overallCompletionPct}%
+                                        </span>
+                                      </div>
+                                      <button
+                                        onClick={() => handleAddSubjectToBatch(batch)}
+                                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/30 flex items-center gap-1 transition-colors"
+                                      >
+                                        <Plus className="w-3.5 h-3.5" /> Add Subject
+                                      </button>
+                                    </div>
+
+                                    {/* Subjects Grid matching Image 1 diagram: SQL - 5 +, Python - 3 +, AI - 4 +, ML - 5 + */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                      {subjects.map((subItem) => (
+                                        <div
+                                          key={subItem.subject}
+                                          className="bg-erp-background border border-erp-border rounded-xl p-3 flex items-center justify-between hover:border-indigo-500/40 transition-all shadow-xs"
+                                        >
+                                          <div className="min-w-0 pr-2">
+                                            <span className="text-xs font-bold text-erp-text block truncate" title={subItem.subject}>
+                                              {subItem.subject}
+                                            </span>
+                                            <span className="text-[11px] font-bold text-indigo-500">
+                                              {subItem.completed} classes completed
+                                            </span>
+                                          </div>
+
+                                          {/* - and + buttons */}
+                                          <div className="flex items-center gap-1 bg-erp-surface border border-erp-border rounded-lg p-1 shrink-0">
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAdjustSubjectClasses(batch, subItem.subject, -1);
+                                              }}
+                                              className="w-6 h-6 rounded bg-erp-background hover:bg-red-500/10 hover:text-red-500 flex items-center justify-center font-bold text-sm text-erp-text/70 transition-colors"
+                                              title={`Reduce class for ${subItem.subject}`}
+                                            >
+                                              -
+                                            </button>
+                                            <span className="text-xs font-black px-1.5 text-erp-text">
+                                              {subItem.completed}
+                                            </span>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleAdjustSubjectClasses(batch, subItem.subject, 1);
+                                              }}
+                                              className="w-6 h-6 rounded bg-erp-background hover:bg-emerald-500/10 hover:text-emerald-500 flex items-center justify-center font-bold text-sm text-erp-text/70 transition-colors"
+                                              title={`Add completed class for ${subItem.subject}`}
+                                            >
+                                              +
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                     </tbody>
@@ -784,27 +1092,88 @@ export default function UserManagement() {
                 )}
               </div>
               <div className="border-t border-erp-border pt-5">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-sm font-bold text-erp-text uppercase tracking-wider flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-erp-primary" /> Advanced Access Control
-                  </label>
-                  <span className="text-xs text-erp-text/50">Granular module permissions</span>
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <div>
+                    <label className="block text-sm font-bold text-erp-text uppercase tracking-wider flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-erp-primary" /> Advanced Access Control
+                    </label>
+                    <span className="text-xs text-erp-text/50">Granular module permissions for all CEO & Staff features</span>
+                  </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allFull = SYSTEM_MODULES.reduce((acc, m) => ({ ...acc, [m.id]: 'full' }), {});
+                        setPermissions(allFull as any);
+                      }}
+                      className="text-[10px] font-bold px-2 py-1 rounded-md bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/30 transition-colors"
+                    >
+                      ⚡ Grant All Full Access
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allView = SYSTEM_MODULES.reduce((acc, m) => ({ ...acc, [m.id]: 'view' }), {});
+                        setPermissions(allView as any);
+                      }}
+                      className="text-[10px] font-bold px-2 py-1 rounded-md bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border border-blue-500/30 transition-colors"
+                    >
+                      👁️ Grant All View Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allNone = SYSTEM_MODULES.reduce((acc, m) => ({ ...acc, [m.id]: 'none' }), {});
+                        setPermissions(allNone as any);
+                      }}
+                      className="text-[10px] font-bold px-2 py-1 rounded-md bg-red-500/10 text-red-600 hover:bg-red-500/20 border border-red-500/30 transition-colors"
+                    >
+                      🔒 Revoke All Access
+                    </button>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {MODULES_LIST.map(mod => (
-                    <div key={mod.id} className="bg-erp-background border border-erp-border rounded-lg p-3 flex flex-col gap-2">
-                      <span className="text-xs font-semibold text-erp-text/80">{mod.label}</span>
-                      <select 
-                        value={permissions[mod.id] || 'none'} 
-                        onChange={e => setPermissions(p => ({ ...p, [mod.id]: e.target.value as AccessLevel }))}
-                        className="w-full bg-erp-surface border border-erp-border rounded px-2 py-1.5 text-xs text-erp-text focus:outline-none focus:border-indigo-500"
+                  {SYSTEM_MODULES.map(mod => {
+                    const currentVal = permissions[mod.id] || 'none';
+                    return (
+                      <div 
+                        key={mod.id} 
+                        className={`border rounded-xl p-3 flex flex-col justify-between gap-2 transition-all ${
+                          currentVal === 'full' 
+                            ? 'bg-erp-background border-emerald-500/30 shadow-xs' 
+                            : currentVal === 'view'
+                            ? 'bg-erp-background border-blue-500/30'
+                            : 'bg-erp-background/40 border-erp-border opacity-75'
+                        }`}
                       >
-                        <option value="none">No Access</option>
-                        <option value="view">View Only</option>
-                        <option value="full">Full Access</option>
-                      </select>
-                    </div>
-                  ))}
+                        <div>
+                          <div className="flex items-center justify-between mb-1 gap-1">
+                            <span className="text-xs font-bold text-erp-text truncate" title={mod.label}>{mod.label}</span>
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-erp-surface border border-erp-border text-erp-text/50 uppercase tracking-wider shrink-0">
+                              {mod.category}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-erp-text/50 leading-snug line-clamp-2">{mod.description}</p>
+                        </div>
+
+                        <select 
+                          value={currentVal} 
+                          onChange={e => setPermissions(p => ({ ...p, [mod.id]: e.target.value as AccessLevel }))}
+                          className={`w-full border rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-indigo-500 transition-colors ${
+                            currentVal === 'full'
+                              ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/40'
+                              : currentVal === 'view'
+                              ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/40'
+                              : 'bg-erp-surface text-erp-text/60 border-erp-border'
+                          }`}
+                        >
+                          <option value="full">Full Access</option>
+                          <option value="view">View Only</option>
+                          <option value="none">No Access</option>
+                        </select>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>

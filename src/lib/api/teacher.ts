@@ -295,27 +295,28 @@ export async function getInstructorClasses(instructorId: string, specificClassId
         const courseName = slotRes.rows[0].course_name as string;
         let parsedCourses: string[] = [];
         try { parsedCourses = JSON.parse(courseName); } catch (e) { parsedCourses = [courseName]; }
-        const coursePlaceholders = parsedCourses.map(() => '?').join(',');
+        if (!Array.isArray(parsedCourses)) parsedCourses = [parsedCourses];
+        parsedCourses = parsedCourses.map(c => String(c).trim()).filter(Boolean);
 
-        const res = await executeWithRetry(
-          `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
-                  c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
-                  m.title as module_title
-           FROM classes c 
-           JOIN modules m ON c.module_id = m.id 
-           LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
-           LEFT JOIN courses crs ON cmm.course_id = crs.id
-           WHERE (m.instructor_id = ? 
-                  OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-                  OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-                 )
-             AND (crs.title IN (${coursePlaceholders}) OR m.title IN (${coursePlaceholders})) AND c.status != 'completed' 
-           ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
-          [instructorId, instructorId, instructorId, ...parsedCourses, ...parsedCourses]
-        );
-        if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
+        if (parsedCourses.length > 0) {
+          const coursePlaceholders = parsedCourses.map(() => '?').join(',');
+
+          const res = await executeWithRetry(
+            `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
+                    c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
+                    m.title as module_title
+             FROM classes c 
+             JOIN modules m ON c.module_id = m.id 
+             LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
+             LEFT JOIN courses crs ON cmm.course_id = crs.id
+             WHERE (crs.title IN (${coursePlaceholders}) OR m.title IN (${coursePlaceholders}))
+               AND c.status != 'completed' 
+             ORDER BY c.order_index ASC LIMIT 1`,
+            [...parsedCourses, ...parsedCourses]
+          );
+          if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
+        }
       }
-      // If no incomplete class found for this slot's module, fallback to fetching any incomplete class
       specificClassId = undefined;
     }
 
@@ -326,35 +327,22 @@ export async function getInstructorClasses(instructorId: string, specificClassId
                 m.title as module_title
          FROM classes c 
          JOIN modules m ON c.module_id = m.id 
-         LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
-         LEFT JOIN courses crs ON cmm.course_id = crs.id
-         WHERE c.id = ? 
-           AND (m.instructor_id = ? 
-                OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-                OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-               )`,
-        [specificClassId, instructorId, instructorId, instructorId]
+         WHERE c.id = ?`,
+        [specificClassId]
       );
-      return res.rows as unknown as ClassRow[];
-    } else {
-      const res = await executeWithRetry(
-        `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
-                c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
-                m.title as module_title
-         FROM classes c 
-         JOIN modules m ON c.module_id = m.id 
-         LEFT JOIN course_module_mapping cmm ON m.id = cmm.module_id
-         LEFT JOIN courses crs ON cmm.course_id = crs.id
-         WHERE (m.instructor_id = ? 
-                OR m.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-                OR crs.title IN (SELECT json_each.value FROM timetable_slots s, json_each(s.course_name) WHERE s.teacher_id = ?)
-               ) 
-           AND c.status != 'completed' 
-         ORDER BY cmm.order_index ASC, c.order_index ASC LIMIT 1`,
-        [instructorId, instructorId, instructorId]
-      );
-      return res.rows as unknown as ClassRow[];
+      if (res.rows.length > 0) return res.rows as unknown as ClassRow[];
     }
+
+    const res = await executeWithRetry(
+      `SELECT DISTINCT c.id, c.title, c.description, c.type, c.status, 
+              c.ai_ppt_markdown, c.ai_script, c.ai_keypoints, c.youtube_video_id,
+              m.title as module_title
+       FROM classes c 
+       JOIN modules m ON c.module_id = m.id 
+       WHERE c.status != 'completed' 
+       ORDER BY c.order_index ASC LIMIT 1`
+    );
+    return res.rows as unknown as ClassRow[];
   } catch (e) {
     console.error("Failed to fetch instructor classes", e);
     return [];

@@ -19,9 +19,8 @@ export default function Profile() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const handleLogout = async () => {
+    await logout();
   };
 
   if (!user) return null;

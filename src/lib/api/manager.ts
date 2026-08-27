@@ -391,16 +391,28 @@ export const getGlobalTimetable = async (filters?: { course?: string, module?: s
 export const getBatchesList = async () => {
   if (isTursoConfigured && client) {
     try {
-      const batchesRes = await executeWithRetry("SELECT id, name, course_id FROM batches ORDER BY created_at DESC");
-      const studentBatchesRes = await executeWithRetry("SELECT DISTINCT batch_number, course FROM students WHERE batch_number IS NOT NULL");
+      const batchesRes = await executeWithRetry("SELECT id, name, course_id FROM batches ORDER BY name ASC");
+      const studentBatchesRes = await executeWithRetry("SELECT DISTINCT batch_number, course FROM students WHERE batch_number IS NOT NULL AND batch_number != '' AND batch_number != 'null'");
       
-      const allBatches = [...batchesRes.rows];
+      const allBatches: { id: string; name: string; course_id?: string }[] = batchesRes.rows.map((r: any) => ({
+        id: String(r.id),
+        name: String(r.name || 'Unnamed Batch'),
+        course_id: r.course_id ? String(r.course_id) : undefined,
+      }));
       
       studentBatchesRes.rows.forEach((r: any) => {
-        const batchNum = String(r.batch_number);
-        const course = String(r.course || '');
-        if (batchNum && batchNum !== 'null' && !allBatches.some(b => String(b.id) === batchNum && b.course_id === course)) {
-          allBatches.push({ id: batchNum, name: 'Batch ' + batchNum, course_id: course });
+        const batchNum = String(r.batch_number).trim();
+        const course = String(r.course || '').trim();
+        if (batchNum && batchNum !== 'null') {
+          const normName = batchNum.toLowerCase().startsWith('batch') ? batchNum : 'Batch ' + batchNum;
+          const exists = allBatches.some(b => 
+            String(b.id) === batchNum || 
+            String(b.name).toLowerCase() === normName.toLowerCase() ||
+            String(b.name).toLowerCase() === batchNum.toLowerCase()
+          );
+          if (!exists) {
+            allBatches.push({ id: batchNum, name: normName, course_id: course });
+          }
         }
       });
       
@@ -415,21 +427,32 @@ export const getBatchesList = async () => {
 export const saveTimetableSlot = async (slot: Partial<GlobalTimetableSlot>) => {
   if (isTursoConfigured && client) {
     try {
-      const id = slot.id || 'ts_' + Date.now().toString(36);
+      const id = slot.id || 'ts_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
+      const batchId = slot.batch_id ?? '{}';
+      const dayOfWeek = slot.day_of_week ?? 'Monday';
+      const startTime = slot.start_time ?? '09:00';
+      const endTime = slot.end_time ?? '10:00';
+      const courseName = slot.course_name ?? '[]';
+      const teacherId = slot.teacher_id ?? '';
+      const timing = slot.timing ?? 'Offline';
+      const status = slot.status ?? 'one-time';
+      const weekStart = slot.week_start ?? '';
+
       if (slot.id) {
         await executeWithRetry(
           "UPDATE timetable_slots SET batch_id=?, day_of_week=?, start_time=?, end_time=?, course_name=?, teacher_id=?, timing=?, status=?, week_start=? WHERE id=?",
-          [slot.batch_id, slot.day_of_week, slot.start_time, slot.end_time, slot.course_name, slot.teacher_id, slot.timing, slot.status || 'one-time', slot.week_start || '', id]
+          [batchId, dayOfWeek, startTime, endTime, courseName, teacherId, timing, status, weekStart, id]
         );
       } else {
         await executeWithRetry(
           "INSERT INTO timetable_slots (id, batch_id, day_of_week, start_time, end_time, course_name, teacher_id, timing, status, week_start) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-          [id, slot.batch_id, slot.day_of_week, slot.start_time, slot.end_time, slot.course_name, slot.teacher_id, slot.timing, slot.status || 'one-time', slot.week_start || '']
+          [id, batchId, dayOfWeek, startTime, endTime, courseName, teacherId, timing, status, weekStart]
         );
       }
       return true;
     } catch (e) {
-      console.error(e);
+      console.error('Error in saveTimetableSlot:', e);
+      throw e;
     }
   }
   return false;

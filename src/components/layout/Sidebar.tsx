@@ -8,46 +8,7 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { ALL_PAGES } from '../../lib/pageRegistry';
 import { getRolePages } from '../../lib/api/rolePageAccess';
 
-const ROUTE_MODULE_MAP: Record<string, string> = {
-  '/manager': 'dashboard',
-  '/teacher': 'dashboard',
-  '/sales/dashboard': 'dashboard',
-  '/dm/dashboard': 'dashboard',
-  '/manager/users': 'users',
-  '/ceo/users': 'users',
-  '/manager/students': 'students',
-  '/manager/student-progress': 'students',
-  '/ceo/students': 'students',
-  '/ceo/student-progress': 'students',
-  '/manager/courses': 'courses',
-  '/teacher/cms': 'courses',
-  '/sales/pitch': 'courses',
-  '/ceo/courses': 'courses',
-  '/manager/timetable': 'timetable',
-  '/teacher/timetable': 'timetable',
-  '/ceo/timetable': 'timetable',
-  '/teacher/live': 'classes',
-  '/teacher/attendance': 'classes',
-  '/sales/history': 'finance',
-  '/manager/reports': 'finance',
-  '/ceo/history': 'finance',
-  '/ceo/reports': 'finance',
-  '/ceo/sales-dashboard': 'finance',
-  '/manager/tasks': 'leaves',
-  '/teacher/tasks': 'leaves',
-  '/dm/planner': 'leaves',
-  '/dm/tasks': 'leaves',
-  '/sales/tasks': 'leaves',
-  '/sales/pipeline': 'leaves',
-  '/ceo/tasks': 'leaves',
-  '/manager/student-settings': 'settings',
-  '/manager/gamification': 'settings',
-  '/teacher/settings': 'settings',
-  '/ceo/ai-settings': 'settings',
-  '/ceo/gamification': 'settings',
-  '/ceo/student-settings': 'settings',
-  '/ceo/settings': 'settings'
-};
+import { ROUTE_MODULE_MAP } from '../../lib/permissionsRegistry';
 
 type NavItem = { to: string, icon: any, label: string, section: string };
 
@@ -110,9 +71,10 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   if (accessLevels.includes('Teacher') && !accessLevels.includes('CEO')) {
     allNavItems.push(
       { to: '/teacher',             icon: LayoutDashboard, label: 'Teacher Hub', section: 'Teacher' },
+      { to: '/teacher/courses',     icon: BookOpen,        label: 'Course CMS',  section: 'Teacher' },
       { to: '/teacher/timetable',   icon: Calendar,        label: 'Timetable',   section: 'Teacher' },
       { to: '/teacher/live',        icon: Video,           label: 'Live Stream', section: 'Teacher' },
-      { to: '/teacher/cms',         icon: BookOpen,        label: 'Course CMS',  section: 'Teacher' },
+      { to: '/teacher/cms',         icon: BookOpen,        label: 'AI Material Gen', section: 'Teacher' },
       { to: '/teacher/attendance',  icon: Users,           label: 'Attendance',  section: 'Teacher' },
       { to: '/teacher/tasks',       icon: CheckSquare,     label: 'Tasks',       section: 'Teacher' },
       { to: '/teacher/settings',    icon: Settings,        label: 'AI Settings', section: 'Teacher' }
@@ -122,6 +84,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   if (accessLevels.includes('DM') && !accessLevels.includes('CEO')) {
     allNavItems.push(
       { to: '/dm/dashboard', icon: LayoutDashboard, label: 'DM Hub',          section: 'Marketing' },
+      { to: '/dm/courses',   icon: BookOpen,        label: 'Course CMS',      section: 'Marketing' },
       { to: '/dm/planner',   icon: Calendar,        label: 'Content Planner', section: 'Marketing' },
       { to: '/dm/tasks',     icon: CheckSquare,     label: 'Tasks',           section: 'Marketing' }
     );
@@ -130,6 +93,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   if (accessLevels.includes('Sales/HR') && !accessLevels.includes('CEO')) {
     allNavItems.push(
       { to: '/sales/dashboard', icon: LayoutDashboard, label: 'Dashboard',    section: 'Sales & HR' },
+      { to: '/sales/courses',   icon: BookOpen,        label: 'Course CMS',   section: 'Sales & HR' },
       { to: '/sales/pitch',     icon: BookOpen,        label: 'Sales Pitch',  section: 'Sales & HR' },
       { to: '/sales/pipeline',  icon: Users,           label: 'Pipeline',     section: 'Sales & HR' },
       { to: '/sales/tasks',     icon: CheckSquare,     label: 'Tasks',        section: 'Sales & HR' }
@@ -159,6 +123,42 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
     );
   }
 
+  // Helper for dynamic module routes
+  const SYSTEM_MODULE_NAV: Record<string, { label: string; icon: any; section: string; getRoute: (role: string) => string }> = {
+    dashboard: { label: 'Dashboard & Master View', icon: LayoutDashboard, section: 'Core Navigation', getRoute: (r) => r === 'Manager' ? '/manager' : r === 'Teacher' ? '/teacher' : r === 'DM' ? '/dm/dashboard' : r === 'Sales/HR' ? '/sales/dashboard' : '/ceo/dashboard' },
+    tasks: { label: 'Tasks & Task Center', icon: CheckSquare, section: 'Core Navigation', getRoute: (r) => r === 'Manager' ? '/manager/tasks' : r === 'Teacher' ? '/teacher/tasks' : r === 'DM' ? '/dm/tasks' : r === 'Sales/HR' ? '/sales/tasks' : '/ceo/tasks' },
+    reports: { label: 'Performance Reports', icon: BarChart2, section: 'Analytics', getRoute: (r) => r === 'Manager' ? '/manager/reports' : '/ceo/reports' },
+    sales: { label: 'Sales Hub & CRM Pipeline', icon: DollarSign, section: 'Sales & Growth', getRoute: (r) => r === 'Sales/HR' ? '/sales/pipeline' : '/ceo/sales-pipeline' },
+    sales_history: { label: 'Sales & Master History', icon: History, section: 'Sales & Growth', getRoute: (r) => r === 'Sales/HR' ? '/sales/history' : '/ceo/history' },
+    users: { label: 'User Admin & Staff Mgmt', icon: Users, section: 'Administration', getRoute: (r) => r === 'Manager' ? '/manager/users' : '/ceo/users' },
+    students: { label: 'Students & Progress', icon: GraduationCap, section: 'Academic', getRoute: (r) => r === 'Manager' ? '/manager/students' : '/ceo/students' },
+    courses: { label: 'Courses & Curriculum CMS', icon: BookOpen, section: 'Academic', getRoute: (r) => r === 'Manager' ? '/manager/courses' : r === 'Teacher' ? '/teacher/courses' : r === 'DM' ? '/dm/courses' : r === 'Sales/HR' ? '/sales/courses' : '/ceo/courses' },
+    timetable: { label: 'Timetable & Scheduling', icon: Calendar, section: 'Academic', getRoute: (r) => r === 'Manager' ? '/manager/timetable' : r === 'Teacher' ? '/teacher/timetable' : '/ceo/timetable' },
+    classes: { label: 'Live Classes & Attendance', icon: Video, section: 'Academic', getRoute: () => '/teacher/live' },
+    marketing: { label: 'Marketing Hub & Planner', icon: Calendar, section: 'Marketing', getRoute: (r) => r === 'DM' ? '/dm/planner' : '/ceo/dm-dashboard' },
+    ai_voice: { label: 'AI Voice & Settings', icon: Bot, section: 'AI Tools', getRoute: (r) => r === 'Teacher' ? '/teacher/settings' : '/ceo/ai-voice' },
+    gamification: { label: 'Game Config & Rewards', icon: Zap, section: 'Engagement', getRoute: (r) => r === 'Manager' ? '/manager/gamification' : '/ceo/gamification' },
+    settings: { label: 'System & ERP Settings', icon: Settings, section: 'Administration', getRoute: (r) => r === 'Manager' ? '/manager/student-settings' : '/ceo/student-settings' },
+  };
+
+  // Dynamically add any granted system modules not already present in allNavItems
+  if (user.role !== 'CEO') {
+    Object.entries(SYSTEM_MODULE_NAV).forEach(([modId, def]) => {
+      const access = getModuleAccess(user, modId);
+      if (access !== 'none') {
+        const route = def.getRoute(user.role);
+        if (!allNavItems.some(i => i.to === route)) {
+          allNavItems.push({
+            to: route,
+            icon: def.icon,
+            label: def.label,
+            section: def.section
+          });
+        }
+      }
+    });
+  }
+
   // Common elements for internal staff
   if (user.role !== 'Student') {
     allNavItems.push({ to: '/chat', icon: MessageCircle, label: 'Chat Center', section: 'Shared' });
@@ -170,7 +170,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   allNavItems = [...allNavItems, ...dedupedExtras];
 
   // Apply Advanced Access Control permission filtering for non-CEO users
-  if (user.role !== 'CEO' && user.permissions_json) {
+  if (user.role !== 'CEO') {
     allNavItems = allNavItems.filter(item => {
       const moduleId = ROUTE_MODULE_MAP[item.to];
       if (!moduleId) return true;

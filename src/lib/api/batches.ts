@@ -1,6 +1,12 @@
 import { client, isTursoConfigured } from '../turso';
 import { cachedQuery, invalidateQueryCache } from '../queryCache';
 
+export interface SubjectClassProgress {
+  subject: string;
+  completed: number;
+  total?: number;
+}
+
 export interface BatchItem {
   id: string;
   name: string;
@@ -16,6 +22,8 @@ export interface BatchItem {
   status: 'Active' | 'Upcoming' | 'Completed' | 'Paused';
   mode?: 'Online' | 'Offline' | 'Hybrid';
   created_at?: string;
+  subject_progress_json?: string;
+  completion_percentage?: number;
 }
 
 export interface StudentAssignmentItem {
@@ -63,7 +71,9 @@ export async function ensureBatchesTable() {
         current_enrolled INTEGER DEFAULT 0,
         status TEXT DEFAULT 'Active',
         mode TEXT DEFAULT 'Hybrid',
-        created_at TEXT
+        created_at TEXT,
+        subject_progress_json TEXT,
+        completion_percentage INTEGER DEFAULT 0
       )
     `);
 
@@ -82,8 +92,64 @@ export async function ensureBatchesTable() {
     await safeAddColumn('current_enrolled', 'INTEGER DEFAULT 0');
     await safeAddColumn('status', "TEXT DEFAULT 'Active'");
     await safeAddColumn('mode', "TEXT DEFAULT 'Hybrid'");
+    await safeAddColumn('subject_progress_json', 'TEXT');
+    await safeAddColumn('completion_percentage', 'INTEGER DEFAULT 0');
   } catch (e) {
     console.error("Error ensuring batches table:", e);
+  }
+}
+
+export const DEFAULT_DIAGRAM_SUBJECTS: SubjectClassProgress[] = [
+  { subject: 'SQL', completed: 5, total: 10 },
+  { subject: 'Python', completed: 3, total: 10 },
+  { subject: 'AI', completed: 4, total: 10 },
+  { subject: 'ML', completed: 5, total: 10 }
+];
+
+export function parseBatchSubjectProgress(batch: BatchItem): SubjectClassProgress[] {
+  if (batch.subject_progress_json) {
+    try {
+      const parsed = JSON.parse(batch.subject_progress_json);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map(item => ({
+          subject: item.subject || 'Subject',
+          completed: Math.max(0, Number(item.completed) || 0),
+          total: Math.max(1, Number(item.total) || 10)
+        }));
+      }
+    } catch (e) {
+      console.error("Failed to parse subject_progress_json", e);
+    }
+  }
+  return DEFAULT_DIAGRAM_SUBJECTS.map(s => ({ ...s }));
+}
+
+/**
+ * Updates batch subject progress and completion percentage in Turso DB.
+ */
+export async function updateBatchSubjectProgress(batchId: string, subjectProgress: SubjectClassProgress[]): Promise<boolean> {
+  if (!isTursoConfigured || !client) return false;
+
+  await ensureBatchesTable();
+
+  try {
+    const totalCompleted = subjectProgress.reduce((acc, s) => acc + (s.completed || 0), 0);
+    const totalClasses = subjectProgress.reduce((acc, s) => acc + (s.total || 10), 0);
+    const completionPercentage = totalClasses > 0 ? Math.min(100, Math.round((totalCompleted / totalClasses) * 100)) : 0;
+    const jsonStr = JSON.stringify(subjectProgress);
+
+    await executeWithRetry(`
+      UPDATE batches SET
+        subject_progress_json = ?,
+        completion_percentage = ?
+      WHERE id = ?
+    `, [jsonStr, completionPercentage, batchId]);
+
+    invalidateQueryCache('batches_all');
+    return true;
+  } catch (e) {
+    console.error("Error updating batch subject progress:", e);
+    return false;
   }
 }
 
@@ -111,6 +177,8 @@ export async function getAllBatches(): Promise<BatchItem[]> {
           b.status,
           b.mode,
           b.created_at,
+          b.subject_progress_json,
+          b.completion_percentage,
           u.name as primary_teacher_name,
           c.title as course_name
         FROM batches b
@@ -153,6 +221,8 @@ export async function getAllBatches(): Promise<BatchItem[]> {
           status: (row.status as any) || 'Active',
           mode: (row.mode as any) || 'Hybrid',
           created_at: row.created_at ? String(row.created_at) : undefined,
+          subject_progress_json: row.subject_progress_json ? String(row.subject_progress_json) : undefined,
+          completion_percentage: row.completion_percentage !== undefined && row.completion_percentage !== null ? Number(row.completion_percentage) : undefined,
         };
       });
     } catch (error) {

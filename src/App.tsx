@@ -226,6 +226,9 @@ function App() {
         
         {/* Sales / HR Routes */}
         <Route path="/sales/dashboard" element={<SalesLayout><SalesDashboard /></SalesLayout>} />
+        <Route path="/sales/courses" element={<SalesLayout><CourseManagement /></SalesLayout>} />
+        <Route path="/sales/courses/:courseId/modules/:moduleId" element={<SalesLayout><ModuleEditor /></SalesLayout>} />
+        <Route path="/sales/courses/:courseId/modules/:moduleId/classes/:classId" element={<SalesLayout><ClassEditor /></SalesLayout>} />
         <Route path="/sales/tasks" element={<SalesLayout><AsanaTaskApp /></SalesLayout>} />
         
         {/* Shared Routes */}
@@ -253,6 +256,9 @@ function App() {
 
         {/* DM Routes */}
         <Route path="/dm/dashboard" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><DMDashboard /></DMLayout></RequireAuth>} />
+        <Route path="/dm/courses" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><CourseManagement /></DMLayout></RequireAuth>} />
+        <Route path="/dm/courses/:courseId/modules/:moduleId" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><ModuleEditor /></DMLayout></RequireAuth>} />
+        <Route path="/dm/courses/:courseId/modules/:moduleId/classes/:classId" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><ClassEditor /></DMLayout></RequireAuth>} />
         <Route path="/dm/planner" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><ContentPlanner /></DMLayout></RequireAuth>} />
         <Route path="/dm/tasks" element={<RequireAuth allowedRoles={['DM', 'Manager', 'CEO']}><DMLayout><AsanaTaskApp /></DMLayout></RequireAuth>} />
 
@@ -277,10 +283,12 @@ function App() {
         <Route path="/ceo/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><CEOLayout><ReportsPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/students" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentsPage /></CEOLayout></RequireAuth>} />
         <Route path="/ceo/student-progress" element={<RequireAuth allowedRoles={['CEO']}><CEOLayout><StudentProgress /></CEOLayout></RequireAuth>} />
-        <Route path="/manager/reports" element={<RequireAuth allowedRoles={['CEO', 'Manager']}><ManagerLayout><ReportsPage /></ManagerLayout></RequireAuth>} />
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherLayout><TeacherDashboard /></TeacherLayout>} />
+        <Route path="/teacher/courses" element={<TeacherLayout><CourseManagement /></TeacherLayout>} />
+        <Route path="/teacher/courses/:courseId/modules/:moduleId" element={<TeacherLayout><ModuleEditor /></TeacherLayout>} />
+        <Route path="/teacher/courses/:courseId/modules/:moduleId/classes/:classId" element={<TeacherLayout><ClassEditor /></TeacherLayout>} />
         <Route path="/teacher/timetable" element={<TeacherLayout><TeacherTimetable /></TeacherLayout>} />
         <Route path="/teacher/tasks" element={<TeacherLayout><AsanaTaskApp /></TeacherLayout>} />
         <Route path="/teacher/cms" element={<TeacherLayout><TeacherCMS /></TeacherLayout>} />

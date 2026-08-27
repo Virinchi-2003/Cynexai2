@@ -133,7 +133,7 @@ export const getTodayAttendance = async (userId: string): Promise<EmployeeAttend
   const today = new Date().toISOString().split('T')[0];
   try {
     const res = await client.execute({
-      sql: `SELECT * FROM employee_attendance WHERE user_id = ? AND date = ?`,
+      sql: `SELECT * FROM employee_attendance WHERE user_id = ? AND date = ? ORDER BY login_time DESC LIMIT 1`,
       args: [userId, today]
     });
     if (res.rows.length === 0) return null;
@@ -155,8 +155,8 @@ const autoCleanupAttendance = async () => {
     for (const row of res.rows) {
       const date = row.date as string;
       const loginTime = row.login_time as string;
-      const endOfThatDay = `${date}T23:59:59.000Z`;
-      const duration = Math.round((new Date(endOfThatDay).getTime() - new Date(loginTime).getTime()) / 60000);
+      const endOfThatDay = new Date(`${date}T23:59:59`).toISOString();
+      const duration = Math.max(0, Math.round((new Date(endOfThatDay).getTime() - new Date(loginTime).getTime()) / 60000));
       
       await client.execute({
         sql: `UPDATE employee_attendance SET logout_time = ?, duration_minutes = ? WHERE id = ?`,
@@ -176,8 +176,17 @@ export const logOfficeAttendance = async (userId: string, action: 'login' | 'log
   try {
     const existing = await getTodayAttendance(userId);
     if (action === 'login') {
-      if (existing) return true; // Already logged in today
-      const id = 'att_' + Date.now().toString(36);
+      if (existing) {
+        // If user logged out earlier today and is logging back in, clear logout_time to mark them active again
+        if (existing.logout_time) {
+          await client.execute({
+            sql: `UPDATE employee_attendance SET logout_time = NULL, duration_minutes = NULL WHERE id = ?`,
+            args: [existing.id]
+          });
+        }
+        return true;
+      }
+      const id = 'att_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
       await client.execute({
         sql: `INSERT INTO employee_attendance (id, user_id, date, login_time) VALUES (?, ?, ?, ?)`,
         args: [id, userId, today, now]
@@ -186,7 +195,7 @@ export const logOfficeAttendance = async (userId: string, action: 'login' | 'log
     } else {
       if (!existing || !existing.login_time) return false; // Not logged in
       const start = new Date(existing.login_time);
-      const duration = Math.round((new Date(now).getTime() - start.getTime()) / 60000);
+      const duration = Math.max(0, Math.round((new Date(now).getTime() - start.getTime()) / 60000));
       await client.execute({
         sql: `UPDATE employee_attendance SET logout_time = ?, duration_minutes = ? WHERE id = ?`,
         args: [now, duration, existing.id]
@@ -350,16 +359,6 @@ export const getEmployeeReports = async (
         totalCalls = Number(callRes.rows[0]?.total_calls) || 0;
       } catch { /* crm_activities error fallback */ }
 
-      // Time spent
-      let totalTimeMinutes = 0;
-      try {
-        const timeRes = await client.execute({
-          sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total_time FROM time_logs WHERE user_id = ? AND ended_at IS NOT NULL`,
-          args: [userId]
-        });
-        totalTimeMinutes = Number(timeRes.rows[0]?.total_time) || 0;
-      } catch { /* time_logs error fallback */ }
-
       // Conversions (leads assigned to this user that became admissions)
       let conversions = 0;
       try {
@@ -380,9 +379,11 @@ export const getEmployeeReports = async (
         } catch { /* fallback 0 */ }
       }
 
-      // Attendance stats
-      let login_time = null;
-      let logout_time = null;
+      // Attendance stats & Time spent
+      let login_time: string | null = null;
+      let logout_time: string | null = null;
+      let totalTimeMinutes = 0;
+
       try {
         const dateOnlyFrom = dateFrom ? dateFrom.split('T')[0] : undefined;
         const dateOnlyTo = dateTo ? dateTo.split('T')[0] : undefined;
@@ -400,14 +401,57 @@ export const getEmployeeReports = async (
         const attRes = await client.execute({
           sql: `SELECT login_time, logout_time FROM employee_attendance 
                 WHERE user_id = ? ${attFilter} 
-                ORDER BY date DESC LIMIT 1`,
+                ORDER BY date DESC, login_time DESC LIMIT 1`,
           args: attArgs
         });
         if (attRes.rows.length > 0) {
           login_time = attRes.rows[0].login_time as string;
           logout_time = attRes.rows[0].logout_time as string;
         }
-      } catch { /* table might be missing */ }
+
+        // Calculate attendance time spent (completed sessions + active live session)
+        const allAttRes = await client.execute({
+          sql: `SELECT login_time, logout_time, duration_minutes FROM employee_attendance 
+                WHERE user_id = ? ${attFilter}`,
+          args: attArgs
+        });
+
+        const nowMs = Date.now();
+        let attMins = 0;
+        for (const row of allAttRes.rows) {
+          if (row.logout_time && row.duration_minutes != null) {
+            attMins += Number(row.duration_minutes);
+          } else if (row.login_time && !row.logout_time) {
+            const live = Math.max(0, Math.round((nowMs - new Date(row.login_time as string).getTime()) / 60000));
+            attMins += live;
+          }
+        }
+
+        // Calculate task-specific time logs
+        let timeLogFilter = '';
+        const timeLogArgs: string[] = [userId];
+        if (effectiveDateFrom) {
+          timeLogFilter += ` AND started_at >= ?`;
+          timeLogArgs.push(effectiveDateFrom);
+        }
+        if (effectiveDateTo) {
+          timeLogFilter += ` AND started_at <= ?`;
+          timeLogArgs.push(effectiveDateTo);
+        }
+
+        let taskMins = 0;
+        try {
+          const timeRes = await client.execute({
+            sql: `SELECT COALESCE(SUM(duration_minutes), 0) as total_time FROM time_logs WHERE user_id = ? AND ended_at IS NOT NULL ${timeLogFilter}`,
+            args: timeLogArgs
+          });
+          taskMins = Number(timeRes.rows[0]?.total_time) || 0;
+        } catch { /* fallback 0 */ }
+
+        totalTimeMinutes = Math.max(attMins, taskMins);
+      } catch (e) {
+        console.error('Time spent calculation error:', e);
+      }
 
       reports.push({
         user_id: userId,

@@ -9,7 +9,11 @@ import { ConfirmModal } from '../../components/ui/erp/ConfirmModal';
 export default function ModuleEditor() {
   const navigate = useNavigate();
   const location = useLocation();
-  const basePath = location.pathname.startsWith('/ceo') ? '/ceo' : '/manager';
+  let basePath = '/ceo';
+  if (location.pathname.startsWith('/manager')) basePath = '/manager';
+  else if (location.pathname.startsWith('/teacher')) basePath = '/teacher';
+  else if (location.pathname.startsWith('/sales')) basePath = '/sales';
+  else if (location.pathname.startsWith('/dm')) basePath = '/dm';
   const { courseId, moduleId } = useParams();
 
   const [moduleData, setModuleData] = useState<any>(null);

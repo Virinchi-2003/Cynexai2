@@ -1,6 +1,8 @@
 import { decryptPassword } from './crypto';
 import { getUserByEmail } from './api/auth';
 import { invalidateQueryCache } from './queryCache';
+import { SYSTEM_MODULES, DEFAULT_PERMISSIONS } from './permissionsRegistry';
+import { logOfficeAttendance } from './api/reports';
 
 export type Role = 'Admin' | 'Manager' | 'Sales/HR' | 'Teacher' | 'Student' | 'CEO' | 'DM';
 export type AccessLevel = 'none' | 'view' | 'full';
@@ -52,30 +54,46 @@ export const updateCurrentUserSession = (updatedFields: Partial<User>) => {
   }
 };
 
+export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  'Manager': ['dashboard', 'tasks', 'reports', 'sales', 'sales_history', 'users', 'students', 'courses', 'timetable', 'gamification', 'settings'],
+  'Teacher': ['dashboard', 'tasks', 'courses', 'timetable', 'classes', 'ai_voice'],
+  'DM': ['dashboard', 'tasks', 'courses', 'marketing'],
+  'Sales/HR': ['dashboard', 'tasks', 'courses', 'sales', 'sales_history'],
+};
+
 export function getUserPermissions(user: User | null): Record<string, AccessLevel> {
-  const defaults: Record<string, AccessLevel> = {
-    dashboard: 'full', users: 'full', students: 'full', courses: 'full',
-    timetable: 'full', classes: 'full', finance: 'full', leaves: 'full', settings: 'full'
-  };
+  const defaults: Record<string, AccessLevel> = { ...DEFAULT_PERMISSIONS };
   if (!user) return defaults;
   if (user.role === 'CEO') return defaults;
+
   if (user.permissions_json) {
     try {
       const parsed = JSON.parse(user.permissions_json);
-      const res = { ...defaults };
+      const res: Record<string, AccessLevel> = {};
+      SYSTEM_MODULES.forEach(mod => {
+        res[mod.id] = 'none';
+      });
       for (const k of Object.keys(parsed)) {
+        let val: AccessLevel = 'none';
         if (typeof parsed[k] === 'boolean') {
-          res[k] = parsed[k] ? 'full' : 'none';
+          val = parsed[k] ? 'full' : 'none';
         } else if (typeof parsed[k] === 'string') {
-          res[k] = parsed[k] as AccessLevel;
+          val = parsed[k] as AccessLevel;
         }
+        res[k] = val;
       }
       return res;
     } catch {
-      return defaults;
+      // Fallback
     }
   }
-  return defaults;
+
+  const granted = ROLE_DEFAULT_PERMISSIONS[user.role] || [];
+  const res: Record<string, AccessLevel> = {};
+  SYSTEM_MODULES.forEach(mod => {
+    res[mod.id] = granted.includes(mod.id) ? 'full' : 'none';
+  });
+  return res;
 }
 
 export function getModuleAccess(user: User | null, moduleId: string): AccessLevel {
@@ -92,7 +110,15 @@ export function hasModuleAccess(user: User | null, moduleId: string, requiredLev
   return true;
 }
 
-export const logout = () => {
+export const logout = async () => {
+  const user = getCurrentUser();
+  if (user && user.role !== 'Student') {
+    try {
+      await logOfficeAttendance(user.id, 'logout');
+    } catch (attErr) {
+      console.error('Failed auto attendance logout:', attErr);
+    }
+  }
   cachedUserRaw = null;
   cachedUserObj = null;
   localStorage.removeItem(SESSION_KEY);
@@ -127,6 +153,13 @@ export const login = async (email: string, password: string): Promise<User | nul
           permissions_json: (row.permissions_json as string) || undefined
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+        if (user.role !== 'Student') {
+          try {
+            await logOfficeAttendance(user.id, 'login');
+          } catch (attErr) {
+            console.error('Failed auto attendance login:', attErr);
+          }
+        }
         return user;
       } else {
         console.error("Invalid password.");

@@ -750,8 +750,17 @@ async function speechToText(audioBlob: Blob): Promise<string> {
 export function cleanAiTextResponse(text: string): string {
   if (!text) return '';
   let cleaned = text;
+  // First remove complete <think>...</think> blocks
   cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
-  cleaned = cleaned.replace(/<think>[\s\S]*/gi, '');
+  // Handle unclosed <think> tags gracefully
+  if (cleaned.includes('<think>')) {
+    const afterThink = cleaned.replace(/<think>[\s\S]*/gi, '').trim();
+    if (afterThink.length > 5) {
+      cleaned = afterThink;
+    } else {
+      cleaned = cleaned.replace(/<think>/gi, '').trim();
+    }
+  }
   cleaned = cleaned.replace(/\*\*.*?\*\*/g, '');
   cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
   cleaned = cleaned.replace(/^[\s\-*#]+/gm, '');
@@ -762,7 +771,13 @@ async function generateChatResponse(messages: any[]): Promise<string> {
   const GROQ_API_KEY = getGroqApiKey();
   if (!GROQ_API_KEY) throw new Error("Missing Groq API Key");
 
-  const candidateModels = ['qwen/qwen3.6-27b', 'groq/compound', 'groq/compound-mini', 'openai/gpt-oss-120b', 'llama-3.3-70b-versatile'];
+  const candidateModels = [
+    'groq/compound',
+    'groq/compound-mini',
+    'openai/gpt-oss-120b',
+    'qwen/qwen3.6-27b',
+    'openai/gpt-oss-20b'
+  ];
   let lastErr = '';
 
   for (const model of candidateModels) {
@@ -776,15 +791,21 @@ async function generateChatResponse(messages: any[]): Promise<string> {
         body: JSON.stringify({
           model,
           messages,
-          temperature: 0.85,
-          max_tokens: 300
+          temperature: 0.7,
+          max_tokens: 1000
         })
       });
 
       if (response.ok) {
         const data = await response.json();
-        const content = data.choices[0]?.message?.content;
-        if (content) return cleanAiTextResponse(content);
+        const rawContent = data.choices[0]?.message?.content;
+        if (rawContent) {
+          const cleaned = cleanAiTextResponse(rawContent);
+          if (cleaned) return cleaned;
+          // Fallback if cleaning stripped everything
+          const fallback = rawContent.replace(/<think>[\s\S]*?<\/think>/gi, '').replace(/<[^>]+>/g, '').trim();
+          if (fallback) return fallback;
+        }
       } else {
         lastErr = await response.text();
       }

@@ -11,6 +11,15 @@ export default function CrmLogin() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const [inactivityNotice, setInactivityNotice] = useState(() => {
+    const isAuto = sessionStorage.getItem('cynex_auto_logged_out');
+    if (isAuto === 'true') {
+      sessionStorage.removeItem('cynex_auto_logged_out');
+      return 'You were logged out automatically after 10 minutes of inactivity.';
+    }
+    return '';
+  });
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -52,6 +61,13 @@ export default function CrmLogin() {
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
 
         <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6">Sign in to your portal</h2>
+
+        {inactivityNotice && (
+          <div className="mb-4 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold flex items-center gap-2">
+            <span>⏱️</span>
+            <span>{inactivityNotice}</span>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           

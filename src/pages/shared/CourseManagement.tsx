@@ -13,7 +13,11 @@ export default function CourseManagement() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = getCurrentUser();
-  const basePath = location.pathname.startsWith('/ceo') ? '/ceo' : '/manager';
+  let basePath = '/ceo';
+  if (location.pathname.startsWith('/manager')) basePath = '/manager';
+  else if (location.pathname.startsWith('/teacher')) basePath = '/teacher';
+  else if (location.pathname.startsWith('/sales')) basePath = '/sales';
+  else if (location.pathname.startsWith('/dm')) basePath = '/dm';
 
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
@@ -334,26 +338,11 @@ export default function CourseManagement() {
                               <div className="flex justify-between items-start gap-2 mb-1">
                                 <h5 className="font-bold text-erp-text text-base group-hover:text-indigo-400 transition-colors truncate flex-1">{mod.name}</h5>
                               </div>
-                              <div className="flex items-center justify-between gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center justify-between gap-2 mt-2">
                                 <p className="text-xs text-erp-text/60 font-medium flex items-center gap-1.5">
                                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"></span>
                                   {mod.classes.length} {mod.classes.length === 1 ? 'Class' : 'Classes'}
                                 </p>
-                                <select
-                                  value={mod.instructor_id || ''}
-                                  onChange={async (e) => {
-                                    e.stopPropagation();
-                                    const newTeacherId = e.target.value;
-                                    await updateModuleInstructor(mod.id, newTeacherId);
-                                    await fetchCourses();
-                                  }}
-                                  className="text-[11px] font-bold bg-erp-background border border-erp-border rounded-lg px-2 py-1 text-erp-text focus:outline-none focus:border-indigo-500 cursor-pointer"
-                                >
-                                  <option value="">Select Teacher</option>
-                                  {teachers.map(t => (
-                                    <option key={t.id} value={t.id}>{t.name} ({t.role || 'Teacher'})</option>
-                                  ))}
-                                </select>
                               </div>
                             </div>
                             <div className="flex justify-between items-center pt-3 border-t border-erp-border/50">

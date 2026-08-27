@@ -135,9 +135,13 @@ function EmployeeRow({ report, rank, allTasks, dateFrom, dateTo }: { report: Emp
           </div>
         </td>
         <td className="px-4 py-3.5 text-center">
-          <div className="flex flex-col text-xs font-bold text-erp-text/60">
+          <div className="flex flex-col items-center justify-center text-xs font-bold text-erp-text/60">
             <span>{report.login_time ? new Date(report.login_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '—'}</span>
-            <span className="text-[10px] text-erp-text/40">{report.logout_time ? new Date(report.logout_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (report.login_time ? 'Active' : '')}</span>
+            {report.logout_time ? (
+              <span className="text-[10px] text-erp-text/40">{new Date(report.logout_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            ) : report.login_time ? (
+              <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-full mt-0.5 inline-block">Active</span>
+            ) : null}
           </div>
         </td>
         <td className="px-4 py-3.5 text-center">

@@ -219,11 +219,11 @@ cron.schedule('30 59 23 * * *', async () => {
       });
     }
 
-    // 3. Find all daily tasks due today, group by (title + assignee_id)
-    //    and create tomorrow's copy if one doesn't already exist
+    // 3. Find all active daily tasks, group by (title + assignee_id)
+    //    and create tomorrow's copy if one doesn't already exist and recurrence is not stopped
     const todayResult = await db.execute({
-      sql: `SELECT * FROM tasks WHERE task_type = 'Daily' AND due_date = ?`,
-      args: [today]
+      sql: `SELECT * FROM tasks WHERE task_type = 'Daily' AND (recurrence_rule IS NULL OR recurrence_rule != 'stopped')`,
+      args: []
     });
     const todayTasks = todayResult.rows;
 
