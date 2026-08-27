@@ -4,7 +4,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 
 
-async function executeWithRetry(query: string, args: any[] = [], retries = MAX_RETRIES): Promise<any> {
+export async function executeWithRetry(query: string, args: any[] = [], retries = MAX_RETRIES): Promise<any> {
   try {
     if (!client) throw new Error('Database client not configured');
     return await client.execute({ sql: query, args });
