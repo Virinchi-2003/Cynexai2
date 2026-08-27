@@ -470,8 +470,8 @@ export async function getActiveLiveClassStudent() {
 
 export async function checkClassStatus(classId: string) {
   try {
-    const res = await executeWithRetry("SELECT status FROM classes WHERE id = ?", [classId]);
-    return res.rows.length > 0 ? res.rows[0].status : null;
+    const res = await executeWithRetry("SELECT id, status, type, meet_link, youtube_video_id FROM classes WHERE id = ?", [classId]);
+    return res.rows.length > 0 ? res.rows[0] : null;
   } catch (e) {
     console.error(e);
     return null;

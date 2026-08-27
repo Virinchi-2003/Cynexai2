@@ -162,18 +162,20 @@ function NodePopup({
 
           {/* Status badge */}
           <div className="mb-5">
-            {state === 'completed' && (
-              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20">
-                <NodeIcons.check size={14} /> Completed
+            {node.classItem.status === 'in_progress' || node.classItem.status === 'live' ? (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-red-600 bg-red-100 border border-red-200 px-3 py-1 rounded-full dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/20">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" /> Live Class in Session
               </span>
-            )}
-            {state === 'current' && (
+            ) : state === 'completed' || node.classItem.status === 'completed' ? (
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/20">
+                <NodeIcons.check size={14} /> Class Ended · Recorded
+              </span>
+            ) : state === 'current' ? (
               <span className="inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: cfg.color }}>
                 <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: cfg.color }} />
                 Ready to start
               </span>
-            )}
-            {state === 'locked' && (
+            ) : (
               <span className="inline-flex items-center gap-1.5 text-sm font-bold text-amber-600 bg-amber-100 border border-amber-200 px-3 py-1 rounded-full dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/20">
                 <NodeIcons.lock size={14} /> Locked · Complete previous class to unlock
               </span>
@@ -195,7 +197,11 @@ function NodePopup({
                 isClickable ? 'candy-btn-blue' : 'bg-slate-300 dark:bg-zinc-700 text-slate-500 dark:text-zinc-500 shadow-none border-none'
               }`}
             >
-              {state === 'completed' ? 'Review' : 'Start ▶'}
+              {node.classItem.status === 'in_progress' || node.classItem.status === 'live'
+                ? 'Join Live Class ▶'
+                : state === 'completed' || node.classItem.status === 'completed' || node.classItem.youtube_video_id
+                ? 'Watch Class ▶'
+                : 'Start Class ▶'}
             </button>
           </div>
         </div>

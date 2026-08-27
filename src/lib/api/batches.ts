@@ -145,6 +145,33 @@ export async function updateBatchSubjectProgress(batchId: string, subjectProgres
       WHERE id = ?
     `, [jsonStr, completionPercentage, batchId]);
 
+    // Also update matching module classes status to 'completed' so student portal shows "Watch Class"
+    for (const sp of subjectProgress) {
+      if (sp.completed > 0 && sp.subject) {
+        try {
+          const modRes = await executeWithRetry(
+            `SELECT id FROM modules WHERE LOWER(title) LIKE ? LIMIT 1`,
+            [`%${sp.subject.toLowerCase().trim()}%`]
+          );
+          if (modRes.rows.length > 0) {
+            const modId = modRes.rows[0].id;
+            const clsRes = await executeWithRetry(
+              `SELECT id FROM classes WHERE module_id = ? ORDER BY order_index ASC LIMIT ?`,
+              [modId, sp.completed]
+            );
+            for (const cRow of clsRes.rows) {
+              await executeWithRetry(
+                `UPDATE classes SET status = 'completed' WHERE id = ? AND (status IS NULL OR status = 'upcoming' OR status = 'in_progress' OR status = 'draft')`,
+                [cRow.id]
+              );
+            }
+          }
+        } catch (err) {
+          console.warn("Could not sync class status for batch progress:", err);
+        }
+      }
+    }
+
     invalidateQueryCache('batches_all');
     return true;
   } catch (e) {
