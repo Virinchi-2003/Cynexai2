@@ -415,8 +415,16 @@ export default function ModuleMap() {
               const state: NodeState = isCompleted ? 'completed' : isUnlocked ? 'current' : 'locked';
               const isCurrent = state === 'current';
 
-              let kind: keyof typeof KIND_CONFIG = 'video';
-              if (node.classItem.type === 'live' || node.classItem.type === 'zoom') kind = 'live';
+              let kind: keyof typeof KIND_CONFIG = 'lesson';
+              if (node.classItem.status === 'in_progress') {
+                kind = 'live';
+              } else if (node.classItem.type === 'video') {
+                kind = 'video';
+              } else if (node.classItem.type === 'quiz') {
+                kind = 'quiz';
+              } else if (node.classItem.type === 'code') {
+                kind = 'code';
+              }
               const cfg = KIND_CONFIG[kind] || KIND_CONFIG.lesson;
 
               return (

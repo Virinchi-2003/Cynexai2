@@ -54,6 +54,7 @@ export default function ClassFlow() {
   const REQUIRED_VIDEO_SECONDS = 5 * 60; // 5 min for video completion unlock
 
   // Live attendance timer (5 min for live classes)
+  const [hasJoinedLiveClass, setHasJoinedLiveClass] = useState(false);
   const liveStartRef = useRef<number | null>(null);
   const [liveSeconds, setLiveSeconds] = useState(0);
   const liveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -84,13 +85,12 @@ export default function ClassFlow() {
     });
   }, [classId, user?.id, currentStep]);
 
-  // Start live attendance timer when class is live type and loaded
+  // Start live attendance timer ONLY after student clicks "Join Live Class"
   useEffect(() => {
-    if (!classData || !user) return;
+    if (!classData || !user || !hasJoinedLiveClass) return;
     const isLive = classData.type === 'live' || classData.meet_link;
     if (!isLive || attendanceMarked) return;
 
-    // Start counting when student is on the page
     liveStartRef.current = Date.now();
     liveIntervalRef.current = setInterval(() => {
       setLiveSeconds(prev => {
@@ -121,7 +121,7 @@ export default function ClassFlow() {
     return () => {
       if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
     };
-  }, [classData, user?.id, attendanceMarked]);
+  }, [classData, user?.id, attendanceMarked, hasJoinedLiveClass]);
 
   // YouTube watch timer - REMOVED 5 MIN REQUIREMENT
   useEffect(() => {
@@ -335,6 +335,7 @@ export default function ClassFlow() {
                   href={classData.meet_link}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => setHasJoinedLiveClass(true)}
                   className="candy-btn px-6 py-3 text-sm"
                 >
                   <Play className="w-4 h-4 fill-white" /> Join Live Class
@@ -360,22 +361,28 @@ export default function ClassFlow() {
                   <span className="text-xs font-bold text-green-500 flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" /> Marked!
                   </span>
-                ) : (
+                ) : hasJoinedLiveClass ? (
                   <span className="text-xs font-bold text-primary">
                     {liveMinLeft} min remaining
+                  </span>
+                ) : (
+                  <span className="text-xs font-bold text-slate-400">
+                    Not Started
                   </span>
                 )}
               </div>
               <div className="h-3 bg-foreground/10 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-1000 ${attendanceMarked ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-600'}`}
-                  style={{ width: `${attendanceMarked ? 100 : livePct}%` }}
+                  style={{ width: `${attendanceMarked ? 100 : hasJoinedLiveClass ? livePct : 0}%` }}
                 />
               </div>
               <p className="text-xs text-slate-600 dark:text-white/60 font-bold mt-2">
                 {attendanceMarked
                   ? '✅ Attendance marked! Great job attending this live class.'
-                  : 'Stay on this page for 5 minutes to automatically mark attendance.'}
+                  : hasJoinedLiveClass
+                  ? 'Stay on this page for 5 minutes to automatically mark attendance.'
+                  : '👇 Click "Join Live Class" above to start your 5-minute attendance tracking.'}
               </p>
             </div>
           </div>
