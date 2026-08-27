@@ -160,11 +160,18 @@ export default function TeacherCMS() {
                     mod.classes.map((cls: any) => (
                       <div key={cls.id as string} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-black p-3 rounded-lg border border-erp-border gap-3">
                         <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${cls.type === 'live' ? 'bg-red-100 text-red-500' : 'bg-blue-100 text-blue-500'}`}>
-                            {cls.type === 'live' ? <Radio className="w-4 h-4" /> : <Video className="w-4 h-4" />}
+                          <div className={`p-2 rounded-lg ${cls.status === 'in_progress' ? 'bg-red-100 text-red-500 animate-pulse' : 'bg-indigo-100 text-indigo-600'}`}>
+                            {cls.status === 'in_progress' ? <Radio className="w-4 h-4" /> : <Video className="w-4 h-4" />}
                           </div>
                           <div>
-                            <span className="font-bold text-sm text-slate-800 dark:text-white">{cls.title}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-slate-800 dark:text-white">{cls.title}</span>
+                              {cls.status === 'in_progress' && (
+                                <span className="bg-red-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider animate-pulse">
+                                  Live Now
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-slate-500 truncate max-w-sm">{cls.description}</p>
                           </div>
                         </div>

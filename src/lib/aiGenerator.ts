@@ -2,9 +2,28 @@ function getGroqApiKey(): string {
   return import.meta.env.VITE_GROQ_VOICE_API || import.meta.env.VITE_GROQ_API_KEY || (typeof localStorage !== 'undefined' ? localStorage.getItem('cynex_groq_key') : '') || '';
 }
 
-function cleanAiContent(text: string): string {
+export function cleanAiContent(text: string): string {
   if (!text) return '';
-  return text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  let cleaned = text;
+  // Remove closed <think>...</think> blocks
+  cleaned = cleaned.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  // Remove unclosed <think>... blocks or remaining <think> tags
+  if (cleaned.includes('<think>')) {
+    const afterThink = cleaned.replace(/<think>[\s\S]*/gi, '').trim();
+    if (afterThink.length > 10) {
+      cleaned = afterThink;
+    } else {
+      cleaned = cleaned.replace(/<think>/gi, '').trim();
+    }
+  }
+  // Strip prompt thought headers if present
+  if (cleaned.toLowerCase().includes('thinking process') || cleaned.toLowerCase().includes('analyze user input')) {
+    const markdownMatch = cleaned.match(/(?:##|#|What We Learned|Important Concepts|1\.)[\s\S]*/i);
+    if (markdownMatch) {
+      cleaned = markdownMatch[0];
+    }
+  }
+  return cleaned.trim();
 }
 
 async function callGroq(prompt: string): Promise<string> {

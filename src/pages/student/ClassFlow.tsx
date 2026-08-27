@@ -6,6 +6,7 @@ import { ArrowLeft, Play, CheckCircle, Lock, Code2, BookOpen, Clock, Star, Alert
 import ReactPlayer from 'react-player';
 import { formatYoutubeUrl } from '../../lib/videoUtils';
 import ReactMarkdown from 'react-markdown';
+import { cleanAiContent } from '../../lib/aiGenerator';
 import html2pdf from 'html2pdf.js';
 import { PythonEditor } from '../../components/ui/erp/PythonEditor';
 
@@ -406,7 +407,11 @@ export default function ClassFlow() {
             {classData.ai_summary && (
               <div className="candy-panel p-5 mt-6 mb-6 flow-panel">
                 <h2 className="font-black text-slate-900 dark:text-white flex items-center gap-2 mb-3"><BookOpen className="w-4 h-4 text-primary" /> Class Summary</h2>
-                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-bold">{classData.ai_summary}</p>
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-3 font-medium prose dark:prose-invert max-w-none">
+                  <ReactMarkdown>
+                    {cleanAiContent(classData.ai_summary)}
+                  </ReactMarkdown>
+                </div>
               </div>
             )}
           </>

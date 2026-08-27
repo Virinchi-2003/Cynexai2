@@ -106,7 +106,11 @@ export default function TeacherTimetable() {
     return slots;
   }, [schedule]);
 
-  const getStatusColor = (day: string, startHourStr: string) => {
+  const getStatusColor = (day: string, startHourStr: string, classItem?: GlobalTimetableSlot) => {
+    if (classItem?.status === 'in_progress' || (classItem?.id && localStorage.getItem('cynexai_live_class_id') === classItem.id)) {
+      return 'live';
+    }
+
     const today = currentTime.getDay(); // 0=Sun, 1=Mon
     const classDayIdx = DAYS.indexOf(day); // 0=Mon, 6=Sun
     // Convert current JS day to standard index where Mon=0, Sun=6
@@ -117,10 +121,6 @@ export default function TeacherTimetable() {
 
     if (classDayIdx < normToday) return 'past';
     if (classDayIdx === normToday && startHour < currentHour - 1) return 'past'; // class ended
-    
-    if (classDayIdx === normToday && startHour >= currentHour - 1 && startHour <= currentHour + 1) {
-      return 'live';
-    }
 
     return 'upcoming';
   };
@@ -231,7 +231,7 @@ export default function TeacherTimetable() {
                         {classItems.map(classItem => {
                           const isOnline = classItem.timing?.toLowerCase().includes('online') || classItem.timing?.includes('zoom');
                           const durationHrs = getDurationHours(classItem.start_time, classItem.end_time);
-                          const statusColor = getStatusColor(day, classItem.start_time);
+                          const statusColor = getStatusColor(day, classItem.start_time, classItem);
                           
                           let bgStyle = 'bg-indigo-50 border-indigo-200';
                           if (isOnline) bgStyle = 'bg-emerald-50 border-emerald-200';
