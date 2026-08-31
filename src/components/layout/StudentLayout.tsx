@@ -196,7 +196,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
+    <div className="flex h-[100dvh] w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-shrink-0 flex-col border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-black z-20 overflow-hidden">
@@ -205,9 +205,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
       {/* Mobile overlay menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <aside className="relative w-72 flex flex-col z-10 candy-panel !rounded-l-none !border-y-0 !border-l-0 bg-white dark:bg-black">
+        <div className="md:hidden fixed inset-0 z-[100] flex">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="relative w-72 flex flex-col z-10 candy-panel !rounded-l-none !border-y-0 !border-l-0 bg-white dark:bg-black shadow-2xl">
             <button onClick={() => setMobileMenuOpen(false)}
               className="absolute top-4 right-4 candy-btn !min-h-[40px] px-3 py-2 rounded-xl flex items-center justify-center z-50 shadow-md">
               <X className="w-5 h-5 text-white" strokeWidth={3} />
@@ -218,83 +218,95 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       )}
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden relative">
 
-        {/* Mobile top header */}
-        <div className="md:hidden flex items-center justify-between px-4 py-3 flex-shrink-0"
-          style={{ background: T.sidebarBg, borderBottom: `1px solid ${T.border}` }}>
-          <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2">
-            <img src="/cynex_logo.png" alt="Cynex AI" className="h-7 w-auto object-contain dark:invert dark:brightness-200" />
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-              <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              {data.completedClasses} Classes Done
-            </span>
+        {/* Mobile top sticky header & module quick bar */}
+        <div className="md:hidden flex flex-col flex-shrink-0 sticky top-0 z-40 bg-white/95 dark:bg-[#000000]/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-zinc-800 shadow-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2">
+              <img src="/cynex_logo.png" alt="Cynex AI" className="h-7 w-auto object-contain dark:invert dark:brightness-200" />
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                {data.completedClasses} Classes Done
+              </span>
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 active:scale-95"
+                aria-label="Open menu"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Sticky Top Module Quick Navigation Bar */}
+          <div className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto no-scrollbar border-t border-slate-100 dark:border-zinc-900">
+            {NAV_ITEMS.map(({ to, icon: Icon, label, short, comingSoon }) => {
+              const active = isActive(to);
+              return (
+                <button
+                  key={to}
+                  onClick={() => { if (!comingSoon) navigate(to); }}
+                  disabled={comingSoon}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all flex-shrink-0 ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 ring-1 ring-indigo-400'
+                      : 'bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200/80 dark:border-zinc-800 active:scale-95'
+                  }`}
+                >
+                  <Icon className={`w-3.5 h-3.5 ${active ? 'text-white' : 'text-indigo-500 dark:text-indigo-400'}`} />
+                  <span>{label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Mobile Sticky Top Module Quick Navigation Bar */}
-        <div className="md:hidden flex items-center gap-1.5 px-3 py-2.5 overflow-x-auto no-scrollbar bg-slate-900/95 dark:bg-black/95 backdrop-blur-md border-b border-slate-800/80 flex-shrink-0 z-30 sticky top-0 shadow-md">
-          {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
+        {/* Scrollable content container with bottom padding for constant fixed navbar */}
+        <div className="flex-1 overflow-y-auto pb-28 md:pb-8">
+          {children}
+        </div>
+
+        {/* Mobile Constant Fixed Bottom Navigation Bar */}
+        <nav
+          className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#09090b]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-zinc-800 shadow-[0_-10px_30px_rgba(0,0,0,0.35)] flex items-center justify-around px-1 py-1.5"
+          style={{
+            height: '66px',
+            paddingBottom: 'env(safe-area-inset-bottom, 6px)',
+          }}
+        >
+          {BOTTOM_NAV.map(({ to, icon: Icon, short, label, comingSoon }) => {
             const active = isActive(to);
             return (
               <button
                 key={to}
                 onClick={() => { if (!comingSoon) navigate(to); }}
                 disabled={comingSoon}
-                className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all flex-shrink-0 ${
-                  active
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 ring-1 ring-indigo-400'
-                    : 'bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95'
+                aria-label={label}
+                className={`flex flex-col items-center justify-center flex-1 h-full py-1 rounded-xl transition-all relative ${
+                  comingSoon 
+                    ? 'opacity-40 cursor-not-allowed' 
+                    : active 
+                    ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white active:scale-90'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5 text-indigo-400" />
-                <span>{label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
-
-        {/* Mobile bottom tab bar */}
-        <div className="md:hidden flex-shrink-0 flex justify-around items-center px-2 candy-panel !rounded-t-3xl !rounded-b-none !border-b-0 !border-x-0 !shadow-[0_-10px_25px_rgba(0,0,0,0.15)] bg-white dark:bg-black z-30 relative"
-          style={{
-            height: '80px',
-            paddingBottom: 'env(safe-area-inset-bottom, 12px)',
-          }}>
-          {BOTTOM_NAV.map(({ to, icon: Icon, short, comingSoon }) => {
-            const active = isActive(to);
-            return (
-              <button key={to} onClick={() => { if (!comingSoon) navigate(to); }}
-                disabled={comingSoon}
-                className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all min-h-[44px] mx-0.5 relative
-                  ${comingSoon ? 'opacity-50 cursor-not-allowed' : active ? 'text-white' : 'text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white active:scale-95'}
-                `}
-              >
-                <div className={`w-12 h-10 flex items-center justify-center rounded-2xl transition-all duration-300 ${active && !comingSoon ? 'candy-btn-blue shadow-lg !min-h-[40px] !border' : ''}`}>
-                  <Icon className="w-6 h-6" strokeWidth={active && !comingSoon ? 3 : 2} />
+                <div className={`w-9 h-7 flex items-center justify-center rounded-xl transition-all duration-200 ${
+                  active && !comingSoon ? 'bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-500/30' : ''
+                }`}>
+                  <Icon className="w-4 h-4" strokeWidth={active ? 2.5 : 2} />
                 </div>
-                <span className={`text-[10px] font-black leading-none ${active && !comingSoon ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{short}</span>
-                {comingSoon && (
-                  <span className="absolute top-0 right-0 text-[8px] bg-slate-200 dark:bg-white dark:bg-black/20 px-1 py-[1px] rounded font-bold uppercase z-10 text-slate-600 dark:text-white/80">Soon</span>
-                )}
+                <span className={`text-[9px] font-bold tracking-tight mt-0.5 ${
+                  active ? 'text-indigo-600 dark:text-indigo-400 font-black' : 'text-slate-500 dark:text-zinc-400'
+                }`}>
+                  {short}
+                </span>
               </button>
             );
           })}
-          <button onClick={() => setMobileMenuOpen(true)}
-            className="flex flex-col items-center justify-center gap-1 flex-1 py-1 rounded-2xl transition-all active:scale-95 min-h-[44px] mx-0.5 text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white"
-          >
-            <div className="w-12 h-10 flex items-center justify-center">
-              <Menu className="w-6 h-6" strokeWidth={2.5} />
-            </div>
-            <span className="text-[10px] font-black leading-none">More</span>
-          </button>
-        </div>
+        </nav>
 
       </div>
     </div>

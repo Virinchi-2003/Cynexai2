@@ -50,12 +50,12 @@ export const MobileNavigation: React.FC = () => {
   return (
     <>
       {/* Bottom nav bar */}
-      <div className="fixed bottom-0 left-0 w-full z-50 md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
         {/* Safe area background with candy-panel style */}
-        <div className="candy-panel !rounded-t-3xl !rounded-b-none !border-b-0 !border-x-0 !shadow-[0_-10px_25px_rgba(0,0,0,0.15)] bg-white dark:bg-black">
+        <div className="bg-white/95 dark:bg-[#09090b]/95 backdrop-blur-xl border-t border-slate-200/80 dark:border-zinc-800 shadow-[0_-10px_30px_rgba(0,0,0,0.35)]">
           <div
-            className="flex items-center h-20 px-2"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}
+            className="flex items-center h-[66px] px-1 py-1"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 6px)' }}
           >
             {navItems.map(item => (
               <NavLink
