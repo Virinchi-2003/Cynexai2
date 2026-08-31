@@ -60,6 +60,8 @@ import ModuleMap from './pages/student/ModuleMap';
 import MockInterview from './pages/student/MockInterview';
 import AttendancePage from './pages/student/AttendancePage';
 import QuizzesPage from './pages/student/QuizzesPage';
+import AssessmentStudioPage from './pages/student/AssessmentStudioPage';
+import ClassesPage from './pages/student/ClassesPage';
 import StudentLayout from './components/layout/StudentLayout';
 import EnrollPage from './pages/EnrollPage';
 
@@ -302,14 +304,18 @@ function App() {
         {/* Admin & Student Routes */}
         <Route path="/admin/dashboard" element={<RequireAuth allowedRoles={['CEO']}><CRMLayout><AdminDashboard /></CRMLayout></RequireAuth>} />
         <Route path="/student" element={<StudentLayoutWrapper><StudentPortal /></StudentLayoutWrapper>} />
+        <Route path="/student/classes" element={<StudentLayoutWrapper><ClassesPage /></StudentLayoutWrapper>} />
+        <Route path="/student/class" element={<Navigate to="/student/classes" replace />} />
         <Route path="/student/quizzes" element={<StudentLayoutWrapper><QuizzesPage /></StudentLayoutWrapper>} />
+        <Route path="/student/assessment/:classId" element={<StudentLayoutWrapper><AssessmentStudioPage /></StudentLayoutWrapper>} />
         <Route path="/student/module/:moduleId" element={<StudentLayoutWrapper><ModuleMap /></StudentLayoutWrapper>} />
         <Route path="/student/class-flow" element={<StudentLayoutWrapper><ClassFlow /></StudentLayoutWrapper>} />
         <Route path="/student/interview" element={<StudentLayoutWrapper><MockInterview /></StudentLayoutWrapper>} />
         <Route path="/student/attendance" element={<StudentLayoutWrapper><AttendancePage /></StudentLayoutWrapper>} />
         <Route path="/student/leaderboard" element={<Navigate to="/student" replace />} />
         <Route path="/student/career" element={<StudentLayoutWrapper><CareerCenter /></StudentLayoutWrapper>} />
-        <Route path="/student/referrals" element={<StudentLayoutWrapper><ReferralCenter /></StudentLayoutWrapper>} />
+        <Route path="/student/referrals" element={<Navigate to="/student" replace />} />
+        <Route path="/student/rewards" element={<Navigate to="/student" replace />} />
       </Routes>
     </Router>
   );

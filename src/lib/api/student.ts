@@ -92,7 +92,15 @@ export async function getStudentMode(studentId: string): Promise<string> {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-export async function getStudentDashboardData(studentId: string): Promise<StudentDashboardData> {
+const dashboardCache = new Map<string, { data: StudentDashboardData; timestamp: number }>();
+const CACHE_TTL = 5000; // 5 seconds fast cache
+
+export async function getStudentDashboardData(studentId: string, forceRefresh = false): Promise<StudentDashboardData> {
+  const cached = dashboardCache.get(studentId);
+  if (!forceRefresh && cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+    return cached.data;
+  }
+
   // NEVER throw from this function — always return a safe default
   let stu: any = null;
   try {
@@ -183,16 +191,25 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
           `SELECT id, module_id, status, type FROM classes`
         ).catch(() => ({ rows: [] }));
 
+        let realStudentId = studentId;
+        try {
+          const sRes = await executeWithRetry(
+            "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+            [studentId, studentId]
+          );
+          if (sRes.rows.length > 0) realStudentId = sRes.rows[0].id as string;
+        } catch {}
+
         const [progRes, qaRes] = await Promise.all([
           // Get Progress
           executeWithRetry(
-            "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
-            [studentId]
+            "SELECT lesson_id FROM student_progress WHERE (student_id = ? OR student_id = ?) AND completed = 1",
+            [studentId, realStudentId]
           ).catch(() => ({ rows: [] })),
           // Get QA
           executeWithRetry(
-            `SELECT class_id, COUNT(*) as cnt FROM qa_responses WHERE student_id = ? GROUP BY class_id`,
-            [studentId]
+            `SELECT class_id, COUNT(*) as cnt FROM qa_responses WHERE (student_id = ? OR student_id = ?) GROUP BY class_id`,
+            [studentId, realStudentId]
           ).catch(() => ({ rows: [] }))
         ]);
 
@@ -204,7 +221,7 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
 
         modulesData = (modRes.rows || []).map((m: any) => {
           const mClasses = clsRows.filter((c: any) => c.module_id === m.id);
-          const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed').length;
+          const completed = mClasses.filter((c: any) => completedSet.has(c.id) || c.status === 'completed' || c.status === 'ended').length;
           const qaTotal = mClasses.reduce((s: number, c: any) => s + (qaByClass[c.id] || 0), 0);
           const quizClasses = mClasses.filter((c: any) => ['quiz','qa','q&a'].includes((c.type||'').toLowerCase())).length;
           const codeClasses = mClasses.filter((c: any) => ['code','exercise','coding'].includes((c.type||'').toLowerCase())).length;
@@ -260,7 +277,9 @@ export async function getStudentDashboardData(studentId: string): Promise<Studen
     })()
   ]);
 
-  return { course: activeCourse, gamification, modules: modulesDataResult, upcomingClass: upcomingClassResult };
+  const result: StudentDashboardData = { course: activeCourse, gamification, modules: modulesDataResult, upcomingClass: upcomingClassResult };
+  dashboardCache.set(studentId, { data: result, timestamp: Date.now() });
+  return result;
 }
 
 // ─── Class Flow ───────────────────────────────────────────────────────────────
@@ -371,11 +390,30 @@ export async function markClassWatched(studentId: string, classId: string): Prom
       `INSERT OR IGNORE INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
       [id, studentId, classId, new Date().toISOString()]
     );
+    if (realStudentId !== studentId) {
+      await executeWithRetry(
+        `INSERT OR IGNORE INTO student_progress (id, student_id, lesson_id, completed, created_at) VALUES (?, ?, ?, 1, ?)`,
+        [`${id}_r`, realStudentId, classId, new Date().toISOString()]
+      );
+    }
     // Update streak
     await executeWithRetry(
       `UPDATE students SET last_streak_date = ?, streak = streak + 1 WHERE id = ? AND (last_streak_date IS NULL OR last_streak_date != date('now'))`,
       [new Date().toISOString().split('T')[0], realStudentId]
     );
+
+    // Sync manager_student_progress
+    try {
+      const cpRes = await executeWithRetry(
+        `SELECT COUNT(DISTINCT lesson_id) as num FROM student_progress WHERE (student_id = ? OR student_id = ?) AND completed = 1`,
+        [studentId, realStudentId]
+      );
+      const cpNum = Number(cpRes.rows[0]?.num) || 0;
+      await executeWithRetry(
+        `UPDATE manager_student_progress SET course_progress_num = ?, last_updated = CURRENT_TIMESTAMP WHERE student_id = ? OR student_id = ?`,
+        [cpNum, realStudentId, studentId]
+      );
+    } catch (e) {}
   } catch (e) {
     console.error('Failed to mark class watched', e);
   }
@@ -419,21 +457,30 @@ export async function saveQaResponse(input: QaResponseInput): Promise<void> {
 
 export async function getModuleMapData(moduleId: string, studentId: string) {
   try {
+    let realStudentId = studentId;
+    try {
+      const res = await executeWithRetry(
+        "SELECT id FROM students WHERE id = ? OR portal_login_email = (SELECT email FROM users WHERE id = ?) LIMIT 1",
+        [studentId, studentId]
+      );
+      if (res.rows.length > 0) realStudentId = res.rows[0].id as string;
+    } catch (e) {}
+
     const modRes = await executeWithRetry("SELECT * FROM modules WHERE id = ?", [moduleId]);
     const clsRes = await executeWithRetry(
       "SELECT id, title, type, status, order_index, youtube_video_id, meet_link, date, start_time FROM classes WHERE module_id = ? ORDER BY order_index ASC",
       [moduleId]
     );
     const progRes = await executeWithRetry(
-      "SELECT lesson_id FROM student_progress WHERE student_id = ? AND completed = 1",
-      [studentId]
+      "SELECT lesson_id FROM student_progress WHERE (student_id = ? OR student_id = ?) AND completed = 1",
+      [studentId, realStudentId]
     );
     const qaRes = await executeWithRetry(
       `SELECT qr.class_id, cq.type 
        FROM qa_responses qr 
        JOIN class_questions cq ON qr.question_id = cq.id 
-       WHERE qr.student_id = ?`,
-      [studentId]
+       WHERE qr.student_id = ? OR qr.student_id = ?`,
+      [studentId, realStudentId]
     );
 
     const completedQaIds = new Set<string>();
@@ -443,10 +490,17 @@ export async function getModuleMapData(moduleId: string, studentId: string) {
       if (r.type === 'coding') completedCodingIds.add(r.class_id);
     });
 
+    const completedLessonIds = new Set<string>(progRes.rows.map((r: any) => r.lesson_id));
+    clsRes.rows.forEach((c: any) => {
+      if (c.status === 'completed' || c.status === 'ended') {
+        completedLessonIds.add(c.id);
+      }
+    });
+
     return {
       moduleData: modRes.rows.length > 0 ? modRes.rows[0] : null,
       classes: clsRes.rows,
-      completedLessonIds: new Set(progRes.rows.map((r: any) => r.lesson_id)),
+      completedLessonIds,
       completedQaIds,
       completedCodingIds
     };

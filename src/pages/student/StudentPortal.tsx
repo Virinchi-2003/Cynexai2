@@ -361,134 +361,6 @@ function ActivityChartCard() {
   );
 }
 
-// ─── Curriculum Modules Data View Table ──────────────────────────────────────
-
-function ModulesDataSection({ modules }: { modules: any[] }) {
-  const [filter, setFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
-  const navigate = useNavigate();
-
-  const filteredModules = modules.filter(m => {
-    const pct = m.progressPct ?? 0;
-    if (filter === 'completed') return pct >= 100;
-    if (filter === 'in_progress') return pct > 0 && pct < 100;
-    return true;
-  });
-
-  return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
-      {/* Header & Filter Tabs */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
-        <div>
-          <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
-            Course Curriculum & Modules
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            {modules.length} active modules in your enrolled masterclass
-          </p>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-semibold">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-lg transition-all ${
-              filter === 'all'
-                ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            All ({modules.length})
-          </button>
-          <button
-            onClick={() => setFilter('in_progress')}
-            className={`px-3 py-1 rounded-lg transition-all ${
-              filter === 'in_progress'
-                ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            In Progress
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-3 py-1 rounded-lg transition-all ${
-              filter === 'completed'
-                ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            Completed
-          </button>
-        </div>
-      </div>
-
-      {/* Structured Modules Table */}
-      <div className="space-y-2.5">
-        {filteredModules.map((mod, idx) => {
-          const pct = mod.progressPct ?? 0;
-          const isCompleted = pct >= 100;
-          const isCurrent = (pct > 0 && pct < 100) || (idx === 0 && pct < 100);
-
-          return (
-            <div
-              key={mod.id ?? idx}
-              onClick={() => navigate(`/student/module/${mod.id}`)}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-indigo-500/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-all cursor-pointer group"
-            >
-              {/* Left: Module Number & Title */}
-              <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                  isCompleted
-                    ? 'bg-emerald-500 text-white'
-                    : isCurrent
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
-                }`}>
-                  {String(idx + 1).padStart(2, '0')}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
-                    {mod.title || mod.name || `Module ${idx + 1}`}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                    {mod.completedClasses ?? 0} of {mod.totalClasses ?? 0} classes completed
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress Bar (desktop) */}
-              <div className="w-full sm:w-44 hidden md:block">
-                <ProgressBar pct={pct} gradient={isCompleted ? "from-emerald-500 to-teal-400" : "from-indigo-600 to-blue-500"} height="h-2" />
-              </div>
-
-              {/* Status Pill */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                {isCompleted ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Completed
-                  </span>
-                ) : isCurrent ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 border border-indigo-500/20">
-                    <Play className="w-3.5 h-3.5" /> In Progress
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
-                    <Lock className="w-3.5 h-3.5" /> Locked
-                  </span>
-                )}
-
-                <button className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shadow-sm">
-                  {isCurrent ? 'Continue' : isCompleted ? 'Review' : 'View'}
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 // ─── Upcoming Class Card ──────────────────────────────────────────────────────
 
 function UpcomingClassCard({ cls }: { cls: any }) {
@@ -616,7 +488,7 @@ function LoadingState() {
         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
           <Loader2 className="w-7 h-7 text-white animate-spin" />
         </div>
-        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Loading your executive dashboard…</p>
+        <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Loading your student dashboard…</p>
       </div>
     </div>
   );
@@ -718,7 +590,7 @@ export default function StudentPortal() {
             <div className="flex items-center gap-2 mb-1">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-400">
-                Student Executive Portal
+                Student Portal
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -769,10 +641,7 @@ export default function StudentPortal() {
           />
         </div>
 
-        {/* ══ ROW 2: CURRICULUM MODULES DATA VIEW (Prominently Visible on Mobile) ══ */}
-        <ModulesDataSection modules={modules} />
-
-        {/* ══ ROW 3: UPCOMING CLASS & ACADEMIC GUIDANCE ══ */}
+        {/* ══ ROW 2: UPCOMING CLASS & ACADEMIC GUIDANCE ══ */}
         {upcomingClass && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="lg:col-span-2">

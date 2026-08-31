@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getCurrentUser } from '../../lib/auth';
 import { 
   getLastMockInterview, 
@@ -116,6 +116,22 @@ export default function MockInterview() {
     init();
   }, [user?.id]);
 
+  const weeklyInterviewsTaken = useMemo(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(now.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+
+    return pastInterviews.filter(i => {
+      if (!i.created_at) return false;
+      const date = new Date(i.created_at);
+      return !isNaN(date.getTime()) && date >= monday;
+    }).length;
+  }, [pastInterviews]);
+
+  const isWeeklyLimitReached = weeklyInterviewsTaken >= 2;
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory]);
@@ -173,21 +189,11 @@ export default function MockInterview() {
   };
 
   const startInterview = async () => {
-    if (coinsAvailable < interviewCost) {
-      alert(`You need ${interviewCost} coins to start an interview.`);
+    if (isWeeklyLimitReached) {
+      alert("Weekly limit reached! Students are allowed a maximum of 2 mock interviews per week. Your quota resets next week.");
       return;
     }
     if (!user) return;
-
-    setProcessingAI(true);
-    const spent = await spendCoins(user.id, interviewCost);
-    if (!spent) {
-      alert("Failed to deduct coins. Please check coin balance and try again.");
-      setProcessingAI(false);
-      return;
-    }
-
-    setCoinsAvailable(prev => Math.max(0, prev - interviewCost));
     setPhase('interview');
     setChatHistory([]);
     setTurnCount(1);
@@ -386,22 +392,37 @@ export default function MockInterview() {
 
           {activeTab === 'setup' ? (
             <div className="candy-panel p-6 md:p-8 space-y-6 !border-2">
-              {/* Coin Economy Banner */}
-              <div className="flex items-center justify-between p-4 candy-panel bg-white/50 dark:bg-black/30 !border-2">
+              {/* Weekly Quota Limit Banner */}
+              <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 candy-panel !border-2 rounded-2xl gap-4 ${
+                isWeeklyLimitReached 
+                  ? 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/40' 
+                  : 'bg-indigo-500/10 dark:bg-indigo-950/40 border-indigo-500/30'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-yellow-100 dark:bg-yellow-500/10 flex items-center justify-center">
-                    <Star className="w-5 h-5 text-yellow-600 dark:text-yellow-500 fill-current" />
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
+                    isWeeklyLimitReached ? 'bg-amber-500/20 text-amber-500' : 'bg-indigo-500/20 text-indigo-400'
+                  }`}>
+                    <Clock className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest">Available Balance</p>
-                    <p className="text-xl font-black text-slate-900 dark:text-white">{coinsAvailable} Coins</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">Weekly Quota (2 / Week)</p>
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${
+                        isWeeklyLimitReached ? 'bg-amber-500/20 text-amber-400 border-amber-500/40' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                      }`}>
+                        {weeklyInterviewsTaken} / 2 Completed
+                      </span>
+                    </div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                      {isWeeklyLimitReached 
+                        ? 'Weekly limit reached (2/2 sessions completed this week). Quota resets next Monday!'
+                        : `${2 - weeklyInterviewsTaken} mock interview session${2 - weeklyInterviewsTaken === 1 ? '' : 's'} available for this week.`}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-black text-slate-500 dark:text-white/40 uppercase tracking-widest">Session Cost</p>
-                  <p className={`text-xl font-black ${coinsAvailable >= interviewCost ? 'text-purple-600 dark:text-purple-400' : 'text-red-500'}`}>
-                    -{interviewCost} Coins
-                  </p>
+
+                <div className="text-right flex-shrink-0">
+                  <span className="text-xs font-bold text-slate-400">Twice per week limit</span>
                 </div>
               </div>
 
@@ -482,11 +503,22 @@ export default function MockInterview() {
               {/* Start Action */}
               <button
                 onClick={startInterview}
-                disabled={coinsAvailable < interviewCost || !targetJobRole.trim()}
-                className="w-full py-4 candy-btn-blue text-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={processingAI || isWeeklyLimitReached || !targetJobRole.trim()}
+                className={`w-full py-4 candy-btn-blue text-base md:text-lg font-black flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isWeeklyLimitReached ? '!bg-slate-700 !border-slate-600 text-slate-300' : ''
+                }`}
               >
-                <Play className="w-5 h-5 fill-current" /> 
-                {coinsAvailable < interviewCost ? 'Insufficient Coins' : !targetJobRole.trim() ? 'Enter Target Role to Continue' : 'Spend Coins & Enter Interview Room'}
+                {isWeeklyLimitReached ? (
+                  <>
+                    <XCircle className="w-5 h-5" />
+                    Weekly Limit Reached (2 / 2 Sessions Completed)
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5 fill-current" />
+                    Start AI Mock Interview ({weeklyInterviewsTaken}/2 Used)
+                  </>
+                )}
               </button>
             </div>
           ) : (

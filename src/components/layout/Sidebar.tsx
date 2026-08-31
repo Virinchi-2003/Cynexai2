@@ -196,8 +196,11 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
   return (
     <div className={`h-full flex flex-col ${isMobile ? '' : 'bg-erp-surface'}`}>
       {!isMobile && (
-        <div className="p-6 border-b-2 border-erp-border flex items-center justify-between">
-          <h2 className="font-display font-bold text-2xl text-erp-text truncate">{portalName}</h2>
+        <div className="px-5 py-4 border-b-2 border-erp-border flex items-center justify-between">
+          <img src="/cynex_logo.png" alt="Cynex AI" className="h-8 w-auto object-contain dark:invert dark:brightness-200" />
+          <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+            {portalName}
+          </span>
         </div>
       )}
       

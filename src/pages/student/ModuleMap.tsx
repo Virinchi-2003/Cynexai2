@@ -250,7 +250,7 @@ export default function ModuleMap() {
             classId: c.id,
             stepType: 'video', // Since we're hiding Q&A and coding, default to video behavior to allow viewing recorded class
             title: c.title,
-            isCompleted: data.completedLessonIds.has(c.id),
+            isCompleted: data.completedLessonIds.has(c.id) || c.status === 'completed' || c.status === 'ended',
             classItem: c
           });
         });

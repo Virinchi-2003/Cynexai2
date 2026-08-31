@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { client } from '../../lib/turso';
 import {
-  Home, ClipboardCheck, Mic2, Gift, Briefcase,
+  Home, BookOpen, ClipboardCheck, Mic2, Briefcase,
   GraduationCap, LogOut, Moon, Sun,
   Menu, X, ChevronRight, CheckCircle2,
 } from 'lucide-react';
@@ -29,10 +29,10 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/student',             icon: Home,           label: 'Dashboard',      short: 'Home'      },
+  { to: '/student/classes',     icon: BookOpen,        label: 'Class',          short: 'Class'     },
   { to: '/student/quizzes',     icon: GraduationCap,  label: 'Quizzes & Code', short: 'Quizzes'   },
   { to: '/student/attendance',  icon: ClipboardCheck, label: 'Attendance',     short: 'Attend'    },
   { to: '/student/interview',   icon: Mic2,           label: 'AI Interview',   short: 'Interview' },
-  { to: '/student/referrals',   icon: Gift,           label: 'Rewards',        short: 'Rewards'   },
   { to: '/student/career',      icon: Briefcase,      label: 'Career',         short: 'Career'    },
 ];
 
@@ -84,23 +84,23 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // ── Theme-aware palette ────────────────────────────────────────────────────
   const T = isDark ? {
-    pageBg:      '#030712',
-    sidebarBg:   '#0f172a',
-    border:      'rgba(255,255,255,0.08)',
-    tabBarBg:    'rgba(15,23,42,0.97)',
-    profileCard: 'rgba(79,70,229,0.08)',
-    profileBorder: 'rgba(79,70,229,0.2)',
-    navSectionLabel: '#64748b',
-    navMuted:    '#94a3b8',
-    navActive:   '#6366f1',
+    pageBg:      '#000000',
+    sidebarBg:   '#000000',
+    border:      '#27272a',
+    tabBarBg:    '#09090b',
+    profileCard: 'rgba(255,255,255,0.04)',
+    profileBorder: '#27272a',
+    navSectionLabel: '#a1a1aa',
+    navMuted:    '#cbd5e1',
+    navActive:   '#818cf8',
     navActiveBg: 'rgba(99,102,241,0.15)',
-    text:        '#f8fafc',
-    textMuted:   '#64748b',
-    avatarBorder: '#0f172a',
+    text:        '#fafafa',
+    textMuted:   '#a1a1aa',
+    avatarBorder: '#000000',
     xpTrack:     'rgba(255,255,255,0.08)',
     closeBtn:    'rgba(255,255,255,0.1)',
-    closeBtnTxt: 'rgba(255,255,255,0.8)',
-    inactiveTab: 'rgba(255,255,255,0.4)',
+    closeBtnTxt: '#fafafa',
+    inactiveTab: 'rgba(255,255,255,0.6)',
   } : {
     pageBg:      '#f8fafc',
     sidebarBg:   '#ffffff',
@@ -123,18 +123,16 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // ── Sidebar content (shared between desktop + mobile overlay) ─────────────
   const SidebarContent = () => (
-    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-slate-900 border-r border-slate-200/80 dark:border-slate-800">
+    <div className="flex flex-col h-full min-h-0 bg-white dark:bg-black border-r border-slate-200/80 dark:border-zinc-800">
 
       {/* Brand Header */}
-      <div className="px-5 py-5 flex items-center gap-3 flex-shrink-0 border-b border-slate-200/70 dark:border-slate-800">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
-          style={{ background: 'linear-gradient(135deg, #4f46e5, #3b82f6)' }}>
-          <GraduationCap className="w-5 h-5 text-white" />
+      <div className="px-5 py-4 flex items-center justify-between flex-shrink-0 border-b border-slate-200/70 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <img src="/cynex_logo.png" alt="Cynex AI" className="h-8 w-auto object-contain dark:invert dark:brightness-200" />
         </div>
-        <div>
-          <p className="font-black text-base leading-tight tracking-tight text-slate-900 dark:text-white">Cynex<span className="text-indigo-600 dark:text-indigo-400">AI</span></p>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">Executive Portal</p>
-        </div>
+        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+          Student
+        </span>
       </div>
 
       {/* Navigation Links */}
@@ -167,7 +165,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       </div>
 
       {/* Movin-style Pinned User Profile (Bottom Left) */}
-      <div className="p-3 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/80 flex-shrink-0 space-y-2">
+      <div className="p-3 border-t border-slate-200/80 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950 flex-shrink-0 space-y-2">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60 shadow-sm">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 relative shadow-sm"
             style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)' }}>
@@ -201,7 +199,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <div className="flex h-screen w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 z-20 overflow-hidden">
+      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-black z-20 overflow-hidden">
         <SidebarContent />
       </aside>
 
@@ -225,12 +223,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         {/* Mobile top header */}
         <div className="md:hidden flex items-center justify-between px-4 py-3 flex-shrink-0"
           style={{ background: T.sidebarBg, borderBottom: `1px solid ${T.border}` }}>
-          <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #06b6d4, #0891b2)' }}>
-              <GraduationCap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-black text-sm" style={{ color: '#06b6d4' }}>CynexAI</span>
+          <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2">
+            <img src="/cynex_logo.png" alt="Cynex AI" className="h-7 w-auto object-contain dark:invert dark:brightness-200" />
           </button>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
@@ -238,6 +232,28 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               {data.completedClasses} Classes Done
             </span>
           </div>
+        </div>
+
+        {/* Mobile Sticky Top Module Quick Navigation Bar */}
+        <div className="md:hidden flex items-center gap-1.5 px-3 py-2.5 overflow-x-auto no-scrollbar bg-slate-900/95 dark:bg-black/95 backdrop-blur-md border-b border-slate-800/80 flex-shrink-0 z-30 sticky top-0 shadow-md">
+          {NAV_ITEMS.map(({ to, icon: Icon, label, comingSoon }) => {
+            const active = isActive(to);
+            return (
+              <button
+                key={to}
+                onClick={() => { if (!comingSoon) navigate(to); }}
+                disabled={comingSoon}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 whitespace-nowrap transition-all flex-shrink-0 ${
+                  active
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 ring-1 ring-indigo-400'
+                    : 'bg-slate-800/90 text-slate-300 hover:text-white border border-slate-700/60 active:scale-95'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Scrollable content */}

@@ -115,19 +115,49 @@ body {
   color: var(--erp-text-muted) !important;
 }
 
-/* Global fix for light-mode backgrounds in dark mode */
-[data-theme="dark"] .bg-slate-50:not([class*="dark:bg-"]),
-[data-theme="dark"] .bg-slate-100:not([class*="dark:bg-"]),
-[data-theme="dark"] .bg-gray-50:not([class*="dark:bg-"]),
-[data-theme="dark"] .bg-gray-100:not([class*="dark:bg-"]) {
-  background-color: var(--erp-sidebar-bg) !important;
+/* Universal Premium True Black Overrides for Dark Mode */
+[data-theme="dark"] .bg-slate-950,
+[data-theme="dark"] .bg-slate-900,
+[data-theme="dark"] .bg-slate-850,
+[data-theme="dark"] .bg-slate-800,
+[data-theme="dark"] [class*="dark:bg-slate-950"],
+[data-theme="dark"] [class*="dark:bg-slate-900"],
+[data-theme="dark"] [class*="dark:bg-slate-800"],
+[data-theme="dark"] [class*="dark:bg-\[\#070913\]"],
+[data-theme="dark"] [class*="dark:bg-\[\#0d0d1a\]"],
+[data-theme="dark"] [class*="dark:bg-\[\#0a0a14\]"],
+[data-theme="dark"] [class*="dark:bg-\[\#0b0f19\]"],
+[data-theme="dark"] [class*="dark:bg-\[\#0f172a\]"],
+[data-theme="dark"] [class*="dark:bg-black\/30"],
+[data-theme="dark"] [class*="dark:bg-black\/50"],
+[data-theme="dark"] [class*="dark:bg-black\/60"] {
+  background-color: #09090b !important;
 }
 
-/* Global fix for light-mode borders in dark mode */
-[data-theme="dark"] .border-slate-200:not([class*="dark:border-"]),
-[data-theme="dark"] .border-slate-100:not([class*="dark:border-"]),
-[data-theme="dark"] .border-gray-200:not([class*="dark:border-"]) {
-  border-color: var(--erp-border) !important;
+[data-theme="dark"] body,
+[data-theme="dark"] #root,
+[data-theme="dark"] main,
+[data-theme="dark"] .min-h-screen,
+[data-theme="dark"] [class*="dark:bg-slate-950"].min-h-screen,
+[data-theme="dark"] [class*="dark:bg-slate-900"].min-h-screen,
+[data-theme="dark"] .candy-map-bg {
+  background-color: #000000 !important;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px) !important;
+}
+
+[data-theme="dark"] .candy-panel {
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8) !important;
+}
+
+[data-theme="dark"] .border-slate-800,
+[data-theme="dark"] .border-slate-700,
+[data-theme="dark"] [class*="dark:border-slate-800"],
+[data-theme="dark"] [class*="dark:border-slate-700"],
+[data-theme="dark"] [class*="dark:border-white\/10"],
+[data-theme="dark"] [class*="dark:border-white\/20"] {
+  border-color: #27272a !important;
 }
 
 /* Dark Container Safeguard: Ensure elements inside dark containers keep crisp white/light text in light mode */
@@ -495,18 +525,42 @@ button, [role="button"] {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 [data-theme="dark"] .candy-panel {
-  @apply bg-slate-900;
-  border-color: #1e293b;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  background-color: #09090b !important;
+  border-color: #27272a !important;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
 }
 
-/* Corporate Page Background */
+/* Corporate Page Background & Cynex AI Watermark */
+body, .candy-map-bg {
+  position: relative;
+}
+
+body::before,
+.candy-map-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url('/cynex_logo.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: min(520px, 80vw) auto;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .candy-map-bg {
   background-color: #f8fafc;
   background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 [data-theme="dark"] .candy-map-bg {
-  background-color: #030712;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-color: #000000 !important;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px) !important;
+}
+
+[data-theme="dark"] body::before,
+[data-theme="dark"] .candy-map-bg::before {
+  opacity: 0.06;
+  filter: invert(1) brightness(2.0);
 }
