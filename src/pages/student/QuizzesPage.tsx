@@ -381,19 +381,15 @@ export default function QuizzesPage() {
     <div className="min-h-screen bg-[#f8fafc] dark:bg-[#070913] text-slate-900 dark:text-white p-4 md:p-8 selection:bg-indigo-500/30">
       <div className="max-w-7xl mx-auto space-y-8 pb-24">
         
-        {/* Futuristic Cyber-LMS Hero Section */}
+        {/* Hero Section */}
         <div className="relative rounded-3xl p-6 md:p-10 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-          {/* Ambient Glow Orbs */}
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/3 -mb-16 w-80 h-80 rounded-full bg-gradient-to-tr from-blue-500/20 to-emerald-500/20 blur-3xl pointer-events-none" />
-
           <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
             <div className="max-w-2xl space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-black uppercase tracking-widest">
                 <Zap className="w-3.5 h-3.5 text-indigo-400 fill-current" /> Batch Progression Assessments
               </div>
               <h1 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white leading-tight">
-                Quizzes & <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Code Studio</span>
+                Quizzes & <span className="text-indigo-400">Code Studio</span>
               </h1>
               <p className="text-slate-400 text-sm font-medium leading-relaxed">
                 Test your mastery with interactive MCQ quizzes and real-world Python coding challenges. Questions unlock automatically as your batch progresses.

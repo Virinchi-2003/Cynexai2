@@ -9,17 +9,17 @@ import {
 
 function ProgressBar({
   pct,
-  gradient = 'from-indigo-600 to-blue-500',
+  color = 'bg-indigo-600',
   height = 'h-2.5',
 }: {
   pct: number;
-  gradient?: string;
+  color?: string;
   height?: string;
 }) {
   return (
     <div className={`w-full ${height} bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden`}>
       <div
-        className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
+        className={`h-full rounded-full ${color} transition-all duration-700`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
       />
     </div>
@@ -95,16 +95,13 @@ export default function ClassesPage() {
 
         {/* Hero Banner Header */}
         <div className="relative rounded-3xl p-6 md:p-10 bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden text-white">
-          <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-600/30 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-1/3 -mb-16 w-80 h-80 rounded-full bg-gradient-to-tr from-blue-500/20 to-emerald-500/20 blur-3xl pointer-events-none" />
-
           <div className="relative z-10 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
             <div className="max-w-2xl space-y-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-black uppercase tracking-widest">
                 <BookOpen className="w-3.5 h-3.5 text-indigo-400" /> Class Curriculum Hub
               </div>
               <h1 className="text-3xl md:text-5xl font-black font-display tracking-tight text-white leading-tight">
-                Class <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">Modules</span>
+                Class <span className="text-indigo-400">Modules</span>
               </h1>
               <p className="text-slate-400 text-sm font-medium leading-relaxed">
                 Access all curriculum modules, step-by-step video lessons, and interactive class progress.
@@ -263,7 +260,7 @@ export default function ClassesPage() {
                         <span className="text-slate-400 text-[10px] uppercase">Progress</span>
                         <span className="text-slate-900 dark:text-white">{Math.round(pct)}%</span>
                       </div>
-                      <ProgressBar pct={pct} gradient={isCompleted ? 'from-emerald-500 to-teal-400' : 'from-indigo-600 to-blue-500'} />
+                      <ProgressBar pct={pct} color={isCompleted ? 'bg-emerald-500' : 'bg-indigo-600'} />
                     </div>
 
                     <button

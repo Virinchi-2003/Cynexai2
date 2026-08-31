@@ -66,17 +66,17 @@ function formatTime(timeStr: string | null | undefined): string {
 
 function ProgressBar({
   pct,
-  gradient = 'from-indigo-600 to-blue-500',
+  color = 'bg-indigo-600',
   height = 'h-2',
 }: {
   pct: number;
-  gradient?: string;
+  color?: string;
   height?: string;
 }) {
   return (
     <div className={`w-full ${height} bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden`}>
       <div
-        className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700`}
+        className={`h-full rounded-full ${color} transition-all duration-700`}
         style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
       />
     </div>
@@ -485,7 +485,7 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center shadow-xl shadow-indigo-500/30">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
           <Loader2 className="w-7 h-7 text-white animate-spin" />
         </div>
         <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Loading your student dashboard…</p>

@@ -22,10 +22,10 @@ import { Avatar2D } from '../../components/ui/Avatar2D';
 import { getGamificationSettings } from '../../lib/api/gamification';
 
 const VOICES = [
-  { id: 'aura-asteria-en', name: '🇮🇳 Priya (Indian HR Female)', desc: 'Warm & professional' },
-  { id: 'aura-orion-en', name: '🇮🇳 Arjun (Indian HR Male)', desc: 'Authoritative & clear' },
-  { id: 'aura-helios-en', name: '🌐 Vikram (International Male)', desc: 'MNC style' },
-  { id: 'aura-angus-en', name: '🌐 Meera (International Female)', desc: 'Senior management' },
+  { id: 'aura-asteria-en', name: 'Priya (Indian HR Female)', desc: 'Warm & professional' },
+  { id: 'aura-orion-en', name: 'Arjun (Indian HR Male)', desc: 'Authoritative & clear' },
+  { id: 'aura-helios-en', name: 'Vikram (International Male)', desc: 'MNC style' },
+  { id: 'aura-angus-en', name: 'Meera (International Female)', desc: 'Senior management' },
 ];
 
 const SPEEDS = [
@@ -355,15 +355,11 @@ export default function MockInterview() {
           {/* Header */}
           <div className="text-center space-y-2 candy-panel p-6 bg-white/80 dark:bg-black/60 backdrop-blur-md !border-2">
             <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
-              <span>🇮🇳</span> AI Mock Interview Room
+              <Mic className="w-8 h-8 text-purple-600 dark:text-purple-400" /> AI Mock Interview Room
             </h1>
-            <p className="text-slate-600 dark:text-white/70 font-bold">
-              Practice live voice interviews powered by Deepgram TTS & Groq LLM.
+            <p className="text-slate-600 dark:text-white/70 font-bold text-sm">
+              Practice live interactive voice mock interviews with real-time feedback.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
-              <span className="text-xs bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/30 px-3 py-1 rounded-full font-black">Groq LLaMA 3.3 / Qwen</span>
-              <span className="text-xs bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-500/30 px-3 py-1 rounded-full font-black">Deepgram Voice API Connected</span>
-            </div>
           </div>
 
           {/* Navigation Tabs (New Interview vs Past Results) */}
