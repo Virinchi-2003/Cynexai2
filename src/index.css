@@ -534,9 +534,17 @@ button, [role="button"] {
   box-shadow: 0 4px 25px rgba(0, 0, 0, 0.8);
 }
 
-/* Corporate Page Background & Premium CYNEXAI Background Watermark (Portals Only) */
+/* Corporate Page Background & Subtle CYNEXAI Background Watermark */
 .candy-map-bg, .portal-dot-bg, .bg-erp-background, .portal-watermark-bg {
   position: relative;
+}
+
+.candy-map-bg > *,
+.portal-dot-bg > *,
+.bg-erp-background > *,
+.portal-watermark-bg > * {
+  position: relative;
+  z-index: 1;
 }
 
 .candy-map-bg::before,
@@ -546,15 +554,14 @@ button, [role="button"] {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('/CynexAI.in.ai.svg?v=8');
+  background-image: url('/CynexAI.in.ai.svg?v=11');
   background-repeat: no-repeat;
   background-position: center center;
-  background-size: min(85vw, 950px) auto;
-  opacity: 0.18;
+  background-size: min(75vw, 850px) auto;
+  opacity: 0.04;
   pointer-events: none;
   z-index: 0;
-  filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.2));
-  transition: opacity 0.3s ease, background-position 0.3s ease, filter 0.3s ease;
+  transition: opacity 0.3s ease, background-position 0.3s ease;
 }
 
 .no-watermark::before,
@@ -577,8 +584,8 @@ button, [role="button"] {
   .bg-erp-background::before,
   .portal-watermark-bg::before {
     background-position: center center;
-    background-size: min(92vw, 550px) auto;
-    opacity: 0.15;
+    background-size: min(85vw, 450px) auto;
+    opacity: 0.04;
   }
 }
 
@@ -606,7 +613,7 @@ button, [role="button"] {
 .dark .portal-dot-bg::before,
 .dark .bg-erp-background::before,
 .dark .portal-watermark-bg::before {
-  background-image: url('/CynexAI.in.ai.svg?v=8');
-  opacity: 0.25;
-  filter: invert(1) drop-shadow(0 0 25px rgba(255, 255, 255, 0.4));
+  background-image: url('/CynexAI.in.ai.svg?v=11');
+  opacity: 0.05;
+  filter: invert(1);
 }

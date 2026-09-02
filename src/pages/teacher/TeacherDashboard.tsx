@@ -174,22 +174,22 @@ export default function TeacherDashboard() {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Upcoming Class Banner */}
-            <Card className="bg-gradient-to-br from-blue-950 via-slate-900 to-slate-900 border-blue-800/50 p-6 shadow-xl relative overflow-hidden">
+            <Card className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-blue-800/50 p-6 shadow-xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
               
               <div className="flex items-center gap-2 mb-4 relative z-10">
-                <Zap className="w-5 h-5 text-yellow-400 animate-pulse" />
-                <h2 className="font-bold text-white text-lg">Next Upcoming Class</h2>
+                <Zap className="w-5 h-5 text-yellow-500 dark:text-yellow-400 animate-pulse" />
+                <h2 className="font-bold text-slate-900 dark:text-white text-lg">Next Upcoming Class</h2>
               </div>
 
               {nextClass ? (
                 <div className="relative z-10">
-                  <div className="bg-white dark:bg-black/5 border border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
+                  <div className="bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl p-5 mb-5 backdrop-blur-sm">
                     <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs font-bold text-blue-300 uppercase tracking-widest">{nextClass.batchName || 'Unassigned Batch'}</p>
+                      <p className="text-xs font-bold text-blue-600 dark:text-blue-300 uppercase tracking-widest">{nextClass.batchName || 'Unassigned Batch'}</p>
                       <span className="text-xs font-bold text-white bg-blue-600 px-3 py-1 rounded-full">{nextClass.time}</span>
                     </div>
-                    <h3 className="text-2xl font-display font-bold text-white mb-2">{nextClass.course || 'Ad-hoc Class'}</h3>
+                    <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">{nextClass.course || 'Ad-hoc Class'}</h3>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row gap-3">

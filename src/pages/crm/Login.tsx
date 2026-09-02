@@ -40,7 +40,7 @@ export default function CrmLogin() {
       
       {/* Brand Header */}
       <div className="text-center mb-8 flex flex-col items-center justify-center">
-        <CynexLogo size="xl" />
+        <CynexLogo size="xl" showText={true} />
         <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium mt-1">
           Learning Management System
         </p>

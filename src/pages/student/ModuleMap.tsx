@@ -266,7 +266,20 @@ export default function ModuleMap() {
   const completedCount = virtualNodes.filter(n => n.isCompleted).length;
   const pct = virtualNodes.length > 0 ? Math.round((completedCount / virtualNodes.length) * 100) : 0;
 
-  const handleNodeClick = (node: VirtualNode) => setSelectedNode(node);
+  const handleNodeClick = (node: VirtualNode) => {
+    const isCompleted = node.isCompleted;
+    const isTeacherUnlocked = node.classItem.status === 'unlocked' || node.classItem.status === 'in_progress' || node.classItem.status === 'active' || node.classItem.status === 'completed';
+    const nodeIdx = virtualNodes.findIndex(n => n.id === node.id);
+    const isPreviousCompleted = nodeIdx <= 0 || (nodeIdx > 0 && virtualNodes[nodeIdx - 1].isCompleted);
+    const isUnlocked = isPreviousCompleted || isTeacherUnlocked || isCompleted;
+
+    if (isUnlocked) {
+      navigate(`/student/class-flow?classId=${node.classId}&step=${node.stepType}`);
+    } else {
+      setSelectedNode(node);
+    }
+  };
+
   const handleGo = () => {
     if (!selectedNode) return;
     const { classId, stepType } = selectedNode;
