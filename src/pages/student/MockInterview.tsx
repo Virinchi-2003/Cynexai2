@@ -342,7 +342,7 @@ export default function MockInterview() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-black">
-        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
       </div>
     );
   }
@@ -355,7 +355,7 @@ export default function MockInterview() {
           {/* Header */}
           <div className="text-center space-y-2 candy-panel p-6 bg-white/80 dark:bg-black/60 backdrop-blur-md !border-2">
             <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-3">
-              <Mic className="w-8 h-8 text-purple-600 dark:text-purple-400" /> AI Mock Interview Room
+              <Mic className="w-8 h-8 text-blue-600 dark:text-blue-400" /> AI Mock Interview Room
             </h1>
             <p className="text-slate-600 dark:text-white/70 font-bold text-sm">
               Practice live interactive voice mock interviews with real-time feedback.
@@ -368,7 +368,7 @@ export default function MockInterview() {
               onClick={() => setActiveTab('setup')}
               className={`px-6 py-2.5 rounded-2xl font-black text-sm transition-all border-2 ${
                 activeTab === 'setup'
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-lg'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg'
                   : 'bg-white/60 dark:bg-black/40 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10'
               }`}
             >
@@ -378,7 +378,7 @@ export default function MockInterview() {
               onClick={() => setActiveTab('history')}
               className={`px-6 py-2.5 rounded-2xl font-black text-sm transition-all border-2 flex items-center gap-2 ${
                 activeTab === 'history'
-                  ? 'bg-purple-600 text-white border-purple-500 shadow-lg'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg'
                   : 'bg-white/60 dark:bg-black/40 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10'
               }`}
             >
@@ -392,11 +392,11 @@ export default function MockInterview() {
               <div className={`flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 candy-panel !border-2 rounded-2xl gap-4 ${
                 isWeeklyLimitReached 
                   ? 'bg-amber-500/10 dark:bg-amber-950/40 border-amber-500/40' 
-                  : 'bg-indigo-500/10 dark:bg-indigo-950/40 border-indigo-500/30'
+                  : 'bg-blue-500/10 dark:bg-blue-950/40 border-blue-500/30'
               }`}>
                 <div className="flex items-center gap-3">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${
-                    isWeeklyLimitReached ? 'bg-amber-500/20 text-amber-500' : 'bg-indigo-500/20 text-indigo-400'
+                    isWeeklyLimitReached ? 'bg-amber-500/20 text-amber-500' : 'bg-blue-500/20 text-blue-400'
                   }`}>
                     <Clock className="w-6 h-6" />
                   </div>
@@ -425,14 +425,14 @@ export default function MockInterview() {
               {/* Target Job Role Presets & Custom Input */}
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-600 dark:text-white/70 uppercase tracking-wider">
-                  <BookOpen className="w-4 h-4 text-purple-500" /> Target Job Role
+                  <BookOpen className="w-4 h-4 text-blue-500" /> Target Job Role
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Full Stack Web Developer, Data Scientist..."
                   value={targetJobRole}
                   onChange={(e) => setTargetJobRole(e.target.value)}
-                  className="w-full candy-panel !border-2 px-4 py-3 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:border-purple-400 transition-all bg-white/70 dark:bg-black/50"
+                  className="w-full candy-panel !border-2 px-4 py-3 text-slate-900 dark:text-white font-bold placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:border-blue-400 transition-all bg-white/70 dark:bg-black/50"
                 />
                 <div className="flex flex-wrap gap-2 pt-1">
                   {ROLE_PRESETS.map(role => (
@@ -441,8 +441,8 @@ export default function MockInterview() {
                       onClick={() => setTargetJobRole(role)}
                       className={`text-xs px-3 py-1.5 rounded-xl font-bold transition-all border ${
                         targetJobRole === role
-                          ? 'bg-purple-500 text-white border-purple-400'
-                          : 'bg-white/50 dark:bg-black/30 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10 hover:border-purple-300'
+                          ? 'bg-blue-500 text-white border-blue-400'
+                          : 'bg-white/50 dark:bg-black/30 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/10 hover:border-blue-300'
                       }`}
                     >
                       {role}
@@ -454,7 +454,7 @@ export default function MockInterview() {
               {/* Interviewer Persona Selection */}
               <div className="space-y-3">
                 <label className="flex items-center gap-2 text-sm font-black text-slate-600 dark:text-white/70 uppercase tracking-wider">
-                  <Settings className="w-4 h-4 text-purple-500" /> HR Interviewer Voice & Persona
+                  <Settings className="w-4 h-4 text-blue-500" /> HR Interviewer Voice & Persona
                 </label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {VOICES.map(v => (
@@ -463,8 +463,8 @@ export default function MockInterview() {
                       onClick={() => setVoice(v.id)}
                       className={`candy-panel p-4 text-left transition-all !border-2 ${
                         voice === v.id 
-                          ? 'border-purple-500 bg-purple-50/80 dark:bg-purple-900/30 dark:border-purple-400' 
-                          : 'bg-white/50 dark:bg-black/30 border-slate-200 dark:border-white/10 hover:border-purple-300'
+                          ? 'border-blue-500 bg-blue-50/80 dark:bg-blue-900/30 dark:border-blue-400' 
+                          : 'bg-white/50 dark:bg-black/30 border-slate-200 dark:border-white/10 hover:border-blue-300'
                       }`}
                     >
                       <div className="font-black text-slate-900 dark:text-white text-sm">{v.name}</div>
@@ -521,7 +521,7 @@ export default function MockInterview() {
             /* History Tab */
             <div className="candy-panel p-6 space-y-4 !border-2">
               <h3 className="font-black text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                <History className="w-5 h-5 text-purple-500" /> Your Previous Mock Interviews
+                <History className="w-5 h-5 text-blue-500" /> Your Previous Mock Interviews
               </h3>
               {pastInterviews.length === 0 ? (
                 <div className="text-center py-12 text-slate-500 dark:text-white/40 font-bold">
@@ -539,7 +539,7 @@ export default function MockInterview() {
                             <span className="font-black text-slate-900 dark:text-white text-base">
                               {parsedEval?.targetRole || 'Mock Interview Session'}
                             </span>
-                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold border border-purple-500/30">
+                            <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-300 font-bold border border-blue-500/30">
                               Score: {item.score?.toFixed(1)}/10
                             </span>
                           </div>
@@ -554,7 +554,7 @@ export default function MockInterview() {
                         </div>
                         <button
                           onClick={() => setSelectedPastInterview(item)}
-                          className="px-4 py-2 text-xs candy-btn text-purple-600 dark:text-purple-400 font-black"
+                          className="px-4 py-2 text-xs candy-btn text-blue-600 dark:text-blue-400 font-black"
                         >
                           View Report
                         </button>
@@ -571,7 +571,7 @@ export default function MockInterview() {
             <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
               <div className="max-w-2xl w-full candy-panel p-6 space-y-4 max-h-[85vh] overflow-y-auto bg-slate-900 text-white !border-2">
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <h3 className="font-black text-xl text-purple-400">Past Interview Report</h3>
+                  <h3 className="font-black text-xl text-blue-400">Past Interview Report</h3>
                   <button onClick={() => setSelectedPastInterview(null)} className="p-1 rounded-lg hover:bg-white/10">
                     <XCircle className="w-6 h-6 text-slate-400" />
                   </button>
@@ -579,7 +579,7 @@ export default function MockInterview() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="p-3 candy-panel bg-white/10 text-center">
-                      <div className="text-xl font-black text-purple-400">{selectedPastInterview.score?.toFixed(1)}</div>
+                      <div className="text-xl font-black text-blue-400">{selectedPastInterview.score?.toFixed(1)}</div>
                       <div className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Overall</div>
                     </div>
                     <div className="p-3 candy-panel bg-white/10 text-center">
@@ -592,7 +592,7 @@ export default function MockInterview() {
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs uppercase font-black tracking-wider text-purple-300 mb-1">Transcript & Details</h4>
+                    <h4 className="text-xs uppercase font-black tracking-wider text-blue-300 mb-1">Transcript & Details</h4>
                     <pre className="text-xs bg-black/50 p-4 rounded-xl text-slate-300 overflow-x-auto whitespace-pre-wrap font-mono max-h-60">
                       {selectedPastInterview.transcript}
                     </pre>
@@ -611,7 +611,7 @@ export default function MockInterview() {
     return (
       <div className="min-h-screen candy-map-bg flex flex-col items-center justify-center p-4">
         <div className="max-w-md w-full candy-panel p-8 text-center space-y-6 bg-white/80 dark:bg-black/70 backdrop-blur-md !border-2">
-          <Loader2 className="w-12 h-12 text-purple-500 animate-spin mx-auto" />
+          <Loader2 className="w-12 h-12 text-blue-500 animate-spin mx-auto" />
           <h2 className="text-2xl font-black text-slate-900 dark:text-white">Analyzing Your Responses...</h2>
           <p className="text-sm font-bold text-slate-600 dark:text-white/60">
             Our AI HR Director is evaluating your technical accuracy, communication style, and confidence score.
@@ -630,21 +630,21 @@ export default function MockInterview() {
       <div className="min-h-screen candy-map-bg p-4 md:p-8 flex items-center justify-center">
         <div className="max-w-2xl w-full candy-panel p-6 md:p-8 space-y-6 !border-2 bg-white/90 dark:bg-black/90 backdrop-blur-xl">
           <div className="text-center space-y-2">
-            <div className="mx-auto w-20 h-20 bg-purple-100 dark:bg-purple-500/20 rounded-3xl flex items-center justify-center border-2 border-purple-300 dark:border-purple-500/40">
-              <Award className="w-10 h-10 text-purple-600 dark:text-purple-400" />
+            <div className="mx-auto w-20 h-20 bg-blue-100 dark:bg-blue-500/20 rounded-3xl flex items-center justify-center border-2 border-blue-300 dark:border-blue-500/40">
+              <Award className="w-10 h-10 text-blue-600 dark:text-blue-400" />
             </div>
             <h2 className="text-3xl font-black text-slate-900 dark:text-white">Interview Performance Report</h2>
-            <p className="text-sm font-bold text-purple-600 dark:text-purple-400 tracking-wide uppercase">{grade} • {targetJobRole}</p>
+            <p className="text-sm font-bold text-blue-600 dark:text-blue-400 tracking-wide uppercase">{grade} • {targetJobRole}</p>
           </div>
 
           {/* Breakdown Score Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="candy-panel p-4 bg-purple-50/80 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-center">
-              <div className="text-2xl font-black text-purple-600 dark:text-purple-300">{evaluation?.overallScore?.toFixed(1) || '7.5'}</div>
+            <div className="candy-panel p-4 bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-center">
+              <div className="text-2xl font-black text-blue-600 dark:text-blue-300">{evaluation?.overallScore?.toFixed(1) || '7.5'}</div>
               <div className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50">Overall Score</div>
             </div>
-            <div className="candy-panel p-4 bg-blue-50/80 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-center">
-              <div className="text-2xl font-black text-blue-600 dark:text-blue-300">{evaluation?.technicalScore?.toFixed(1) || '7.0'}</div>
+            <div className="candy-panel p-4 bg-sky-50/80 dark:bg-sky-900/20 border-sky-200 dark:border-sky-800 text-center">
+              <div className="text-2xl font-black text-sky-600 dark:text-sky-300">{evaluation?.technicalScore?.toFixed(1) || '7.0'}</div>
               <div className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50">Technical Depth</div>
             </div>
             <div className="candy-panel p-4 bg-emerald-50/80 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-center">
@@ -662,7 +662,7 @@ export default function MockInterview() {
             {evaluation?.summary && (
               <div className="p-4 candy-panel bg-slate-50 dark:bg-zinc-900/80 !border-2">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/50 mb-1 flex items-center gap-1.5">
-                  <Sparkles className="w-4 h-4 text-purple-500" /> Executive Summary
+                  <Sparkles className="w-4 h-4 text-blue-500" /> Executive Summary
                 </h4>
                 <p className="text-sm font-bold text-slate-800 dark:text-white/90 leading-relaxed">{evaluation.summary}</p>
               </div>
@@ -688,9 +688,9 @@ export default function MockInterview() {
             </div>
 
             {evaluation?.recommendations && (
-              <div className="p-4 candy-panel bg-purple-50/60 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800">
-                <h4 className="text-xs font-black uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">HR Recommendation</h4>
-                <p className="text-xs font-bold text-slate-800 dark:text-purple-200">{evaluation.recommendations}</p>
+              <div className="p-4 candy-panel bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800">
+                <h4 className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1">HR Recommendation</h4>
+                <p className="text-xs font-bold text-slate-800 dark:text-blue-200">{evaluation.recommendations}</p>
               </div>
             )}
           </div>
@@ -724,12 +724,12 @@ export default function MockInterview() {
 
       {/* Top Left Header Info */}
       <div className="absolute top-4 left-4 z-30 candy-panel bg-white/80 dark:bg-black/60 backdrop-blur-md px-4 py-2.5 !border-2 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-xl overflow-hidden bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center border border-purple-200 dark:border-purple-500/30">
+        <div className="w-9 h-9 rounded-xl overflow-hidden bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center border border-blue-200 dark:border-blue-500/30">
           <Avatar2D isSpeaking={false} size={36} gender={voice.includes('asteria') ? 'female' : 'male'} />
         </div>
         <div>
           <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">Live AI Interview</p>
-          <p className="text-[10px] font-bold text-purple-600 dark:text-purple-400">{targetJobRole}</p>
+          <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400">{targetJobRole}</p>
         </div>
       </div>
 
@@ -748,14 +748,14 @@ export default function MockInterview() {
 
       {/* Center Avatar Display */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full h-full pb-36 px-4">
-        <div className={`transition-all duration-500 ease-in-out ${isAvatarSpeaking ? 'scale-110 drop-shadow-[0_0_40px_rgba(168,85,247,0.4)]' : 'scale-100'}`}>
+        <div className={`transition-all duration-500 ease-in-out ${isAvatarSpeaking ? 'scale-110 drop-shadow-[0_0_40px_rgba(59,130,246,0.4)]' : 'scale-100'}`}>
           <Avatar2D isSpeaking={isAvatarSpeaking} size={260} gender={voice.includes('asteria') ? 'female' : 'male'} />
         </div>
         
         {/* Status Indicator */}
         <div className="mt-6 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest candy-panel px-5 py-2.5 !border-2 shadow-xl bg-white/80 dark:bg-zinc-900/90 text-slate-900 dark:text-white">
           {processingAI ? (
-            <><Loader2 className="w-4 h-4 text-purple-500 animate-spin" /><span className="text-purple-600 dark:text-purple-400">AI Thinking...</span></>
+            <><Loader2 className="w-4 h-4 text-blue-500 animate-spin" /><span className="text-blue-600 dark:text-blue-400">AI Thinking...</span></>
           ) : isAvatarSpeaking ? (
             <><div className="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse" /><span className="text-cyan-600 dark:text-cyan-400">Interviewer Speaking</span></>
           ) : (
@@ -769,11 +769,11 @@ export default function MockInterview() {
         <div className="absolute bottom-28 left-1/2 -translate-x-1/2 w-full max-w-2xl px-4 z-20 pointer-events-none">
           <div className="bg-black/85 backdrop-blur-xl border border-white/10 rounded-2xl p-4 text-center shadow-2xl pointer-events-auto">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] text-purple-400 font-black uppercase tracking-widest">Interviewer Says:</span>
+              <span className="text-[10px] text-blue-400 font-black uppercase tracking-widest">Interviewer Says:</span>
               <button
                 onClick={replayLastAiResponse}
                 disabled={replayingAudio || isAvatarSpeaking || processingAI}
-                className="flex items-center gap-1 text-[11px] font-black bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 px-2.5 py-0.5 rounded-full border border-purple-500/30 transition-all disabled:opacity-50"
+                className="flex items-center gap-1 text-[11px] font-black bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 px-2.5 py-0.5 rounded-full border border-blue-500/30 transition-all disabled:opacity-50"
               >
                 {replayingAudio ? <Loader2 className="w-3 h-3 animate-spin" /> : <Volume2 className="w-3 h-3" />}
                 <span>Replay Voice</span>
@@ -801,7 +801,7 @@ export default function MockInterview() {
       >
         <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-950">
           <h3 className="font-black text-base text-white flex items-center gap-2">
-            <MessageSquare className="w-4 h-4 text-purple-400" /> Interview Transcript
+            <MessageSquare className="w-4 h-4 text-blue-400" /> Interview Transcript
           </h3>
           <button 
             onClick={() => setShowChatLog(false)} 
@@ -818,7 +818,7 @@ export default function MockInterview() {
               </span>
               <div className={`p-3 rounded-2xl max-w-[85%] text-xs font-medium shadow-md ${
                 msg.role === 'user' 
-                  ? 'bg-purple-600 text-white rounded-br-none' 
+                  ? 'bg-blue-600 text-white rounded-br-none' 
                   : 'bg-zinc-800 text-white border border-zinc-700 rounded-bl-none'
               }`}>
                 {msg.content}
@@ -846,7 +846,7 @@ export default function MockInterview() {
             <button
               onClick={handleTextSubmission}
               disabled={!textInput.trim() || processingAI || isAvatarSpeaking}
-              className="p-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl font-bold transition-all disabled:opacity-40"
+              className="p-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all disabled:opacity-40"
               title="Send Response"
             >
               <Send className="w-4 h-4" />
@@ -868,7 +868,7 @@ export default function MockInterview() {
                   ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                   : isRecording
                   ? 'bg-red-500 text-white shadow-[0_0_30px_rgba(239,68,68,0.7)] scale-95'
-                  : 'bg-purple-600 hover:bg-purple-500 text-white active:scale-95'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white active:scale-95'
               }`}
               title={isRecording ? "Click to Stop & Send" : "Click to Speak"}
             >
@@ -891,7 +891,7 @@ export default function MockInterview() {
             <button
               onClick={() => setShowChatLog(!showChatLog)}
               className={`p-3 rounded-full transition-all text-xs font-bold ${
-                showChatLog ? 'bg-purple-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                showChatLog ? 'bg-blue-600 text-white' : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
               }`}
               title="Toggle Transcript Drawer"
             >

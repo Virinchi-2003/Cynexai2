@@ -66,7 +66,7 @@ function formatTime(timeStr: string | null | undefined): string {
 
 function ProgressBar({
   pct,
-  color = 'bg-indigo-600',
+  color = 'bg-blue-600',
   height = 'h-2',
 }: {
   pct: number;
@@ -91,7 +91,7 @@ function AnnouncementsBanner({ announcements }: { announcements: Announcement[] 
 
   return (
     <div className="flex items-center overflow-hidden bg-slate-900 text-white rounded-2xl px-4.5 py-3 gap-3 border border-slate-800 shadow-md">
-      <div className="flex-shrink-0 flex items-center gap-1.5 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-lg">
+      <div className="flex-shrink-0 flex items-center gap-1.5 bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-lg">
         <Bell className="w-3.5 h-3.5" strokeWidth={2.5} />
         <span className="font-bold text-[10px] uppercase tracking-widest">
           Announcements
@@ -236,7 +236,7 @@ function ActivityBreakdownCard({
             title="Completed"
           />
           <div
-            className="h-full bg-indigo-600 transition-all duration-700"
+            className="h-full bg-blue-600 transition-all duration-700"
             style={{ width: `${Math.max(5, inProgPct)}%` }}
             title="In Progress"
           />
@@ -250,7 +250,7 @@ function ActivityBreakdownCard({
       {/* Legend pills */}
       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-md bg-indigo-600 flex-shrink-0" />
+          <div className="w-3 h-3 rounded-md bg-blue-600 flex-shrink-0" />
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase">In Progress</p>
             <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{inProgressCount} Modules</p>
@@ -289,7 +289,7 @@ function ActivityChartCard() {
             Class attendance and active session trend
           </p>
         </div>
-        <div className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer">
+        <div className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer">
           <span>This Week</span>
           <ChevronRight className="w-3.5 h-3.5 rotate-90" />
         </div>
@@ -300,8 +300,8 @@ function ActivityChartCard() {
         <svg viewBox="0 0 500 160" className="w-full h-full overflow-visible">
           <defs>
             <linearGradient id="movinCurveGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.25" />
-              <stop offset="100%" stopColor="#4f46e5" stopOpacity="0.0" />
+              <stop offset="0%" stopColor="#2563eb" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.0" />
             </linearGradient>
           </defs>
 
@@ -320,7 +320,7 @@ function ActivityChartCard() {
           <path
             d="M 20,130 C 80,100 120,40 180,65 C 240,90 300,30 360,45 C 420,60 460,90 480,75"
             fill="none"
-            stroke="#4f46e5"
+            stroke="#2563eb"
             strokeWidth="3.5"
             strokeLinecap="round"
           />
@@ -340,7 +340,7 @@ function ActivityChartCard() {
               cx={pt.x}
               cy={pt.y}
               r="4.5"
-              className="fill-indigo-600 stroke-white dark:stroke-slate-900"
+              className="fill-blue-600 stroke-white dark:stroke-slate-900"
               strokeWidth="2.5"
             />
           ))}
@@ -383,8 +383,8 @@ function UpcomingClassCard({ cls }: { cls: any }) {
     <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 flex items-center justify-center flex-shrink-0">
-            <Calendar className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+          <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 flex items-center justify-center flex-shrink-0">
+            <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           </div>
           <h3 className="text-slate-900 dark:text-white font-bold text-xs uppercase tracking-wider">Scheduled Session</h3>
         </div>
@@ -430,7 +430,7 @@ function UpcomingClassCard({ cls }: { cls: any }) {
               ? 'bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-500/20'
               : isEnded
               ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-500/20'
-              : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-500/20'
+              : 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20'
           }`}
         >
           {isLiveNow ? (
@@ -452,8 +452,8 @@ function UpcomingClassCard({ cls }: { cls: any }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-6 text-center">
-      <div className="w-20 h-20 rounded-2xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 flex items-center justify-center mb-5 shadow-sm">
-        <BookOpen className="w-9 h-9 text-indigo-600 dark:text-indigo-400" />
+      <div className="w-20 h-20 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 flex items-center justify-center mb-5 shadow-sm">
+        <BookOpen className="w-9 h-9 text-blue-600 dark:text-blue-400" />
       </div>
       <h3 className="text-slate-900 dark:text-white font-bold text-xl mb-2">No Course Enrolled</h3>
       <p className="text-slate-600 dark:text-slate-400 text-sm max-w-xs leading-relaxed">
@@ -473,7 +473,7 @@ function ErrorState({ onRetry }: { onRetry: () => void }) {
       <p className="text-slate-600 dark:text-slate-400 text-sm mb-5">Could not fetch your dashboard data.</p>
       <button
         onClick={onRetry}
-        className="px-5 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-all shadow-md"
+        className="px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all shadow-md"
       >
         Retry
       </button>
@@ -485,7 +485,7 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center h-full min-h-[60vh]">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
           <Loader2 className="w-7 h-7 text-white animate-spin" />
         </div>
         <p className="text-slate-600 dark:text-slate-400 text-sm font-medium">Loading your student dashboard…</p>
@@ -594,7 +594,7 @@ export default function StudentPortal() {
               </span>
             </div>
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-              Welcome back, <span className="text-indigo-600 dark:text-indigo-400">{firstName}</span>
+              Welcome back, <span className="text-blue-600 dark:text-blue-400">{firstName}</span>
             </h1>
           </div>
 
@@ -612,8 +612,8 @@ export default function StudentPortal() {
             value={modules.length}
             sublabel="Enrolled course"
             icon={BookOpen}
-            iconBg="bg-indigo-50 dark:bg-indigo-950/50"
-            iconColor="text-indigo-600 dark:text-indigo-400"
+            iconBg="bg-blue-50 dark:bg-blue-950/50"
+            iconColor="text-blue-600 dark:text-blue-400"
           />
           <MovinKpiCard
             title="Classes Completed"
@@ -628,16 +628,16 @@ export default function StudentPortal() {
             value="98%"
             sublabel="Live attendance"
             icon={Calendar}
-            iconBg="bg-blue-50 dark:bg-blue-950/50"
-            iconColor="text-blue-600 dark:text-blue-400"
+            iconBg="bg-cyan-50 dark:bg-cyan-950/50"
+            iconColor="text-cyan-600 dark:text-cyan-400"
           />
           <MovinKpiCard
             title="Overall Progress"
             value={`${overallPct}%`}
             sublabel="Program completion"
             icon={TrendingUp}
-            iconBg="bg-violet-50 dark:bg-violet-950/50"
-            iconColor="text-violet-600 dark:text-violet-400"
+            iconBg="bg-sky-50 dark:bg-sky-950/50"
+            iconColor="text-sky-600 dark:text-sky-400"
           />
         </div>
 
@@ -648,8 +648,8 @@ export default function StudentPortal() {
               <UpcomingClassCard cls={upcomingClass} />
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-violet-100 dark:bg-violet-500/20 border border-violet-200 dark:border-violet-500/25 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-violet-600 dark:text-violet-400" strokeWidth={2} />
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/15 border border-blue-200 dark:border-blue-500/25 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" strokeWidth={2} />
               </div>
               <div>
                 <p className="text-slate-900 dark:text-white text-sm font-bold mb-1">Academic Guidance</p>

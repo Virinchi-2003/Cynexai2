@@ -90,11 +90,11 @@ function PermissionsDropdown({
           e.stopPropagation();
           setIsOpen(!isOpen);
         }}
-        className="p-2 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg flex items-center gap-0.5 transition-colors"
+        className="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg flex items-center gap-0.5 transition-colors"
         title="Manage Module Access Controls"
       >
         <Shield className="w-4 h-4" />
-        <ChevronDown className="w-3 h-3 text-indigo-400" />
+        <ChevronDown className="w-3 h-3 text-blue-400" />
       </button>
 
       {isOpen && (
@@ -110,7 +110,7 @@ function PermissionsDropdown({
               placeholder="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-erp-background border border-erp-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-erp-text focus:outline-none focus:border-indigo-500 font-medium"
+              className="w-full bg-erp-background border border-erp-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-erp-text focus:outline-none focus:border-blue-500 font-medium"
               autoFocus
             />
           </div>
@@ -124,7 +124,7 @@ function PermissionsDropdown({
                   type="checkbox"
                   checked={allChecked}
                   onChange={handleToggleAll}
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-erp-border cursor-pointer"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-erp-border cursor-pointer"
                 />
                 <span>All</span>
               </label>
@@ -142,7 +142,7 @@ function PermissionsDropdown({
                     type="checkbox"
                     checked={checked}
                     onChange={() => handleToggleModule(mod.id)}
-                    className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-erp-border cursor-pointer shrink-0"
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-erp-border cursor-pointer shrink-0"
                   />
                   <span className="truncate">{mod.label}</span>
                 </label>
@@ -687,7 +687,7 @@ export default function UserManagement() {
             {/* Metric Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-erp-surface border border-erp-border rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center flex-shrink-0">
                   <Layers className="w-6 h-6" />
                 </div>
                 <div>
@@ -744,7 +744,7 @@ export default function UserManagement() {
                 <select
                   value={batchStatusFilter}
                   onChange={e => setBatchStatusFilter(e.target.value)}
-                  className="bg-erp-background border border-erp-border rounded-xl px-3 py-2 text-sm text-erp-text font-medium focus:outline-none focus:border-indigo-500"
+                  className="bg-erp-background border border-erp-border rounded-xl px-3 py-2 text-sm text-erp-text font-medium focus:outline-none focus:border-blue-500"
                 >
                   <option value="">All Statuses</option>
                   <option value="Active">Active</option>
@@ -756,7 +756,7 @@ export default function UserManagement() {
                 <select
                   value={batchCourseFilter}
                   onChange={e => setBatchCourseFilter(e.target.value)}
-                  className="bg-erp-background border border-erp-border rounded-xl px-3 py-2 text-sm text-erp-text font-medium focus:outline-none focus:border-indigo-500"
+                  className="bg-erp-background border border-erp-border rounded-xl px-3 py-2 text-sm text-erp-text font-medium focus:outline-none focus:border-blue-500"
                 >
                   <option value="">All Courses</option>
                   {availableCourseOptions.map(c => (
@@ -767,7 +767,7 @@ export default function UserManagement() {
                 {(batchSearch || batchStatusFilter || batchCourseFilter) && (
                   <button
                     onClick={() => { setBatchSearch(''); setBatchStatusFilter(''); setBatchCourseFilter(''); }}
-                    className="text-xs font-bold text-indigo-500 hover:underline px-2 py-1"
+                    className="text-xs font-bold text-blue-500 hover:underline px-2 py-1"
                   >
                     Clear Filters
                   </button>
@@ -835,25 +835,25 @@ export default function UserManagement() {
                             <tr 
                               onClick={() => toggleBatchExpand(batch.id)}
                               className={`hover:bg-erp-background/60 transition-colors cursor-pointer ${
-                                isExpanded ? 'bg-indigo-500/5 dark:bg-indigo-950/20 font-medium' : ''
+                                isExpanded ? 'bg-blue-500/5 dark:bg-blue-950/20 font-medium' : ''
                               }`}
                             >
                               <td className="py-3.5 px-4 font-bold text-erp-text">
                                 <div className="flex items-center gap-2">
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); toggleBatchExpand(batch.id); }}
-                                    className="p-1 text-erp-text/50 hover:text-indigo-500 transition-colors rounded hover:bg-erp-surface"
+                                    className="p-1 text-erp-text/50 hover:text-blue-500 transition-colors rounded hover:bg-erp-surface"
                                     title={isExpanded ? "Collapse class progress" : "Expand class progress"}
                                   >
-                                    {isExpanded ? <ChevronDown className="w-4 h-4 text-indigo-500" /> : <ChevronRight className="w-4 h-4" />}
+                                    {isExpanded ? <ChevronDown className="w-4 h-4 text-blue-500" /> : <ChevronRight className="w-4 h-4" />}
                                   </button>
-                                  <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 flex-shrink-0" />
                                   <span>{batch.name}</span>
                                 </div>
                               </td>
                               <td className="py-3.5 px-4 text-erp-text/80 font-medium">
                                 <span className="flex items-center gap-1.5">
-                                  <BookOpen className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" />
+                                  <BookOpen className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
                                   {batch.course_name || batch.course_id || '—'}
                                 </span>
                               </td>
@@ -893,7 +893,7 @@ export default function UserManagement() {
                               </td>
                               <td className="py-3.5 px-4">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                  <span className="text-xs font-black text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
                                     {overallCompletionPct}%
                                   </span>
                                   <span className="text-[10px] text-erp-text/50 hidden sm:inline">
@@ -918,7 +918,7 @@ export default function UserManagement() {
                                   </button>
                                   <button
                                     onClick={() => handleOpenBatchModal(batch)}
-                                    className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors"
+                                    className="p-1.5 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors"
                                     title="Edit Batch"
                                   >
                                     <Edit className="w-4 h-4" />
@@ -941,17 +941,17 @@ export default function UserManagement() {
                                   <div className="bg-erp-surface border border-erp-border rounded-xl p-4 space-y-3 shadow-inner">
                                     <div className="flex items-center justify-between flex-wrap gap-2">
                                       <div className="flex items-center gap-2">
-                                        <BarChart3 className="w-4 h-4 text-indigo-500" />
+                                        <BarChart3 className="w-4 h-4 text-blue-500" />
                                         <h4 className="font-bold text-xs text-erp-text uppercase tracking-wider">
                                           {batch.name} — Class Progress & Subject Breakdown
                                         </h4>
-                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 border border-indigo-500/30">
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/30">
                                           Overall Progress: {overallCompletionPct}%
                                         </span>
                                       </div>
                                       <button
                                         onClick={() => handleAddSubjectToBatch(batch)}
-                                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 hover:bg-indigo-500/20 border border-indigo-500/30 flex items-center gap-1 transition-colors"
+                                        className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 border border-blue-500/30 flex items-center gap-1 transition-colors"
                                       >
                                         <Plus className="w-3.5 h-3.5" /> Add Subject
                                       </button>
@@ -962,13 +962,13 @@ export default function UserManagement() {
                                       {subjects.map((subItem) => (
                                         <div
                                           key={subItem.subject}
-                                          className="bg-erp-background border border-erp-border rounded-xl p-3 flex items-center justify-between hover:border-indigo-500/40 transition-all shadow-xs"
+                                          className="bg-erp-background border border-erp-border rounded-xl p-3 flex items-center justify-between hover:border-blue-500/40 transition-all shadow-xs"
                                         >
                                           <div className="min-w-0 pr-2">
                                             <span className="text-xs font-bold text-erp-text block truncate" title={subItem.subject}>
                                               {subItem.subject}
                                             </span>
-                                            <span className="text-[11px] font-bold text-indigo-500">
+                                            <span className="text-[11px] font-bold text-blue-500">
                                               {subItem.completed} classes completed
                                             </span>
                                           </div>
@@ -1024,7 +1024,7 @@ export default function UserManagement() {
           <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-5 border-b border-erp-border bg-erp-background/50">
               <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
-                <Key className="w-5 h-5 text-indigo-400" />
+                <Key className="w-5 h-5 text-blue-500" />
                 {editUser ? 'Edit Staff Member' : 'Create Staff Member'}
               </h2>
               <button onClick={() => setIsStaffModalOpen(false)} className="text-erp-text/50 hover:text-erp-text"><X className="w-6 h-6" /></button>
@@ -1082,7 +1082,7 @@ export default function UserManagement() {
                               if (e.target.checked) setAssignedModules(p => [...p, m.id]);
                               else setAssignedModules(p => p.filter(id => id !== m.id));
                             }}
-                            className="mt-1 w-4 h-4 rounded accent-indigo-500" />
+                            className="mt-1 w-4 h-4 rounded accent-blue-500" />
                           <span className="leading-tight">{m.title}</span>
                         </label>
                       ))}
@@ -1159,7 +1159,7 @@ export default function UserManagement() {
                         <select 
                           value={currentVal} 
                           onChange={e => setPermissions(p => ({ ...p, [mod.id]: e.target.value as AccessLevel }))}
-                          className={`w-full border rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-indigo-500 transition-colors ${
+                          className={`w-full border rounded-lg px-2.5 py-1.5 text-xs font-bold focus:outline-none focus:border-blue-500 transition-colors ${
                             currentVal === 'full'
                               ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/40'
                               : currentVal === 'view'
@@ -1194,7 +1194,7 @@ export default function UserManagement() {
           <div className="bg-erp-surface border border-erp-border rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-5 border-b border-erp-border bg-erp-background/50">
               <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
-                <Layers className="w-5 h-5 text-indigo-500" />
+                <Layers className="w-5 h-5 text-blue-500" />
                 {editingBatch ? 'Edit Batch' : 'Create New Batch'}
               </h2>
               <button onClick={() => setIsBatchModalOpen(false)} className="text-erp-text/50 hover:text-erp-text">
@@ -1316,7 +1316,7 @@ export default function UserManagement() {
               <div>
                 <h2 className="text-xl font-bold text-erp-text font-display flex items-center gap-2">
                   <GraduationCap className="w-6 h-6 text-emerald-500" />
-                  Manage Students — <span className="text-indigo-400">{activeBatchForStudents.name}</span>
+                  Manage Students — <span className="text-blue-500">{activeBatchForStudents.name}</span>
                 </h2>
                 <p className="text-xs text-erp-text/60 mt-1 flex items-center gap-2">
                   <span>Course: <strong className="text-erp-text">{activeBatchForStudents.course_name || activeBatchForStudents.course_id || 'N/A'}</strong></span>
@@ -1335,7 +1335,7 @@ export default function UserManagement() {
                 onClick={() => setStudentModalTab('enrolled')}
                 className={`px-4 py-2 font-bold text-xs rounded-t-xl transition-all border-b-2 ${
                   studentModalTab === 'enrolled'
-                    ? 'border-indigo-500 text-indigo-500 bg-indigo-500/10'
+                    ? 'border-blue-500 text-blue-500 bg-blue-500/10'
                     : 'border-transparent text-erp-text/60 hover:text-erp-text'
                 }`}
               >
@@ -1345,7 +1345,7 @@ export default function UserManagement() {
                 onClick={() => setStudentModalTab('add')}
                 className={`px-4 py-2 font-bold text-xs rounded-t-xl transition-all border-b-2 ${
                   studentModalTab === 'add'
-                    ? 'border-indigo-500 text-indigo-500 bg-indigo-500/10'
+                    ? 'border-blue-500 text-blue-500 bg-blue-500/10'
                     : 'border-transparent text-erp-text/60 hover:text-erp-text'
                 }`}
               >
@@ -1370,7 +1370,7 @@ export default function UserManagement() {
                       <p className="font-bold text-sm">No students in this batch yet</p>
                       <button
                         onClick={() => setStudentModalTab('add')}
-                        className="mt-3 text-xs font-bold text-indigo-500 hover:underline"
+                        className="mt-3 text-xs font-bold text-blue-500 hover:underline"
                       >
                         + Click here to assign students
                       </button>
@@ -1380,10 +1380,10 @@ export default function UserManagement() {
                       {batchStudents.map(student => (
                         <div
                           key={student.id}
-                          className="flex items-center justify-between p-3 bg-erp-background border border-erp-border rounded-xl hover:border-indigo-500/30 transition-colors"
+                          className="flex items-center justify-between p-3 bg-erp-background border border-erp-border rounded-xl hover:border-blue-500/30 transition-colors"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-indigo-500/10 text-indigo-500 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            <div className="w-9 h-9 rounded-full bg-blue-500/10 text-blue-500 font-bold text-xs flex items-center justify-center flex-shrink-0">
                               {student.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
@@ -1446,13 +1446,13 @@ export default function UserManagement() {
                             }}
                             className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${
                               isSelected
-                                ? 'bg-indigo-500/10 border-indigo-500 text-erp-text'
+                                ? 'bg-blue-500/10 border-blue-500 text-erp-text'
                                 : 'bg-erp-background border-erp-border hover:border-erp-primary/40'
                             }`}
                           >
                             <div className="flex items-center gap-3">
                               {isSelected ? (
-                                <CheckSquare className="w-5 h-5 text-indigo-500 flex-shrink-0" />
+                                <CheckSquare className="w-5 h-5 text-blue-500 flex-shrink-0" />
                               ) : (
                                 <Square className="w-5 h-5 text-erp-text/30 flex-shrink-0" />
                               )}

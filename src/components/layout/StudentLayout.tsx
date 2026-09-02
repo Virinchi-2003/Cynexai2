@@ -8,6 +8,7 @@ import {
   Menu, X, ChevronRight, CheckCircle2,
 } from 'lucide-react';
 import { useTheme } from '../../lib/ThemeContext';
+import { CynexLogo } from '../ui/CynexLogo';
 
 interface GamificationData {
   streak: number;
@@ -92,8 +93,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     profileBorder: '#27272a',
     navSectionLabel: '#a1a1aa',
     navMuted:    '#cbd5e1',
-    navActive:   '#818cf8',
-    navActiveBg: 'rgba(99,102,241,0.15)',
+    navActive:   '#60a5fa',
+    navActiveBg: 'rgba(37,99,235,0.15)',
     text:        '#fafafa',
     textMuted:   '#a1a1aa',
     avatarBorder: '#000000',
@@ -106,12 +107,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     sidebarBg:   '#ffffff',
     border:      '#e2e8f0',
     tabBarBg:    'rgba(255,255,255,0.97)',
-    profileCard: 'rgba(79,70,229,0.04)',
-    profileBorder: 'rgba(79,70,229,0.12)',
+    profileCard: 'rgba(37,99,235,0.04)',
+    profileBorder: 'rgba(37,99,235,0.12)',
     navSectionLabel: '#94a3b8',
     navMuted:    '#475569',
-    navActive:   '#4f46e5',
-    navActiveBg: 'rgba(79,70,229,0.08)',
+    navActive:   '#2563eb',
+    navActiveBg: 'rgba(37,99,235,0.08)',
     text:        '#0f172a',
     textMuted:   '#64748b',
     avatarBorder: '#ffffff',
@@ -126,13 +127,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     <div className="flex flex-col h-full min-h-0 bg-white dark:bg-black border-r border-slate-200/80 dark:border-zinc-800">
 
       {/* Brand Header */}
-      <div className="px-5 py-4 flex items-center justify-between flex-shrink-0 border-b border-slate-200/70 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
-          <img src="/cynex_logo.png" alt="Cynex AI" className="h-8 w-auto object-contain dark:invert dark:brightness-200" />
-        </div>
-        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-          Student
-        </span>
+      <div className="p-4 border-b border-slate-200/80 dark:border-zinc-800 flex items-center justify-between flex-shrink-0">
+        <CynexLogo size="md" badge="Student Portal" />
       </div>
 
       {/* Navigation Links */}
@@ -146,18 +142,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 onClick={() => { navigate(to); setMobileMenuOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                   active 
-                    ? 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold border-l-4 border-indigo-600 dark:border-indigo-400 shadow-sm' 
+                    ? 'bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold border-l-4 border-blue-600 dark:border-blue-400 shadow-sm' 
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400'}`} strokeWidth={active ? 2.5 : 2} />
+                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} strokeWidth={active ? 2.5 : 2} />
                 <span className="flex-1 text-left flex items-center justify-between">
                   <span>{label}</span>
                   {comingSoon && (
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-bold uppercase tracking-wider text-slate-500">Soon</span>
                   )}
                 </span>
-                {active && !comingSoon && <ChevronRight className="w-3.5 h-3.5 opacity-60 text-indigo-600 dark:text-indigo-400" />}
+                {active && !comingSoon && <ChevronRight className="w-3.5 h-3.5 opacity-60 text-blue-600 dark:text-blue-400" />}
               </button>
             );
           })}
@@ -168,7 +164,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
       <div className="p-3 border-t border-slate-200/80 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950 flex-shrink-0 space-y-2">
         <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/60 shadow-sm">
           <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 relative shadow-sm"
-            style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)' }}>
+            style={{ background: 'linear-gradient(135deg, #2563eb, #0284c7)' }}>
             {initials}
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900" />
           </div>
@@ -181,7 +177,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         <div className="flex items-center gap-1">
           <button onClick={toggleTheme}
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors">
-            {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-indigo-600" />}
+            {isDark ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-blue-600" />}
             {isDark ? 'Light' : 'Dark'}
           </button>
           <button
@@ -196,7 +192,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   );
 
   return (
-    <div className="flex h-[100dvh] w-full overflow-hidden" style={{ background: T.pageBg, color: T.text }}>
+    <div className="flex h-[100dvh] w-full overflow-hidden portal-dot-bg" style={{ background: T.pageBg, color: T.text }}>
 
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 flex-shrink-0 flex-col border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-black z-20 overflow-hidden">
@@ -223,21 +219,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         {/* Mobile top sticky header */}
         <div className="md:hidden flex flex-col flex-shrink-0 sticky top-0 z-40 bg-white/95 dark:bg-[#000000]/95 backdrop-blur-xl border-b border-slate-200/80 dark:border-zinc-800 shadow-sm">
           <div className="flex items-center justify-between px-4 py-3">
-            <button onClick={() => setMobileMenuOpen(true)} className="flex items-center gap-2">
-              <img src="/cynex_logo.png" alt="Cynex AI" className="h-7 w-auto object-contain dark:invert dark:brightness-200" />
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 active:scale-95 text-xs font-bold"
+            >
+              <Menu className="w-4 h-4" />
+              <span>Menu</span>
             </button>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                 {data.completedClasses} Classes Done
               </span>
-              <button
-                onClick={() => setMobileMenuOpen(true)}
-                className="p-1.5 rounded-xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-slate-200 active:scale-95"
-                aria-label="Open menu"
-              >
-                <Menu className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -267,17 +260,17 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                   comingSoon 
                     ? 'opacity-40 cursor-not-allowed' 
                     : active 
-                    ? 'text-indigo-600 dark:text-indigo-400 font-bold' 
+                    ? 'text-blue-600 dark:text-blue-400 font-bold' 
                     : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white active:scale-90'
                 }`}
               >
                 <div className={`w-9 h-7 flex items-center justify-center rounded-xl transition-all duration-200 ${
-                  active && !comingSoon ? 'bg-indigo-600/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-500/30' : ''
+                  active && !comingSoon ? 'bg-blue-600/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 shadow-sm border border-blue-500/30' : ''
                 }`}>
                   <Icon className="w-4 h-4" strokeWidth={active ? 2.5 : 2} />
                 </div>
                 <span className={`text-[9px] font-bold tracking-tight mt-0.5 ${
-                  active ? 'text-indigo-600 dark:text-indigo-400 font-black' : 'text-slate-500 dark:text-zinc-400'
+                  active ? 'text-blue-600 dark:text-blue-400 font-black' : 'text-slate-500 dark:text-zinc-400'
                 }`}>
                   {short}
                 </span>

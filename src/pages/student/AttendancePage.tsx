@@ -169,12 +169,12 @@ export default function AttendancePage() {
           </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
                 Attendance Check-In
               </span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black font-display text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5 mt-0.5">
-              <QrCode className="w-7 h-7 text-indigo-600 dark:text-indigo-400" /> Offline & Hybrid Check-In
+              <QrCode className="w-7 h-7 text-blue-600 dark:text-blue-400" /> Offline & Hybrid Check-In
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Scan classroom QR code with your camera or enter session check-in token.
@@ -203,7 +203,7 @@ export default function AttendancePage() {
           
           {!scanning ? (
             <div className="w-full text-center py-4 space-y-4">
-              <div className="w-20 h-20 bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-3xl flex items-center justify-center mx-auto border border-indigo-500/20 shadow-inner">
+              <div className="w-20 h-20 bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-3xl flex items-center justify-center mx-auto border border-blue-500/20 shadow-inner">
                 <Camera className="w-10 h-10" />
               </div>
               <div>
@@ -216,7 +216,7 @@ export default function AttendancePage() {
               <div className="pt-2">
                 <button
                   onClick={startScanner}
-                  className="px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-sm flex items-center justify-center gap-2 mx-auto shadow-lg shadow-indigo-500/25 active:scale-95 transition-all"
+                  className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm flex items-center justify-center gap-2 mx-auto shadow-lg shadow-blue-500/25 active:scale-95 transition-all"
                 >
                   <Camera className="w-4 h-4" /> Start Live Camera Scanner
                 </button>
@@ -238,10 +238,10 @@ export default function AttendancePage() {
               </div>
 
               {/* Live Camera Viewport */}
-              <div className="relative rounded-2xl overflow-hidden border-2 border-indigo-500/40 bg-black shadow-2xl flex flex-col items-center justify-center min-h-[320px]">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-blue-500/40 bg-black shadow-2xl flex flex-col items-center justify-center min-h-[320px]">
                 {cameraLoading && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/80 text-white gap-3 p-4 text-center">
-                    <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin" />
+                    <RefreshCw className="w-8 h-8 text-blue-400 animate-spin" />
                     <p className="text-xs font-black uppercase tracking-widest text-slate-300">Accessing Device Camera...</p>
                     <p className="text-[11px] text-slate-400">Please grant camera permissions when prompted.</p>
                   </div>
@@ -253,7 +253,7 @@ export default function AttendancePage() {
                     <p className="text-sm font-bold text-amber-300">{cameraError}</p>
                     <button
                       onClick={startScanner}
-                      className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black shadow-md"
+                      className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-black shadow-md"
                     >
                       Retry Camera
                     </button>
@@ -273,7 +273,7 @@ export default function AttendancePage() {
         {/* Manual Session Token Fallback Card */}
         <div className="candy-panel p-6 md:p-8 !border-2 space-y-3">
           <div className="flex items-center gap-2">
-            <Key className="w-4 h-4 text-purple-500" />
+            <Key className="w-4 h-4 text-blue-500" />
             <h3 className="text-sm font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Manual Session Token Input
             </h3>
@@ -289,12 +289,12 @@ export default function AttendancePage() {
               value={manualCode}
               onChange={(e) => setManualCode(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleManualCheckIn()}
-              className="w-full sm:flex-1 bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-800 px-4 py-3 rounded-xl text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
+              className="w-full sm:flex-1 bg-slate-50 dark:bg-black/50 border border-slate-200 dark:border-zinc-800 px-4 py-3 rounded-xl text-slate-900 dark:text-white font-mono text-xs focus:outline-none focus:border-blue-500"
             />
             <button
               onClick={handleManualCheckIn}
               disabled={!manualCode.trim() || submittingManual}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-purple-500/20 active:scale-95 transition-all"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
             >
               {submittingManual ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
               <span>Check In</span>

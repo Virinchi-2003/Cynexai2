@@ -33,7 +33,7 @@ const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnlin
             const batchNames = (bMap[c] || []).map((bid: string) => batches.find((b: any) => b.id === bid)?.name || bid).join(', ');
             return (
               <div key={c} className="leading-tight">
-                <div className={`text-[9px] font-extrabold uppercase truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>{c}</div>
+                <div className={`text-[9px] font-extrabold uppercase truncate ${isOnline ? 'text-emerald-700 dark:text-emerald-400' : 'text-blue-700 dark:text-blue-400'}`}>{c}</div>
                 <div className="text-[11px] font-bold text-erp-text truncate">{batchNames || 'No Batches'}</div>
               </div>
             );
@@ -46,7 +46,7 @@ const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnlin
     return (
       <>
         <div className="font-bold text-xs text-erp-text truncate leading-tight">{classItem.batch_name || classItem.batch_id}</div>
-        <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>
+        <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700 dark:text-emerald-400' : 'text-blue-700 dark:text-blue-400'}`}>
           {classItem.course_name}
         </div>
       </>
@@ -236,7 +236,7 @@ export default function TimetableManager() {
         {/* Top Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-erp-surface border border-erp-border p-4 flex items-center gap-4">
-            <div className="p-3 bg-indigo-500/10 rounded-xl"><BookOpen className="w-6 h-6 text-indigo-500" /></div>
+            <div className="p-3 bg-blue-500/10 rounded-xl"><BookOpen className="w-6 h-6 text-blue-500" /></div>
             <div>
               <p className="text-sm font-bold text-erp-text/50">Weekly Classes</p>
               <h3 className="text-2xl font-bold text-erp-text">{schedule.length}</h3>
@@ -417,10 +417,10 @@ export default function TimetableManager() {
                                 key={classItem.id}
                                 className={`w-full rounded-xl p-2 z-10 border-2 flex flex-col justify-between shadow-sm cursor-pointer hover:shadow-md transition-shadow
                                   ${alerting 
-                                    ? 'bg-red-50 border-red-500 animate-[pulse_1.5s_ease-in-out_infinite]' 
+                                    ? 'bg-red-50 dark:bg-red-950/40 border-red-500 animate-[pulse_1.5s_ease-in-out_infinite]' 
                                     : isOnline 
-                                      ? 'bg-emerald-50 border-emerald-200' 
-                                      : 'bg-indigo-50 border-indigo-200'
+                                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60' 
+                                      : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/60'
                                   }`}
                                 style={{ minHeight: `${Math.max(80, durationHrs * 80)}px` }}
                                 onClick={(e) => {
@@ -443,7 +443,7 @@ export default function TimetableManager() {
                                       <span className={alerting ? "text-red-600" : ""}>{alerting ? "ABSENT" : classItem.teacher_name || classItem.teacher_id}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-erp-primary">
-                                      {isOnline ? <Video className="w-3 h-3 text-emerald-500"/> : <MapPin className="w-3 h-3 text-indigo-500"/>}
+                                      {isOnline ? <Video className="w-3 h-3 text-emerald-500"/> : <MapPin className="w-3 h-3 text-blue-500"/>}
                                     </div>
                                   </div>
                                 </div>

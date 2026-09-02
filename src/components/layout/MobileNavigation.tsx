@@ -77,7 +77,7 @@ export const MobileNavigation: React.FC = () => {
                     `}>
                       <item.icon className="w-5 h-5" strokeWidth={isActive ? 3 : 2} />
                     </div>
-                    <span className={`text-[10px] font-black leading-none ${isActive ? 'text-[#0096ff] dark:text-[#01cdfe]' : ''}`}>{item.label}</span>
+                    <span className={`text-[10px] font-black leading-none ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`}>{item.label}</span>
                   </>
                 )}
               </NavLink>
@@ -121,7 +121,7 @@ export const MobileNavigation: React.FC = () => {
             <span className="font-display font-bold text-lg text-slate-800 dark:text-white">Navigation</span>
             <button 
               onClick={() => setMenuOpen(false)}
-              className="p-2 rounded-full bg-slate-100 dark:bg-white dark:bg-black/10 text-slate-600 dark:text-white"
+              className="p-2 rounded-full bg-slate-100 dark:bg-zinc-900 text-slate-600 dark:text-white"
             >
               <X className="w-5 h-5" />
             </button>

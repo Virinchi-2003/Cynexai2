@@ -55,7 +55,7 @@ const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnlin
             const batchNames = courseBatchIds.map(resolveBatchName).join(', ');
             return (
               <div key={c} className="leading-tight">
-                <div className={`text-[9px] font-extrabold uppercase truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>{c}</div>
+                <div className={`text-[9px] font-extrabold uppercase truncate ${isOnline ? 'text-emerald-700 dark:text-emerald-400' : 'text-blue-700 dark:text-blue-400'}`}>{c}</div>
                 <div className="text-[11px] font-bold text-erp-text truncate">{batchNames || 'All Batches'}</div>
               </div>
             );
@@ -70,7 +70,7 @@ const renderClassTags = (classItem: GlobalTimetableSlot, batches: any[], isOnlin
   return (
     <>
       <div className="font-bold text-xs text-erp-text truncate leading-tight">{cleanFallback}</div>
-      <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700' : 'text-indigo-700'}`}>
+      <div className={`text-[10px] font-bold mt-1 truncate ${isOnline ? 'text-emerald-700 dark:text-emerald-400' : 'text-blue-700 dark:text-blue-400'}`}>
         {classItem.course_name}
       </div>
     </>
@@ -161,7 +161,7 @@ export default function TeacherTimetable() {
             </Button>
             <div>
               <h1 className="text-3xl font-display font-bold text-erp-text flex items-center gap-3">
-                <Calendar className="w-8 h-8 text-indigo-500" /> My Timetable
+                <Calendar className="w-8 h-8 text-blue-500" /> My Timetable
               </h1>
               <p className="text-erp-text/70 font-medium mt-1">Full weekly view. View classes assigned to you.</p>
             </div>
@@ -220,9 +220,9 @@ export default function TeacherTimetable() {
                   const normToday = today === 0 ? 6 : today - 1;
                   const isCurrentDay = DAYS.indexOf(day) === normToday && currentWeekStart === getMonday(currentTime);
                   return (
-                    <div key={day} className={`p-4 border-r border-erp-border font-bold text-sm text-center last:border-r-0 ${isCurrentDay ? 'text-indigo-600 bg-indigo-50/50' : 'text-erp-text bg-erp-surface'}`}>
+                    <div key={day} className={`p-4 border-r border-erp-border font-bold text-sm text-center last:border-r-0 ${isCurrentDay ? 'text-blue-600 bg-blue-50/50 dark:bg-blue-950/40' : 'text-erp-text bg-erp-surface'}`}>
                       {day}
-                      {isCurrentDay && <div className="text-[10px] uppercase text-indigo-500 mt-0.5">Today</div>}
+                      {isCurrentDay && <div className="text-[10px] uppercase text-blue-500 mt-0.5">Today</div>}
                     </div>
                   );
                 })}
@@ -257,14 +257,14 @@ export default function TeacherTimetable() {
                           const durationHrs = getDurationHours(classItem.start_time, classItem.end_time);
                           const statusColor = getStatusColor(day, classItem.start_time, classItem);
                           
-                          let bgStyle = 'bg-indigo-50 border-indigo-200';
-                          if (isOnline) bgStyle = 'bg-emerald-50 border-emerald-200';
+                          let bgStyle = 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800/60';
+                          if (isOnline) bgStyle = 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/60';
                           if (statusColor === 'past') bgStyle = 'bg-slate-100 dark:bg-zinc-900/50 border-slate-300 dark:border-white/10 opacity-60 grayscale';
-                          if (statusColor === 'live') bgStyle = 'bg-red-50 border-red-400 animate-pulse ring-2 ring-red-400/50';
+                          if (statusColor === 'live') bgStyle = 'bg-red-50 dark:bg-red-950/40 border-red-400 animate-pulse ring-2 ring-red-400/50';
 
                           return (
                             <div 
-                              key={classItem.id}
+                              key={classItem.id} 
                               className={`w-full rounded-xl p-3 z-10 border-2 flex flex-col justify-between shadow-sm
                                 ${bgStyle}`}
                               style={{ minHeight: `${Math.max(80, durationHrs * 80)}px` }}
@@ -279,11 +279,11 @@ export default function TeacherTimetable() {
                               <div className="mt-3 pt-2 border-t border-black/5 flex flex-col gap-2">
                                 <div className="flex items-center justify-between text-[10px] font-bold text-erp-text/70 truncate">
                                   <div className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3 text-indigo-500" />
+                                    <MapPin className="w-3 h-3 text-blue-500" />
                                     <span>{classItem.timing}</span>
                                   </div>
                                   <div className="flex items-center gap-1 text-erp-primary">
-                                    {isOnline ? <Video className="w-3 h-3 text-emerald-500"/> : <Users className="w-3 h-3 text-indigo-500"/>}
+                                    {isOnline ? <Video className="w-3 h-3 text-emerald-500"/> : <Users className="w-3 h-3 text-blue-500"/>}
                                   </div>
                                 </div>
                                 {statusColor !== 'past' && (
@@ -291,7 +291,7 @@ export default function TeacherTimetable() {
                                     <Button 
                                       onClick={() => navigate(`/teacher/live?classId=${classItem.id}&type=${classItem.status}`)}
                                       variant="primary"
-                                      className={`w-full py-1.5 text-[10px] h-auto ${statusColor === 'live' ? 'bg-red-600 hover:bg-red-700 border-red-700 shadow-md' : 'bg-indigo-600'}`}
+                                      className={`w-full py-1.5 text-[10px] h-auto ${statusColor === 'live' ? 'bg-red-600 hover:bg-red-700 border-red-700 shadow-md' : 'bg-blue-600 hover:bg-blue-700'}`}
                                     >
                                       <Video className="w-3 h-3 mr-1" /> 
                                       {statusColor === 'live' ? 'JOIN LIVE CLASS' : 'Launch Studio'}

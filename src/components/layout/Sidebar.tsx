@@ -10,6 +10,8 @@ import { getRolePages } from '../../lib/api/rolePageAccess';
 
 import { ROUTE_MODULE_MAP } from '../../lib/permissionsRegistry';
 
+import { CynexLogo } from '../ui/CynexLogo';
+
 type NavItem = { to: string, icon: any, label: string, section: string };
 
 export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> = ({ onNavClick, isMobile }) => {
@@ -195,16 +197,12 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
 
   return (
     <div className={`h-full flex flex-col ${isMobile ? '' : 'bg-erp-surface'}`}>
-      {!isMobile && (
-        <div className="px-5 py-4 border-b-2 border-erp-border flex items-center justify-between">
-          <img src="/cynex_logo.png" alt="Cynex AI" className="h-8 w-auto object-contain dark:invert dark:brightness-200" />
-          <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-            {portalName}
-          </span>
-        </div>
-      )}
-      
-      <div className={isMobile ? '' : 'flex-1 overflow-y-auto py-6 px-4 space-y-6'}>
+      {/* Brand Header */}
+      <div className="p-4 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between flex-shrink-0">
+        <CynexLogo size="md" badge={portalName} />
+      </div>
+
+      <div className={isMobile ? '' : 'flex-1 overflow-y-auto py-4 px-4 space-y-6'}>
         {loading ? (
           <div className="flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-erp-primary" /></div>
         ) : (

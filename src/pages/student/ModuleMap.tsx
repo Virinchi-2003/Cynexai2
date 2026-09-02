@@ -293,8 +293,8 @@ export default function ModuleMap() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0d0d1a' }}>
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 animate-ping" />
-            <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-indigo-500/20 animate-spin" />
+            <div className="absolute inset-0 rounded-full border-4 border-blue-500/20 animate-ping" />
+            <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-blue-500/20 animate-spin" />
           </div>
           <p className="text-white/50 text-sm font-medium">Loading your quest map…</p>
         </div>
@@ -309,7 +309,7 @@ export default function ModuleMap() {
           <p className="text-red-400 font-semibold mb-4">{error}</p>
           <button
             onClick={() => navigate('/student')}
-            className="px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-colors"
+            className="px-6 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors"
           >
             ← Back to Dashboard
           </button>
@@ -341,9 +341,9 @@ export default function ModuleMap() {
           <div
             className="px-3 py-1 rounded-full text-sm font-black"
             style={{
-              background: pct === 100 ? '#10b98120' : '#6366f120',
-              color: pct === 100 ? '#34d399' : '#818cf8',
-              border: `1px solid ${pct === 100 ? '#10b98140' : '#6366f140'}`
+              background: pct === 100 ? '#10b98120' : '#2563eb20',
+              color: pct === 100 ? '#34d399' : '#3b82f6',
+              border: `1px solid ${pct === 100 ? '#10b98140' : '#2563eb40'}`
             }}
           >
             {pct}%
@@ -354,7 +354,7 @@ export default function ModuleMap() {
         <div className="max-w-lg mx-auto mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
           <div
             className="h-full rounded-full transition-all duration-1000"
-            style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #6366f1, #8b5cf6)' }}
+            style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #2563eb, #0284c7)' }}
           />
         </div>
       </div>
@@ -386,9 +386,9 @@ export default function ModuleMap() {
         <div className="max-w-lg mx-auto px-4 py-20 text-center">
           <div
             className="w-20 h-20 rounded-3xl mx-auto mb-4 flex items-center justify-center"
-            style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)' }}
+            style={{ background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.2)' }}
           >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="1.5">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.5">
               <path d="M12 2a10 10 0 1 0 10 10H12V2z" />
               <path d="M12 2a10 10 0 0 1 10 10" />
             </svg>
@@ -404,9 +404,9 @@ export default function ModuleMap() {
           {/* Start Banner */}
           <div
             className="text-center mb-4 py-3 rounded-2xl relative z-10"
-            style={{ background: 'rgba(99,102,241,0.08)', border: '1px dashed rgba(99,102,241,0.2)' }}
+            style={{ background: 'rgba(37,99,235,0.08)', border: '1px dashed rgba(37,99,235,0.2)' }}
           >
-            <p className="text-indigo-400/60 text-[11px] font-black uppercase tracking-widest">Course Classes · {virtualNodes.length} Items</p>
+            <p className="text-blue-400/60 text-[11px] font-black uppercase tracking-widest">Course Classes · {virtualNodes.length} Items</p>
           </div>
 
           {/* List Area */}
@@ -444,7 +444,7 @@ export default function ModuleMap() {
                     isLocked
                       ? 'cursor-pointer border-dashed border-slate-300 dark:border-white/10 bg-slate-100/60 dark:bg-white/5 opacity-60 hover:opacity-80'
                       : isCurrent
-                      ? 'cursor-pointer border-indigo-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]'
+                      ? 'cursor-pointer border-blue-500 bg-white dark:bg-white/10 shadow-lg scale-[1.02]'
                       : 'cursor-pointer border-transparent bg-white dark:bg-white/10 hover:-translate-y-1'
                   }`}
                 >
@@ -452,7 +452,7 @@ export default function ModuleMap() {
                     isCompleted
                       ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-500/20'
                       : isCurrent
-                      ? 'bg-indigo-100 text-indigo-500 dark:bg-indigo-500/20'
+                      ? 'bg-blue-100 text-blue-500 dark:bg-blue-500/20'
                       : 'bg-slate-200 text-slate-400 dark:bg-white/10 dark:text-white/30'
                   }`}>
                     {isCompleted ? <NodeIcons.check size={24} /> : isLocked ? <NodeIcons.lock size={22} /> : React.createElement(NodeIcons[kind as keyof typeof NodeIcons] || NodeIcons.lesson, { size: 24 })}
@@ -461,7 +461,7 @@ export default function ModuleMap() {
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: isLocked ? '#94a3b8' : cfg.labelColor }}>
                       {cfg.label}
-                      {isCurrent && <span className="ml-2 text-indigo-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-indigo-100 rounded-full">Next up</span>}
+                      {isCurrent && <span className="ml-2 text-blue-500 animate-pulse text-[9px] px-1.5 py-0.5 bg-blue-100 dark:bg-blue-950/60 rounded-full">Next up</span>}
                       {isLocked && <span className="ml-2 text-slate-500 text-[9px] px-1.5 py-0.5 bg-slate-200 dark:bg-white/10 rounded-full font-bold">Locked 🔒</span>}
                     </p>
                     <p className={`font-bold text-sm leading-tight line-clamp-2 ${isLocked ? 'text-slate-500 dark:text-white/40' : 'text-slate-900 dark:text-white'}`}>

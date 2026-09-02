@@ -67,7 +67,7 @@ export default function CEODashboard() {
             </div>
           </Card>
 
-          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-indigo-500 dark:border-l-indigo-400">
+          <Card className="flex flex-col border-t-erp-border border-r-erp-border border-b-erp-border border-l-4 border-l-blue-500 dark:border-l-blue-400">
             <h3 className="text-sm font-bold text-erp-text/50 uppercase">Conversion Rate</h3>
             <div className="flex items-end gap-2 mt-2">
               <span className="text-3xl font-display font-bold text-erp-text">{conversionRate}%</span>
@@ -76,8 +76,8 @@ export default function CEODashboard() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors border-indigo-200 dark:border-indigo-800/30 card-hover" onClick={() => navigate('/ceo/courses')}>
-            <BookOpen className="w-8 h-8 text-indigo-600 dark:text-indigo-400 mb-2" />
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors border-blue-200 dark:border-blue-800/30 card-hover" onClick={() => navigate('/ceo/courses')}>
+            <BookOpen className="w-8 h-8 text-blue-600 dark:text-blue-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Course Management</span>
           </Card>
           
