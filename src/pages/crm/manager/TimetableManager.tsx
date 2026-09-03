@@ -367,7 +367,7 @@ export default function TimetableManager() {
               {loading && <div className="absolute inset-0 bg-erp-surface/80 backdrop-blur-sm z-50 flex items-center justify-center font-bold text-erp-primary">Loading Schedule...</div>}
               <div className="min-w-[1200px]">
                 {/* Header Row */}
-                <div className="grid grid-cols-8 border-b border-erp-border bg-erp-background/30">
+                <div className="grid grid-cols-8 border-b-2 border-erp-border bg-erp-surface shadow-sm relative z-10">
                   <div className="p-3 border-r border-erp-border font-bold text-xs text-erp-text/50 text-center uppercase">Time</div>
                   {DAYS.map(day => (
                     <div key={day} className="p-3 border-r border-erp-border font-bold text-sm text-erp-text text-center last:border-r-0">

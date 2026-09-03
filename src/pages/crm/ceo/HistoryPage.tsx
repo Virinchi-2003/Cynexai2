@@ -170,7 +170,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background subtle-watermark">
       
       {/* Header Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -337,7 +337,7 @@ export default function HistoryPage() {
                   {getEventIcon(ev.type)}
                 </div>
 
-                <div className="bg-slate-900/60 border border-slate-800 rounded-xl p-4 hover:border-indigo-500/40 transition-all shadow-sm">
+                <div className="bg-erp-surface border-2 border-erp-border rounded-2xl p-5 hover:border-indigo-500/40 transition-all shadow-sm">
                   
                   {/* Top Bar: Title, User, Timestamp */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">

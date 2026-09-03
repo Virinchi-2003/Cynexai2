@@ -103,18 +103,20 @@ const CRMLayout = ({ children }: { children: React.ReactNode }) => {
         style={{ background: 'var(--erp-sidebar-bg)', borderColor: 'var(--erp-sidebar-border)' }}
       >
         <div className="w-64 h-full">
-          <Sidebar />
+          <Sidebar onToggleSidebar={() => setIsSidebarOpen(false)} />
         </div>
       </div>
       
-      {/* Toggle Button */}
-      <button 
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="hidden md:flex absolute top-1/2 -translate-y-1/2 z-[200] bg-erp-surface border-2 border-erp-border rounded-full p-1 shadow-md hover:bg-erp-background transition-colors"
-        style={{ left: isSidebarOpen ? '15.5rem' : '0.5rem' }}
-      >
-        {isSidebarOpen ? <ChevronLeft className="w-4 h-4 text-erp-text" /> : <ChevronRight className="w-4 h-4 text-erp-text" />}
-      </button>
+      {/* Expand Button when Sidebar is Collapsed */}
+      {!isSidebarOpen && (
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="hidden md:flex fixed top-4 left-4 z-[200] bg-erp-surface border-2 border-erp-border rounded-xl p-2 shadow-lg hover:bg-erp-background text-erp-text transition-all cursor-pointer items-center gap-1.5 text-xs font-bold"
+          title="Expand sidebar"
+        >
+          <ChevronRight className="w-4 h-4 text-erp-primary" />
+        </button>
+      )}
       
       {/* Main Content Area — overflow-y-auto allows each page to scroll */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto pb-20 md:pb-0 overflow-x-hidden">
@@ -297,6 +299,7 @@ function App() {
         <Route path="/teacher/cms" element={<TeacherLayout><TeacherCMS /></TeacherLayout>} />
         <Route path="/teacher/live" element={<TeacherLayout><LiveStreamDashboard /></TeacherLayout>} />
         <Route path="/teacher/attendance" element={<TeacherLayout><AttendanceSystem /></TeacherLayout>} />
+        <Route path="/teacher/student-progress" element={<TeacherLayout><StudentProgress /></TeacherLayout>} />
         {/* Fullscreen presentation route (No Layout) */}
         <Route path="/teacher/presentation-view" element={<RequireAuth allowedRoles={['Teacher', 'Manager', 'CEO']}><PresentationView /></RequireAuth>} />
         <Route path="/teacher/settings" element={<TeacherLayout><TeacherSettings /></TeacherLayout>} />

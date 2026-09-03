@@ -150,7 +150,7 @@ export default function TeacherTimetable() {
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-erp-background">
+    <div className="flex h-full w-full overflow-hidden bg-erp-background subtle-watermark">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-hidden pb-4">
         
         {/* Header */}

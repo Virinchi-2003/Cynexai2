@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from '../../components/ui/erp/Card';
 import { Button } from '../../components/ui/erp/Button';
-import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter, Settings } from 'lucide-react';
+import { Video, BookOpen, Users, Calendar, Play, Zap, AlertCircle, Filter, Settings, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getCurrentUser } from '../../lib/auth';
 import { AttendanceButton } from '../../components/ui/AttendanceButton';
@@ -132,7 +132,7 @@ export default function TeacherDashboard() {
     : (realBatches.length > 0 ? realBatches : []).filter((b: any) => b.id === selectedBatchId);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-erp-background">
+    <div className="flex h-full w-full overflow-hidden bg-erp-background subtle-watermark">
       <div className="flex-1 flex flex-col p-4 md:p-8 min-w-0 overflow-y-auto pb-32">
         <AttendanceButton />
         
@@ -145,7 +145,7 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Quick Nav */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-erp-primary/5 transition-colors border-erp-primary" onClick={() => navigate('/teacher/live')}>
             <Video className="w-8 h-8 text-erp-primary mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Teacher Studio</span>
@@ -157,6 +157,10 @@ export default function TeacherDashboard() {
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-green-500/5 transition-colors" onClick={() => navigate('/teacher/attendance')}>
             <Users className="w-8 h-8 text-green-400 mb-2" />
             <span className="font-bold text-erp-text text-sm text-center">Attendance</span>
+          </Card>
+          <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-amber-500/5 transition-colors border-amber-500/30" onClick={() => navigate('/teacher/student-progress')}>
+            <TrendingUp className="w-8 h-8 text-amber-500 mb-2" />
+            <span className="font-bold text-erp-text text-sm text-center">Student Progress</span>
           </Card>
           <Card className="flex flex-col items-center justify-center p-6 cursor-pointer hover:bg-blue-500/5 transition-colors" onClick={() => navigate('/teacher/timetable')}>
             <Calendar className="w-8 h-8 text-blue-400 mb-2" />

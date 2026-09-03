@@ -61,6 +61,7 @@ export const ROUTE_MODULE_MAP: Record<string, string> = {
   '/ceo/student-progress': 'students',
   '/manager/students': 'students',
   '/manager/student-progress': 'students',
+  '/teacher/student-progress': 'students',
 
   // Courses & Curriculum CMS
   '/ceo/courses': 'courses',

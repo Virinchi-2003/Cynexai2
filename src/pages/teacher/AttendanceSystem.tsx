@@ -274,7 +274,7 @@ export default function AttendanceSystem() {
     : `https://meet.google.com/cnx-${selectedBatch?.name?.toLowerCase().replace(/\s+/g, '-') || 'live'}`;
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background">
+    <div className="flex-1 flex flex-col min-w-0 overflow-y-auto pb-32 p-4 md:p-8 bg-erp-background subtle-watermark">
       {/* Top Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, CheckSquare, MessageCircle, User, LogOut, LayoutDashboard, Settings, BookOpen, Calendar, Video, Zap, Bot, Loader2, BarChart2, History, GraduationCap, TrendingUp, ChevronLeft } from 'lucide-react';
 import { getCurrentUser, logout, getModuleAccess } from '../../lib/auth';
 import { checkTeacherAssignment } from '../../lib/api/manager';
 import { computeAccessiblePortals } from '../../lib/authUtils';
@@ -14,7 +14,7 @@ import { CynexLogo } from '../ui/CynexLogo';
 
 type NavItem = { to: string, icon: any, label: string, section: string };
 
-export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> = ({ onNavClick, isMobile }) => {
+export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean, onToggleSidebar?: () => void }> = ({ onNavClick, isMobile, onToggleSidebar }) => {
   const user = getCurrentUser();
   const [accessLevels, setAccessLevels] = useState<string[]>(() => {
     if (!user) return [];
@@ -78,6 +78,7 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
       { to: '/teacher/live',        icon: Video,           label: 'Live Stream', section: 'Teacher' },
       { to: '/teacher/cms',         icon: BookOpen,        label: 'AI Material Gen', section: 'Teacher' },
       { to: '/teacher/attendance',  icon: Users,           label: 'Attendance',  section: 'Teacher' },
+      { to: '/teacher/student-progress', icon: TrendingUp, label: 'Student Progress', section: 'Teacher' },
       { to: '/teacher/tasks',       icon: CheckSquare,     label: 'Tasks',       section: 'Teacher' },
       { to: '/teacher/settings',    icon: Settings,        label: 'AI Settings', section: 'Teacher' }
     );
@@ -200,6 +201,15 @@ export const Sidebar: React.FC<{ onNavClick?: () => void, isMobile?: boolean }> 
       {/* Brand Header */}
       <div className="p-4 border-b border-slate-200/80 dark:border-white/10 flex items-center justify-between flex-shrink-0">
         <CynexLogo size="md" badge={portalName} />
+        {onToggleSidebar && !isMobile && (
+          <button
+            onClick={onToggleSidebar}
+            className="hidden md:flex p-1.5 rounded-xl text-erp-text/50 hover:text-erp-text hover:bg-erp-surface transition-all border border-erp-border cursor-pointer shadow-sm"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <div className={isMobile ? '' : 'flex-1 overflow-y-auto py-4 px-4 space-y-6'}>

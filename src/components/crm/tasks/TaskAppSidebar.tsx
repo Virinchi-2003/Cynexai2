@@ -22,7 +22,7 @@ export function TaskAppSidebar({ currentView, onViewChange, projects, onNewProje
     }`;
 
   return (
-    <div className="w-64 h-full bg-erp-background border-r-2 border-erp-border flex flex-col flex-shrink-0 animate-in slide-in-from-left duration-200">
+    <div className="w-64 h-full bg-erp-background border-r-2 border-erp-border flex flex-col flex-shrink-0 animate-in slide-in-from-left duration-200 no-watermark">
       <div className="p-4">
         <h2 className="text-xl font-display font-bold text-erp-text flex items-center gap-2">
           <CheckCircle2 className="w-5 h-5 text-erp-primary" />
